@@ -1,15 +1,7 @@
 from django.contrib import admin
 from django.utils.text import Truncator
-from django.contrib.auth import get_user_model
-from django.contrib.auth.admin import UserAdmin
-from news.models import Categorie, SousCategorie, Article#, CustomUser
-#from news.forms import CustomUserCreationForm, CustomUserChangeForm
+from news.models import Categorie, SousCategorie, Article
 
-#class CustomUserAdmin(UserAdmin):
-#    add_form = CustomUserCreationForm
-#    form = CustomUserChangeForm
-#    model = CustomUser
-#    list_display = ['email', 'username',]
 
 class ArticleAdmin(admin.ModelAdmin):
     list_display   = ('categorie','sous_categorie', 'titre', 'auteur', 'date', 'apercu_contenu')
@@ -41,7 +33,6 @@ class ArticleAdmin(admin.ModelAdmin):
 
     apercu_contenu.short_description = 'Aperçu du contenu'
 
-#admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Categorie)
 admin.site.register(SousCategorie)
 admin.site.register(Article,ArticleAdmin)

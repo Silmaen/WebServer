@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.0/ref/settings/
 """
 
-import os
+import os, platform
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -25,7 +25,7 @@ SECRET_KEY = '17qjs#_bf0fykt+0c1+z4$+$u+)gtl_1ww3(ju)g)4+go$f7!i'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['www.argawaen.net']
+ALLOWED_HOSTS = ['127.0.0.1', 'www.argawaen.net']
 
 
 # Application definition
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'news.apps.NewsConfig',
+    'users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
@@ -77,18 +78,27 @@ WSGI_APPLICATION = 'www.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'BaseSite',
-        'USER':'BASE_site',
-        'PASSWORD':'1234',
-        'HOST':'127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
+if platform.system() == "Windows":
+    # local for testing
+    DATABASES = {
+        'default':{
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': 'BaseSite.db',
+        }
     }
-}
-
+else:
+    # production server
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'BaseSite',
+            'USER': 'BASE_site',
+            'PASSWORD': '1234',
+            'HOST':'127.0.0.1',
+            'PORT': '3306',
+            'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -108,7 +118,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-#AUTH_USER_MODEL = 'news.CustomUser'
+AUTH_USER_MODEL = 'users.CustomUser'
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

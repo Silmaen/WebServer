@@ -24,20 +24,22 @@
 				<div class="site-topright">
 					<div class="site-user">
 						{% if user.is_authenticated %}
-						<p>User: {{ user.name }}</p>
+						<p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %} {{ user.username }}</p>
 						<p><a href="{% url 'logout' %}">Sign out</a></p>
 						{% else %}
-						<p>You are not logged in</p>
+						<p>Anonymous</p>
 						<p><a href="{% url 'login' %}">Sign in</a>
-						<a href="{#{% url 'signup' %}#}">Sign up</a></p>
+						<a href="{% url 'signup' %}">Sign up</a></p>
 						{% endif %}
 					<!-- class="site-user" --></div>
 					<ul class="site-nav-menu">
 						<li class="site-nav-item menu-here"><a href="https://www.argawaen.net">Site Principal</a></li>
 						<li class="site-nav-item menu-ayoaron"><a href="https://ayoaron.argawaen.net">Ayoaron</a></li>
 						<li class="site-nav-item menu-testprojet"><a href="https://testsubject.argawaen.net">TestSubject</a></li>
+						{% if user.is_authenticated %}{% if user.has_Developper_Access %}
 						<li class="site-nav-item menu-mantis"><a href="https://mantis.argawaen.net">bug Tracker</a></li>
 						<li class="site-nav-item menu-tc"><a href="https://builder.argawaen.net">Builder</a></li>
+						{% endif %}{% endif %}
 					</ul>
 				<!-- class="site-topright" --></div>
 			<!-- class="upper-header" --></div>

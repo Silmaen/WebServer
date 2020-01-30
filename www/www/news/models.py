@@ -1,12 +1,6 @@
 from django.db import models
 from django.utils import timezone
-#from django.contrib.auth.models import AbstractUser
 
-#class CustomUser(AbstractUser):
-#    pass
-#    
-#    def __str__(self):
-#        return self.username
 
 class Categorie(models.Model):
     '''
@@ -18,7 +12,7 @@ class Categorie(models.Model):
 
 class SousCategorie(models.Model):
     '''
-    Categorie des articles
+    Sous - Categorie des articles
     '''
     nom = models.CharField(max_length=30)
     image = models.ImageField(upload_to="SousCateIcons/",blank=True)
