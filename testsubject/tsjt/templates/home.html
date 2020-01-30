@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block showcase %}
+{% endblock %}
+{% block content %}
+<H1>NEWS</H1>
+{% for article in derniers_articles %}
+	<div class="post">
+		<h3>{{ article.titre }}</h3>
+		<div class="date">{{ article.date }}</div>
+		<div class="post_content">
+			{{ article.contenu }}
+			{% if article.image.url != "" %}
+			<img src="{{article.image.url}}" alt="no image" border="0" align="center" {% if article.image.width > 530 %} width="530" {% endif %}>
+			{% endif %}
+		</div>
+	</div>
+	<hr class="posthr">
+{% empty %}
+	<p>No News to display</p>
+{% endfor %}
+{% endblock %}

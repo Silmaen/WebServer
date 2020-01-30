@@ -1,0 +1,226 @@
+{% load static template_extra %}
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+	<title>{% block title %}La crypte de Lachouette{% endblock %}</title>
+	<meta charset="UTF-8">
+		<!-- les méta données -->
+		<meta name="robots" content="index,follow">
+		<meta name="author" content="Morna Arran Argawaen">
+		<meta name="description" content="Le concernant les créations de Morna Arran Argawaen">
+		<meta name="keywords" content="lachouette, creation, recherche, programmation, language, fortran, C, C++" >
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+		<!-- mon icone -->
+		<link rel="shortcut icon" href="{% static 'img/favicon.ico' %}">
+		<!-- mon style css -->
+		<link rel="stylesheet" href="{% static 'css/theme.css' %}">
+		<!--[if lte IE 9 ]><link href="theme/defaut/theme_ie.css" rel="stylesheet" type="text/css" media="screen" /><![endif]-->
+		<script type="text/javascript">
+			function afficheimage (adresseimage, placeimage) {
+				document.images[placeimage].src = adresseimage;
+			}
+		</script>
+		<script src="http://code.jquery.com/jquery-1.6.4.min.js"></script>
+		<!--[if lt IE 10]>
+		<script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+		<![endif]-->
+	</head>
+	<body>
+		<div class="conteneur">
+		<!-- debut page -->
+			<div class="bandeau">
+				<header class="log"> 
+					<form method="post" action="/news.php">
+						<fieldset>
+							<legend>Veuillez vous identifer</legend>
+							<table id="cadre_login"> <tr><td><label>Nom d'utilisateur: </label>
+							<input type="text" name="login"/></td>
+							<td><label>Mot de passe:      </label> 
+							<input type="password" name="pass"/></td>
+							<td><input type="submit" name="envoi_log" value="OK"/></td></tr>
+							<tr><td><A href="inscription.php">Inscription</A> </td><td> <A href="resetpassword.php">Mot de passe perdu</A></td><td></td></tr></table>
+						</fieldset>
+					</form>
+				</header>
+			</div>
+			<div class="adress">
+				<A Href="news.php" onMouseOver="afficheimage('{% static 'img/btn_acce2.png' %}',0)" onMouseOut="afficheimage('{% static 'img/btn_acce1.png' %},0)"> <img src="{% static 'img/btn_acce1.png' %}" alt="" height="50" width="150"></a>
+				<A Href="recherche.php" onMouseOver="afficheimage('{% static 'img/btn_rech2.png' %}',1)" onMouseOut="afficheimage('{% static 'img/btn_rech1.png' %}',1)"> <img src="{% static 'img/btn_rech1.png' %}" alt="" height="50" width="150"></a>
+				<A Href="projets.php" onMouseOver="afficheimage('{% static 'img/btn_proj2.png' %}',2)" onMouseOut="afficheimage('{% static 'img/btn_proj1.png' %}',2)"> <img src="{% static 'img/btn_proj1.png' %}" alt="" height="50" width="150"></a>
+				<A Href="liens.php" onMouseOver="afficheimage('{% static 'img/btn_link2.png' %}',3)" onMouseOut="afficheimage('{% static 'img/btn_link1.png' %}',3)"> <img src="{% static 'img/btn_link1.png' %}" alt="" height="50" width="150"></a>
+			</div>
+			<!-- le bloc central -->
+			<div class="centre">
+				<!-- la colonne de gauche -->
+				<div class="colonnel">
+					<p class="col_title">La crypte de Lachouette</p>
+					<h4>navigation rapide:</h4>
+					<ul>
+						<li><A Href="ayoaron.argawaen.net">Projet Ayoaron</A></li>
+						<li><A Href="testsubject.argawaen.net">Projet TestSubject</A></li>
+						<li><A Href="mantis.argawaen.net">bug Tracker</A></li>
+                        <li><A Href="builder.argawaen.net">Continuous integration</A></li>
+					</ul>
+				</div>
+				<!-- la colonne de droite -->
+				<div class="colonner">
+					<p class="col_title">La crypte de Lachouette</p>
+				</div>
+				<!-- la colonne du centre -->
+				<div class="colonnem">
+				<!--[if lte IE 9 ]>
+					<H1>Attention: votre navigateur est trop merdique pour afficher correctement la plupart des éléments de cette page.</H1>
+					<H1>Veuillez utiliser Intermouette Exploiteur version 10 ou suppéreur, ou mieux: utiliser un vrai navigateur internet.</H1>
+				<![endif]-->
+					<h3>Les news</h3>
+				<!-- la new numéro 1 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Crash server</h1>
+					</div>
+					<div class="news_centre">
+						<article><p>Encore un crash du server, cette fois c'est le disque dur système qui a lâché (et il a pas fait semblant). </p>
+<p>Par bonheur, des backup étaient faite, mais par pour tous les items. certain sous-sites sont encore down, comme le <A href=https://testsubject.argawaen.net>TestSubject</a> car il est basé sur django, mais aussi, les serveurs de mails car toute la config n'était pas sou backup</p>
+<p>Enfin, la plus grosse perte est sans doute le repository SVN. en effet il n'était pas sous backup (la grosse erreur) et il n'est pour le moment perdu. peut-être que si les sociétés spécialisées dans la récupération ne font pas de tarif trop prohibitifs, on se lancera dans la récupération.</p></article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2019-06-26 00:00:00</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 2 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Upgrade Server</h1>
+					</div>
+					<div class="news_centre">
+						<article>Et voilà enfin du nouveau sur le site: le passage en PHP 7.2.10
+
+cela implique pas mal de petits changement un peu partout et certaines fonctionnalités peuvent être down pendant un moment.</article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2019-02-25 22:43:35</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 3 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Déménagement</h1>
+					</div>
+					<div class="news_centre">
+						<article>Et encore un déménagement, cette fois c'est pour Genay.
+La connexion est lente pour le moment mais on y travaille!</article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2015-07-29 15:36:00</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 4 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Problème de mise à jour</h1>
+					</div>
+					<div class="news_centre">
+						<article><p>Suite à un Problème de mise à jour du serveur, le site a été mis hors ligne quelques temps.</p>
+<p>Tout est renté dans l'ordre, veuillez signaler tout lien mort!</p></article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2014-12-22 10:45:15</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 5 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Nouveau système de news</h1>
+					</div>
+					<div class="news_centre">
+						<article><p>Un nouveau système de news est maintenant en place. certains utilisateurs avec pouvoirs pourront poster très prochainement leurs news!</p>
+<p>Une petite refonte graphique avec une amélioration des animations a aussi été effecctuée. Maintenant le site est écrit en html 5, ce qui le rend difficilement compatible avec les navigateur internet explorer ou opéra.</p>
+<p>aucun soucis n'est à prévoir avec des navigateur à base de mozilla à jour (firefox) ou à base de webkit à jour (chrome, safari, I-phone, androïd)</p></article>
+					</div>
+					<div class="news_bas">
+						<h5>argawaen - 2013-08-07 09:45:41</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 6 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Nouveau nom de domaine</h1>
+					</div>
+					<div class="news_centre">
+						<article><p>Cela faisait longtemps que je voulais mon propre nom de domaine c'est maintenant le cas.</p>
+<p>La crypte de Lachouette est désormais disponible via www.argawaen.net.</p></article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2013-08-05 14:45:30</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 7 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Déménagement</h1>
+					</div>
+					<div class="news_centre">
+						<article><p>Le serveur a été déménager encore une fois, mais uniquement physiquement cette fois!!!</p>
+<p>Finie l'aventure dans les collines et retour aux sources à Collonges. Les machines ne semblent pas avoir souffert pendant le transport, mais les incertitude portent désormais sur la qualité de la connexion...</p>
+<p> affaire à suivre vraissemblablement!!!</p></article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2011-12-17 21:57:00</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 8 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Nouvelles fonctions</h1>
+					</div>
+					<div class="news_centre">
+						<article>Et voilà, toutes les fonctions ont été rétablies, y compris la lecture des divx.<br>
+On notera également l'apparition d'une nouvelle fonctionnalité: le dictionnaire de mots croisés. il n'a pour le moment pas encore une base de données très fournie mais celle-ci est vouée à grossir de jours en jours<br>
+Ce dictionnaire est disponible <A href="http://lachouette.dnsdojo.net/dico/">Ici</A></article>
+					</div>
+					<div class="news_bas">
+						<h5>Argawaen - 2011-11-28 14:57:29</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 9 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Nouveau serveur</h1>
+					</div>
+					<div class="news_centre">
+						<article>Après plusieurs mois de dépannage sur une vielle machine pourrie, le serveur est enfin déménagé vers une machine plus performante, notament pour le serveur SQL!!! <br>
+de nouveaux services devraient également être bientôt disponibles...<br>
+Les divx et quelques autres fonctions ne sont pas encore disponibles mais devraient être rétablis d'ici peu<br></article>
+					</div>
+					<div class="news_bas">
+						<h5>argawaen - 2011-11-27 15:26:00</h5>
+					</div>
+				</div><br>
+				<!-- la new numéro 10 de la page! :p -->
+				<div class="cadre_news">
+					<div class="news_haut">
+						<h1>Corrections apportées</h1>
+					</div>
+					<div class="news_centre">
+						<article>petits correctifs du site: les problèmes d'accents sur les lettres ont été résolus.<br>
+<br>
+au passage, la section torrent a été supprimée, ceci pour éviter les problèmes avec Hadopi!!!<br></article>
+					</div>
+					<div class="news_bas">
+						<h5>argawaen - 2011-11-25 10:17:00</h5>
+					</div>
+				</div><br>
+				</div>
+			<!-- fin du bloc central -->
+			</div>
+
+			<footer class="pied">
+				<p class="author">Design : <em class="fn">Argawaen</em></p>
+				<p>powered by :
+				<img src="{% static 'img/powered_small.gif' %}" width=211 height=50 alt="">
+				<br>
+				1 visiteur connecté
+			</footer>
+		</div>
+	</body>
+</html>
