@@ -4,7 +4,7 @@ from news.models import Categorie, SousCategorie, Article
 
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display   = ('categorie','sous_categorie', 'titre', 'auteur', 'date', 'apercu_contenu')
+    list_display   = ('needuser', 'ishidden','categorie','sous_categorie', 'titre', 'auteur', 'date', 'apercu_contenu')
     list_filter    = ('auteur', 'categorie', 'sous_categorie',)
     date_hierarchy = 'date'
     ordering       = ('categorie', 'date', 'sous_categorie',)
@@ -14,13 +14,16 @@ class ArticleAdmin(admin.ModelAdmin):
     fieldsets = (
         # Fieldset 1 : meta-info (titre, auteur…)
        ('Général', {
-            'classes': ['collapse', ],
             'fields': ('titre', 'slug', 'auteur', 'categorie', 'sous_categorie'),
         }),
-        # Fieldset 2 : contenu de l'article
+        # Fieldset 2 : acces
+        ('Acces', {
+           'fields': ('needuser', 'ishidden', )
+        }),
+        # Fieldset 3 : contenu de l'article
         ('Contenu de l\'article', {
-           'description': 'Le formulaire accepte les balises HTML. Utilisez-les à bon escient !',
-           'fields': ('contenu', 'image' )
+           'description': 'Le contenu doit être écrit au format HTML. ',
+           'fields': ('contenu', )
         }),
     )
 

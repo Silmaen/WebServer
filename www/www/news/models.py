@@ -28,7 +28,8 @@ class Article(models.Model):
                                 verbose_name="Date de parution")
     categorie = models.ForeignKey('Categorie', on_delete=models.CASCADE)
     sous_categorie = models.ForeignKey('SousCategorie', on_delete=models.CASCADE)
-    image = models.ImageField(upload_to="ArticleImages/",blank=True)
+    needuser = models.BooleanField(default=False)
+    ishidden = models.BooleanField(default=False)
     
     class Meta:
         verbose_name = "article"

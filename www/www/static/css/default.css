@@ -1,5 +1,24 @@
 @charset "UTF-8";
 /* global default */
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+}
 a,
 a code {
  color:#008cba;
@@ -24,11 +43,9 @@ ul {
  padding:0
 }
 body{
-	display:flex;
-	flex-direction: column;
 	background-color:#E4E6E9;
 	font-family:"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-	font-size:18px;
+	font-size:14px;
 	color:#393939;
 	min-height:100%;
 }
@@ -41,6 +58,10 @@ a:active,
 a:focus,
 a:hover {
  text-decoration:underline
+}
+/* noprint */
+@media print {
+	.noprint { display: none; }
 }
 /* main conteners */
 .PageCenter, .site-header, .site-footer{
@@ -87,21 +108,39 @@ a:hover {
 	flex-wrap:nowrap;
 	align-items: center;
 }
+.site-title h3{
+	font-size:23px;
+}
+@media all and (max-width: 1000px) and (orientation:portrait ){
+	.site-title h3{
+		font-size:0px;
+	}
+	.site-title img{
+		width:30px;
+		height:30px;
+	}
+}
 .site-topright {
 	top:0;
 	right:0;
 	width: auto;
 }
+@media all and (max-width: 1000px) {
+	.site-topright {
+		font-size:10px;
+	}
+}
 .site-user {
 	top:0;
 	right:0;
-	width: auto;
+	padding: 5px;
 	display:flex;
 	flex-wrap:nowrap;
 	align-items: center;
 	justify-content: space-between;
 }
-.site-user a {
+
+.userbtn {
 	text-decoration:none;
 	padding: 4px 8px;
 	color:#FFFFFF;
@@ -112,17 +151,19 @@ a:hover {
 	background-color:#7ab8eb;
 	text-align:center;
 }
-.site-user a:active,
-.site-user a:focus,
-.site-user a:hover {
+.userbtn:active,
+.userbtn:focus,
+.userbtn:hover {
 	text-decoration:none;
 	border-color:#FFFFFF;
 	background-color:#9ac8fb;
 }
+
 /*--- SiteMenu setup ---*/
 .site-nav-menu {
 	display: flex;
 	flex-wrap:nowrap;
+	padding: 5px;
 	flex: 1;
 	align-items:center;
 	flex-direction: row;
@@ -182,6 +223,7 @@ a:hover {
 	flex: 1;
 	align-items:center;
 	flex-direction: row;
+	padding:5px;
 }
 .inner-nav-menu>li:not(:last-child) {
 	margin-right:15px
@@ -292,4 +334,36 @@ a:hover {
 	flex-direction: row;
 	align-items:center;
 	justify-content: space-between;
+}
+/* Resitration */
+.registration {
+	font-size:14px;
+}
+
+.registration h2{
+	font-size:18px;
+	text-align: center;
+	padding: 5px;
+}
+
+.registration form{
+	text-align: center;
+	padding: 5px;
+}
+.registration table{
+	text-align: left;
+	padding: 5px;
+}
+
+.rlabel{
+	
+}
+.rfield{
+	
+}
+.rhelp{
+	font-size=10px;
+}
+.rerror{
+	
 }

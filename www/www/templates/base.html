@@ -19,17 +19,19 @@
 			<div class="upper-header" role="banner">
 				<div class="site-title">
 					<a href="/" title="super site"><img alt="Accueil" src="{% static 'img/test.png' %}" width="90" height="90"></a>
-					<h3>La crypte de Lachouette</h3>
+					<h3 class="noprint">La crypte de Lachouette</h3>
 				<!-- class="site-title" --></div>
 				<div class="site-topright">
 					<div class="site-user">
 						{% if user.is_authenticated %}
-						<p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %} {{ user.username }}</p>
-						<p><a href="{% url 'logout' %}">Sign out</a></p>
+						<div class="site-user">
+						<p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %}</p><p> {{ user.username }}</p>
+						</div>
+						<p>{#<a class="userbtn" href="{% url 'compte' %}">Settings</a>#}
+						<a class="userbtn" href="{% url 'logout' %}">Sign out</a></p>
 						{% else %}
-						<p>Anonymous</p>
-						<p><a href="{% url 'login' %}">Sign in</a>
-						<a href="{% url 'signup' %}">Sign up</a></p>
+						<p><a class="userbtn" href="{% url 'login' %}">Sign in</a>
+						<a class="userbtn" href="{% url 'signup' %}">Sign up</a></p>
 						{% endif %}
 					<!-- class="site-user" --></div>
 					<ul class="site-nav-menu">
@@ -51,6 +53,9 @@
 						<li class="inner-nav-item {{ 'Search'|pageSpecificBtn:page }}"><a href="/resarch">Recherche</a></li>
 						<li class="inner-nav-item {{ 'Project'|pageSpecificBtn:page }}"><a href="/projects">Projets</a></li>
 						<li class="inner-nav-item {{ 'Links'|pageSpecificBtn:page }}"><a href="/links">Liens</a></li>
+						{% if user.is_staff %}
+						<li class="inner-nav-item {{ 'admin'|pageSpecificBtn:page }}"><a href="/admin">Admin</a></li>
+						{% endif %}
 					</ul>
 					{% endblock %}
 				</nav>

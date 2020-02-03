@@ -7,5 +7,4 @@ urlpatterns = [
     path('resarch',views.resarch),
     path('projects',views.projects),
     path('links',views.links),
-    path('signup', views.SignUpView),
 ]

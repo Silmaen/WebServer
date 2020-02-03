@@ -7,7 +7,7 @@ class AccessPermission(models.Model):
     '''
     nom = models.CharField(max_length=30)
     description = models.TextField(null=True)
-	        
+
     def __str__(self):
         return self.nom
 
@@ -29,14 +29,21 @@ class CustomUser(AbstractUser):
     '''
     avatar = models.ImageField(upload_to="UserAvatar/",blank=True)
     AccessPermissions = models.ManyToManyField(AccessPermission)
-														       
+
     @property
     def has_Developper_Access(self):
         for f in self.AccessPermissions.all():
             if "See_developper_pages" in f.nom:
                 return True
         return False
-																					       
+
+    @property
+    def has_Hidden_Access(self):
+        for f in self.AccessPermissions.all():
+            if "Access_hidden_news" in f.nom:
+                return True
+        return False
+
     def __str__(self):
         return self.username
 
