@@ -1,0 +1,15 @@
+{% extends "baseSysAdmin.html" %}
+
+{% block content_title %}System Administration{% endblock %}
+
+{% block SysWhat %}
+
+{% ifequal name "General" %}
+<p>General Informations</p>
+{% endifequal %}
+
+{% ifequal name "Connected" %}
+<p>Connected Machine</p>
+{% endifequal %}
+
+{% endblock %}

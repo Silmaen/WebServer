@@ -28,10 +28,10 @@
 						<p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %}</p><p> {{ user.username }}</p>
 						</div>
 						<p>{#<a class="userbtn" href="{% url 'compte' %}">Settings</a>#}
-						<a class="userbtn" href="{% url 'logout' %}">Sign out</a></p>
+						<a class="userbtn" href="{% url 'logout' %}"><span class="icon"><i class="mdi mdi-logout"></i></span><span>Sign out<span></a></p>
 						{% else %}
-						<p><a class="userbtn" href="{% url 'login' %}">Sign in</a>
-						<a class="userbtn" href="{% url 'signup' %}">Sign up</a></p>
+						<p><a class="userbtn" href="{% url 'login' %}"><span class="icon"><i class="mdi mdi-login"></i></span><span>Sign in</span></a>
+						<a class="userbtn" href="{% url 'signup' %}"><span class="icon"><i class="mdi mdi-account-plus"></i></span><span>Sign up</span></a></p>
 						{% endif %}
 					<!-- class="site-user" --></div>
 					<ul class="site-nav-menu">
@@ -49,12 +49,25 @@
 				<nav class="inner-nav">
 					{%block innernav %}
 					<ul class="inner-nav-menu">
-						<li class="inner-nav-item {{ 'News'|pageSpecificBtn:page }}"><a href="/">News</a></li>
-						<li class="inner-nav-item {{ 'Search'|pageSpecificBtn:page }}"><a href="/resarch">Recherche</a></li>
-						<li class="inner-nav-item {{ 'Project'|pageSpecificBtn:page }}"><a href="/projects">Projets</a></li>
-						<li class="inner-nav-item {{ 'Links'|pageSpecificBtn:page }}"><a href="/links">Liens</a></li>
+						<li class="inner-nav-item {{ 'News'|pageSpecificBtn:page }}">
+							<a href="/"><span class="icon"><i class="mdi mdi-email-newsletter"></i></span><span>News<span></a>
+						</li>
+						<li class="inner-nav-item {{ 'Search'|pageSpecificBtn:page }}">
+							<a href="/resarch"><span class="icon"><i class="mdi mdi-card-search"></i></span><span>Recherche</span></a>
+						</li>
+						<li class="inner-nav-item {{ 'Project'|pageSpecificBtn:page }}">
+							<a href="/projects"><span class="icon"><i class="mdi mdi-worker"></i></span><span>Projets</span></a>
+						</li>
+						<li class="inner-nav-item {{ 'Links'|pageSpecificBtn:page }}">
+							<a href="/links"><span class="icon"><i class="mdi mdi-link"></i></span><span>Liens</span></a>
+						</li>
 						{% if user.is_staff %}
-						<li class="inner-nav-item {{ 'admin'|pageSpecificBtn:page }}"><a href="/admin">Admin</a></li>
+						<li class="inner-nav-item {{ 'Sysadmin'|pageSpecificBtn:page }}">
+							<a href="/sysadmin"><span class="icon"><i class="mdi mdi-cctv"></i></span><span>Server Admin</span></a>
+						</li>
+						<li class="inner-nav-item {{ 'admin'|pageSpecificBtn:page }}">
+							<a href="/admin"><span class="icon"><i class="mdi mdi-account-tie"></i></span><span>Site Admin</span></a>
+						</li>
 						{% endif %}
 					</ul>
 					{% endblock %}
