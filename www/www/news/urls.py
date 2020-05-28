@@ -1,13 +1,12 @@
+"""news.urls"""
 from django.urls import path
-from django.conf.urls import url,include
 from . import views
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('resarch',views.resarch),
-    path('projects',views.projects),
-    path('links',views.links),
-    path('sysadmin',views.sysadmin_base),
-    path('sysadmin/<str:name>',views.sysadmin),
-
+    path('research', views.research),
+    path('projects', views.projects),
+    path('links', views.links),
+    path('sysadmin', views.sysadmin_base),
+    path('sysadmin/<str:name>', views.sysadmin),
 ]

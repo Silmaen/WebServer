@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '5wejc$j&of(g6862f7y1xj-x$9o+sl4ik&h!vq%em9f@4cri3p'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['testsubject.argawaen.net',]
 
@@ -57,7 +57,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            # Cette ligne ajoute le dossier templates/ à la racine du projet
+            # Cette ligne ajoute le dossier templates/ ï¿½ la racine du projet
             os.path.join(BASE_DIR, 'templates'),
         ],
         'APP_DIRS': True,
