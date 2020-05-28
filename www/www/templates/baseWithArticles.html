@@ -6,19 +6,25 @@
 {% for article in derniers_articles %}
 <div class="Article">
 	<div class="ArticleHeader">
-		{% if article.sous_categorie.image.url != "" %}
-		<div class="ArticleIcon">
-			<img src="{{ article.sous_categorie.image.url}}" alt="{{ article.sous_categorie.nom}}" height="25" width="25">
+		<div class="ArticleTitle">
+			{% if article.sous_categorie.mdi_icon_name != "" %}
+				<span class="icon"><i class="mdi mdi-{{ article.sous_categorie.mdi_icon_name }}"></i></span>
+			{% endif %}
+			<span>{{ article.titre}}</span>
 		</div>
-		{% endif %}
-		<div class="ArticleTitle">{{ article.titre}}</div>
 	</div>
 	<div class="ArticleContent">
 		{{ article.contenu|safe }}
 	</div>
 	<div class="ArticleFooter">
-		<div class="ArticleAuthor">{{ article.auteur }}</div>
-		<div class="ArticleDate">{{ article.date }}</div>
+		<div class="ArticleAuthor">
+			<span class="icon"><i class="mdi mdi-account-circle"></i></span>
+			<span>{{ article.auteur }}</span>
+		</div>
+		<div class="ArticleDate">
+			<span class="icon"><i class="mdi mdi-clock-fast"></i></span>
+			<span>{{ article.date }}</span>
+		</div>
 	</div>
 </div>
 {% empty %}

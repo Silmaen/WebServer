@@ -7,4 +7,7 @@ urlpatterns = [
     path('resarch',views.resarch),
     path('projects',views.projects),
     path('links',views.links),
+    path('sysadmin',views.sysadmin_base),
+    path('sysadmin/<str:name>',views.sysadmin),
+
 ]

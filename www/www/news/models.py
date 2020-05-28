@@ -7,6 +7,7 @@ class Categorie(models.Model):
     Categorie des articles
     '''
     nom = models.CharField(max_length=30)
+    mdi_icon_name = models.CharField(max_length=30, blank=True)
     def __str__(self):
         return self.nom
 
@@ -15,7 +16,8 @@ class SousCategorie(models.Model):
     Sous - Categorie des articles
     '''
     nom = models.CharField(max_length=30)
-    image = models.ImageField(upload_to="SousCateIcons/",blank=True)
+    mdi_icon_name = models.CharField(max_length=30, blank=True)
+    #image = models.ImageField(upload_to="SousCateIcons/",blank=True)
     def __str__(self):
         return self.nom
 
@@ -37,3 +39,14 @@ class Article(models.Model):
     
     def __str__(self):
         return self.titre
+
+class SysadminSubpages(models.Model):
+    '''
+    liste des sous-page de sysadmin
+    '''
+    Name = models.CharField(max_length=30)
+    Url =  models.CharField(max_length=30)
+    mdi_icon_name = models.CharField(max_length=30, blank=True)
+    
+    def __str__(self):
+        return self.Name

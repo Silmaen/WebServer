@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="PageTitle">
+	{% block content_title %}PageTitle{% endblock %}
+	<nav class="super-inner-nav">
+		<ul class="super-inner-nav-menu">
+			{% for page in SysadminSubpage %}
+				<li class="super-inner-nav-item{% if name == page.Name %} current-subpage{% endif %}"><a href="/sysadmin/{{page.Url}}">
+					{% if article.sous_categorie.mdi_icon_name != "" %}
+						<span class="icon"><i class="mdi {{ page.mdi_icon_name }}"></i></span>
+					{% endif %}
+					<span>{{ page.Name}}</span>
+				</a></li>
+			{% endfor%}
+		</ul>
+	</nav>
+</div>
+
+{% block SysWhat %}
+<p>Empty</p>
+{% endblock %}
+
+{% endblock %}
