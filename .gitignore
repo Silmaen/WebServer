@@ -8,3 +8,5 @@ ayoaron/*wiki*
 ayoaron/.*
 www2
 *.pyc
+*.idea
+
