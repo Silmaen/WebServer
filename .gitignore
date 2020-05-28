@@ -5,5 +5,6 @@ phpMyAdmin
 webmail
 ayoaron/docprojet*
 ayoaron/*wiki*
+ayoaron/.*
 www2
 *.pyc
