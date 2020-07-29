@@ -1,109 +1,110 @@
 {% load static template_extra %}
-<!DOCTYPE html>
 <html lang="fr">
-	<head>
-		<title>{% block title %}Site internet consacré au jeu TestSubject{% endblock %}</title>
-		<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-		<meta name="robot" content="noindex,follow"/>
-		<meta name="description" content="Informations about TestProject game development"/>
-		<link rel="shortcut icon" href="{% static 'img/favicon.ico' %}" />
-		<link rel="stylesheet" type="text/css" href="{% static 'css/default.css' %}" />
-	</head>
-	<body>
-		<div class="{{ 'background'|pageSpecific:page }}">
-			<div class="container">
-				<div class="navigation">
-					<div class="ts_logo">
-						<a href="/"><img src="{% static 'img/BBLogoSq.png' %}" alt="image de logo" style="height:120px;"></a>
-					</div>
-					<div class="top_nav">
-						{% if page == "Home" %}
-						<a class="nav_home_active" href="/">
-							<span>Home</span> 
-						</a>
-						{% else %}
-						<a class="nav_home" href="/">
-							<span>Home</span>
-						</a>
-						{% endif %}
-						{% if page == "About" %}
-						<a class="nav_about_active" href="/about">
-							<span>About</span>
-						</a>
-						{% else %}
-						<a class="nav_about" href="/about">
-							<span>About</span>
-						</a>
-						{% endif %}
-						{% if page == "Blog" %}
-						<a class="nav_blog_active" href="/blog">
-							<span>Blog</span>
-						</a>
-						{% else %}
-						<a class="nav_blog" href="/blog">
-							<span>Blog</span>
-						</a>
-						{% endif %}
-						{% if page == "Media" %}
-						<a class="nav_media_active" href="/media">
-							<span>Media</span>
-						</a>
-						{% else %}
-						<a class="nav_media" href="/media">
-							<span>Media</span>
-						</a>
-						{% endif %}
-							
-					</div>
-				</div>
-				<!-- end navigation div -->
-				<div class="{{ 'showcase'|pageSpecific:page }}" >
-					{% block showcase %}{% endblock %}
-				</div>
-				<!-- end showcase div -->
-				<div class="main_content_title"></div>
-				<div class="main_content">
-					<div class="shift_content">
-						<div class="content_container" style>
-							<div class="left_col_content">
-								{% block content_title %}{% endblock %}
-								{% block content %}{% endblock %}
-							</div>
-							<div class="sidebar">
-								{% block sidebar %}
-								<div class="sidebar_logo">
-									<img src="/static/img/BBLogoEyBrSl_small.png" alt="BigBrain" width="320">
-								</div>
-								{% endblock %}
-							</div>
-						</div>
-						<div style="clear:both"></div>
-						<div class="footer">
-							<a href="https://www.argawaen.net/" style="width:103px;">
-								<img src="{% static 'img/logo_LG.png' %}" style="height:120px;margin-bottom: -33px;">
-							</a>
-							<a href="https://www.unrealengine.com/">
-								<img src="{% static 'img/ue4_small.png' %}" style="height:80px;">
-							</a>
-							<a href="https://www.blender.org/" target="_blank">
-								<img src="{% static 'img/blenderorg_small.png' %}" style="height:80px;with:103px;">
-							</a>
-							<a href="https://www.gimp.org/" target="_blank">
-								<img src="{% static 'img/gimp_small.png' %}" style="height:80px;">
-							</a>
-							<a href="https://www.inkscape.org/" target="_blank">
-								<img src="{% static 'img/inkscape_small.png' %}" style="height:80px;">
-							</a>
-							<p class="footer_copy">
-								&copy; Lachouette Game, all rights reserved.  Lachouette Game, the Lachouette Game logo, TestSubject, the TestSubject logo are trademarks and/or registered trademarks of Lachouette Games.
-							</p>
-						</div>
-					</div>
-				</div>
-				<!-- end main_content div -->
-			</div>
-			<!-- end container div -->
-		</div>
-		<!-- end background div -->
-	</body>
+<head>
+    <title>{% block title %}Site internet consacré au jeu TestSubject{% endblock %}</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="robot" content="noindex,follow"/>
+    <meta name="description" content="Informations about TestProject game development"/>
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/default.css' %}"/>
+</head>
+<body>
+<div class="{{ 'background'|pageSpecific:page }}">
+    <div class="container">
+        <div class="navigation">
+            <div class="ts_logo">
+                <a href="/"><img src="{% static 'img/BBLogoSq.png' %}" alt="image de logo" style="height:120px;"></a>
+            </div>
+            <div class="top_nav">
+                {% if page == "Home" %}
+                <a class="nav_home_active" href="/">
+                    <span>Home</span>
+                </a>
+                {% else %}
+                <a class="nav_home" href="/">
+                    <span>Home</span>
+                </a>
+                {% endif %}
+                {% if page == "About" %}
+                <a class="nav_about_active" href="/about">
+                    <span>About</span>
+                </a>
+                {% else %}
+                <a class="nav_about" href="/about">
+                    <span>About</span>
+                </a>
+                {% endif %}
+                {% if page == "Blog" %}
+                <a class="nav_blog_active" href="/blog">
+                    <span>Blog</span>
+                </a>
+                {% else %}
+                <a class="nav_blog" href="/blog">
+                    <span>Blog</span>
+                </a>
+                {% endif %}
+                {% if page == "Media" %}
+                <a class="nav_media_active" href="/media">
+                    <span>Media</span>
+                </a>
+                {% else %}
+                <a class="nav_media" href="/media">
+                    <span>Media</span>
+                </a>
+                {% endif %}
+
+            </div>
+        </div>
+        <!-- end navigation div -->
+        <div class="{{ 'showcase'|pageSpecific:page }}">
+            {% block showcase %}{% endblock %}
+        </div>
+        <!-- end showcase div -->
+        <div class="main_content_title"></div>
+        <div class="main_content">
+            <div class="shift_content">
+                <div class="content_container" style>
+                    <div class="left_col_content">
+                        {% block content_title %}{% endblock %}
+                        {% block content %}{% endblock %}
+                    </div>
+                    <div class="sidebar">
+                        {% block sidebar %}
+                        <div class="sidebar_logo">
+                            <img src="/static/img/BBLogoEyBrSl_small.png" alt="BigBrain" width="320">
+                        </div>
+                        {% endblock %}
+                    </div>
+                </div>
+                <div style="clear:both"></div>
+                <div class="footer">
+                    <a href="https://www.argawaen.net/" style="width:103px;">
+                        <img src="{% static 'img/logo_LG.png' %}" style="height:120px;margin-bottom: -33px;">
+                    </a>
+                    <a href="https://www.unrealengine.com/">
+                        <img src="{% static 'img/ue4_small.png' %}" style="height:80px;">
+                    </a>
+                    <a href="https://www.blender.org/" target="_blank">
+                        <img src="{% static 'img/blenderorg_small.png' %}" style="height:80px;with:103px;">
+                    </a>
+                    <a href="https://www.gimp.org/" target="_blank">
+                        <img src="{% static 'img/gimp_small.png' %}" style="height:80px;">
+                    </a>
+                    <a href="https://www.inkscape.org/" target="_blank">
+                        <img src="{% static 'img/inkscape_small.png' %}" style="height:80px;">
+                    </a>
+                    <p class="footer_copy">
+                        &copy; Lachouette Game, all rights reserved. Lachouette Game, the Lachouette Game logo,
+                        TestSubject, the TestSubject logo are trademarks and/or registered trademarks of Lachouette
+                        Games.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <!-- end main_content div -->
+    </div>
+    <!-- end container div -->
+</div>
+<!-- end background div -->
+</body>
 </html>

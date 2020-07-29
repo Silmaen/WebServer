@@ -1,31 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="PageTitle">
-	{% block content_title %}PageTitle{% endblock %}
+    {% block content_title %}PageTitle{% endblock %}
 </div>
 {% for article in derniers_articles %}
 <div class="Article">
-	<div class="ArticleHeader">
-		<div class="ArticleTitle">
-			{% if article.sous_categorie.mdi_icon_name != "" %}
-				<span class="icon"><i class="mdi mdi-{{ article.sous_categorie.mdi_icon_name }}"></i></span>
-			{% endif %}
-			<span>{{ article.titre}}</span>
-		</div>
-	</div>
-	<div class="ArticleContent">
-		{{ article.contenu|safe }}
-	</div>
-	<div class="ArticleFooter">
-		<div class="ArticleAuthor">
-			<span class="icon"><i class="mdi mdi-account-circle"></i></span>
-			<span>{{ article.auteur }}</span>
-		</div>
-		<div class="ArticleDate">
-			<span class="icon"><i class="mdi mdi-clock-fast"></i></span>
-			<span>{{ article.date }}</span>
-		</div>
-	</div>
+    <div class="ArticleHeader">
+        <div class="ArticleTitle">
+            {% if article.sous_categorie.mdi_icon_name != "" %}
+            <span class="icon"><i class="mdi mdi-{{ article.sous_categorie.mdi_icon_name }}"></i></span>
+            {% endif %}
+            <span>{{ article.titre}}</span>
+        </div>
+    </div>
+    <div class="ArticleContent">
+        {{ article.contenu|safe }}
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleAuthor">
+            <span class="icon"><i class="mdi mdi-account-circle"></i></span>
+            <span>{{ article.auteur }}</span>
+        </div>
+        <div class="ArticleDate">
+            <span class="icon"><i class="mdi mdi-clock-fast"></i></span>
+            <span>{{ article.date }}</span>
+        </div>
+    </div>
 </div>
 {% empty %}
 <p>Empty</p>
