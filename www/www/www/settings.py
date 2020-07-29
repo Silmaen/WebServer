@@ -16,7 +16,6 @@ import platform
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -27,7 +26,6 @@ SECRET_KEY = '17qjs#_bf0fykt+0c1+z4$+$u+)gtl_1ww3(ju)g)4+go$f7!i'
 DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'www.argawaen.net']
-
 
 # Application definition
 
@@ -57,8 +55,8 @@ ROOT_URLCONF = 'www.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [ 
-            #Cette ligne ajoute le dossier templates/ à la racine du projet
+        'DIRS': [
+            # Cette ligne ajoute le dossier templates/ à la racine du projet
             os.path.join(BASE_DIR, 'templates'),
         ],
         'APP_DIRS': True,
@@ -75,14 +73,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'www.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
 if platform.system() == "Windows":
     # local for testing
     DATABASES = {
-        'default':{
+        'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'BaseSite.db',
         }
@@ -95,9 +92,9 @@ else:
             'NAME': 'BaseSite',
             'USER': 'BASE_site',
             'PASSWORD': '1234',
-            'HOST':'127.0.0.1',
+            'HOST': '127.0.0.1',
             'PORT': '3306',
-            'OPTIONS':{'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
+            'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
         }
     }
 
@@ -133,7 +130,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/

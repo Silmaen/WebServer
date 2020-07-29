@@ -1,6 +1,7 @@
 """news.admin"""
 from django.contrib import admin
 from django.utils.text import Truncator
+
 from .models import Categorie, SousCategorie, Article, SysadminSubpages
 
 
@@ -8,7 +9,8 @@ class ArticleAdmin(admin.ModelAdmin):
     """
     Admin page for articles
     """
-    list_display = ('needuser', 'ishidden', 'categorie', 'sous_categorie', 'titre', 'auteur', 'date', 'content_overview')
+    list_display = (
+        'needuser', 'ishidden', 'categorie', 'sous_categorie', 'titre', 'auteur', 'date', 'content_overview')
     list_filter = ('auteur', 'categorie', 'sous_categorie',)
     date_hierarchy = 'date'
     ordering = ('categorie', 'date', 'sous_categorie',)
