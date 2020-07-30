@@ -1,7 +1,17 @@
 from meteo.models import MeteoValue
 import datetime
 import pytz
-timezone = pytz.timezone("Europe/Paris")
+tz = pytz.timezone("Europe/Paris")
+
+
+def check():
+	data = MeteoValue.objects.all()
+	i = 0
+	for sset in data:
+		i += 1
+		print(str(type(sset.date)) + " " + str(sset.date) + " " + str(sset.date.astimezone(tz)))
+		if i > 10:
+			break
 
 
 def pop():
@@ -20,7 +30,7 @@ def pop():
 		items = line.split()
 		datentime = items[0] + " " + items[1]
 		dt = datetime.datetime.strptime(datentime, "%Y-%m-%d %H:%M:%S")
-		dtt = timezone.localize(dt)
+		dtt = dt.astimezone(tz)
 		m = MeteoValue(date=dtt, server_room_temperature=float(items[2]), server_room_humidity=float(items[3]))
 		m.save()
 		#if i >= 100:

@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="{% static 'css/default.css' %}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+    <script src="{% static 'js/chartutils.js' %}"></script>
 </head>
 <body>
 <header class="site-header"> <!-- conteneur global de l'entête -->
@@ -63,13 +64,15 @@
         <div id="container" style="width: 100%;">
           <canvas id="line-chart" style="display: block;width: 100%;height: 708px;"></canvas>
         </div>
+        <div class="graphpilot">
+            <select id="back">
+                <option value="one_day">1 day</option>
+                <option value="three_day">3 days</option>
+                <option value="all">all</option>
+            </select>
+            <button id="update">update</button>
+        </div>
         <script>
-    function mycolor(index) {
-        if (index == 1)
-            return '#FF7755';
-        return '#4466FF';
-    }
-
     var config = {
       type: 'line',
       data: {
@@ -89,8 +92,8 @@
           fill: false,
           pointRadius: 0,
           lineTension: 0,
-          backgroundColor: mycolor(0),
-          borderColor: mycolor(0),
+          backgroundColor: mycolor(2),
+          borderColor: mycolor(2),
           yAxisID: 'y-axis-2',
         }],
       },
@@ -126,7 +129,7 @@
                 },
             }],
             yAxes: [{
-                type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                type: 'linear',
                 display: true,
                 position: 'left',
                 id: 'y-axis-1',
@@ -138,13 +141,15 @@
 
                 }
             }, {
-                type: 'linear', // only linear but allow scale type registration. This allows extensions to exist solely for log scale for instance
+                type: 'linear',
                 display: true,
                 position: 'right',
                 id: 'y-axis-2',
+
                 scaleLabel: {
                     display: true,
-                    labelString: 'Humidity'
+                    labelString: 'Humidity',
+                    fontColor: mycolor(2),
                 },
                 // grid line settings
                 gridLines: {
@@ -159,6 +164,13 @@
       var ctx = document.getElementById('line-chart').getContext('2d');
       window.myLine = new Chart(ctx, config);
     };
+    document.getElementById('update').addEventListener('click', function() {
+        var type = document.getElementById('type').value;
+        var dataset = chart.config.data.datasets[0];
+        dataset.type = type;
+        dataset.data = generateData();
+        chart.update();
+    });
         </script>
         {% endblock %}
     </div><!-- class="PageContent" -->
