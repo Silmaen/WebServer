@@ -4,7 +4,6 @@ from .models import MeteoValue
 import pytz, datetime
 tz = pytz.timezone("Europe/Paris")
 
-
 def get_data(last):
     """
     get the database data on the last period
@@ -70,7 +69,7 @@ def index(request):
     i = 0
     for sset in data:
         i += 1
-        dates.append(str(sset.date.astimezone(tz)))
+        dates.append(str(sset.date))
         temperatures.append(sset.server_room_temperature)
         humidity.append(sset.server_room_humidity)
     return render(request, "baseMeteo.html",
