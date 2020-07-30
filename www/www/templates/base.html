@@ -24,8 +24,7 @@
             <div class="site-user">
                 {% if user.is_authenticated %}
                 <div class="site-user">
-                    <p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {%
-                        endif %}</p>
+                    <p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %}</p>
                     <p> {{ user.username }}</p>
                 </div>
                 <p>{#<a class="userbtn" href="{% url 'compte' %}">Settings</a>#}
