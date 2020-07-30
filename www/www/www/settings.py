@@ -23,7 +23,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '17qjs#_bf0fykt+0c1+z4$+$u+)gtl_1ww3(ju)g)4+go$f7!i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+if platform.system() == "Windows":
+    DEBUG = True
+else:
+    DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'www.argawaen.net']
 
@@ -38,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'news.apps.NewsConfig',
     'users.apps.UsersConfig',
+    'meteo.apps.MeteoConfig',
 ]
 
 MIDDLEWARE = [
