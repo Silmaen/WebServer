@@ -65,12 +65,21 @@
           <canvas id="line-chart" style="display: block;width: 100%;height: 708px;"></canvas>
         </div>
         <div class="graphpilot">
-            <select id="back">
-                <option value="one_day">1 day</option>
-                <option value="three_day">3 days</option>
-                <option value="all">all</option>
-            </select>
-            <button id="update">update</button>
+            <form action="{% url 'index' %}" method="post">
+                {% csrf_token %}
+                <label for="i_last">Period</label>
+                <select id="i_last" name="i_last">
+                    <option value = "day" {% if last == "day" %}selected{% endif %}>Current day</option>
+                    <option value = "3days" {% if last == "3days" %}selected{% endif %}>Three last days</option>
+                    <option value = "week" {% if last == "week" %}selected{% endif %}>Current week</option>
+                    <option value = "month" {% if last == "month" %}selected{% endif %}>Current Month</option>
+                    <option value = "year" {% if last == "year" %}selected{% endif %}>Current Year</option>
+                    <option value = "all" {% if last == "all" %}selected{% endif %}>All Data</option>
+                </select>
+                <label for="i_smoothing">Smoothing</label>
+                <input type="range" id="i_smoothing" value="{{ smoothing }}" name="i_smoothing" min="0" max="30" step="1">
+                <input type="submit" value="Update Graph">
+            </form>
         </div>
         <script>
     var config = {
