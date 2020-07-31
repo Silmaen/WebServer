@@ -1,5 +1,5 @@
 @charset "UTF-8";
-@import url(https://cdn.materialdesignicons.com/4.5.95/css/materialdesignicons.min.css);
+@import url(https://cdn.materialdesignicons.com/5.3.45/css/materialdesignicons.min.css);
 /* global default */
 html, body, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
@@ -10,8 +10,8 @@ b, u, i, center,
 dl, dt, dd, ol, ul, li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed, 
-figure, figcaption, footer, header, hgroup, 
+article, aside, canvas, details, embed,
+figure, figcaption, footer, header, hgroup,
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
 	margin: 0;
@@ -425,14 +425,147 @@ a:hover {
 }
 
 .rlabel{
-	
+
 }
 .rfield{
-	
+
 }
 .rhelp{
 	font-size=10px;
 }
 .rerror{
-	
+
+}
+
+/* Chart.js */
+@keyframes chartjs-render-animation{
+	from{opacity:.99}to{opacity:1}
+}
+.chartjs-render-monitor{
+	animation:chartjs-render-animation 1ms
+}
+.chartjs-size-monitor,.chartjs-size-monitor-expand,.chartjs-size-monitor-shrink{
+	position:absolute;
+	direction:ltr;
+	left:0;
+	top:0;
+	right:0;
+	bottom:0;
+	overflow:hidden;pointer-events:none;visibility:hidden;z-index:-1
+}
+.chartjs-size-monitor-expand>div{
+	position:absolute;
+	width:1000000px;
+	height:1000000px;
+	left:0;
+	top:0
+}
+.chartjs-size-monitor-shrink>div{
+	position:absolute;
+	width:200%;
+	height:200%;
+	left:0;
+	top:0
+}
+
+/* chart container */
+.graph_container{
+	width: 100%;
+}
+#line-chart {
+	display: block;
+	width: 100%;
+}
+
+/* pilote de graph */
+.graphpilot {
+	margin: 1em;
+	border:0;
+	border-radius: 5em;
+	background-color: #505050;
+	color: #E4E6E9;
+	padding: 1em;
+	display: flex;
+	width: 100%;
+}
+.graphpilot span {
+    margin: 0.1em;
+}
+
+.graphpilot select:hover {
+  opacity: 1;
+}
+.graphpilot select {
+	width: 25%;
+	padding: 0.1em;
+  border: none;
+  border-radius: .2em;
+  background-color:#C4C6C9;
+  text-align:center;
+  opacity: .8;
+}
+.graphpilot input[type=range]:hover {
+	opacity: 1;
+}
+.graphpilot input[type=range] {
+	-webkit-appearance: none;     /*nécessaire pour Chrome */
+  padding: 0;                   /* nécessaire pour IE */
+  font: inherit;                /* même rendu suivant font document */
+  outline: none;
+  color: #069;                  /* sert pour couleur de référence, via currentColor, pour le curseur */
+  opacity: .8;
+  background: #CCC;             /* sert pour couleur de fond de la zone de déplacement */
+  box-sizing: border-box;       /* même modèle de boîte pour tous */
+  transition: opacity .2s;
+  cursor: pointer;
+  width: 15em;
+	height: 1em;
+	margin: 0;
+}
+.chart_option {
+    width: inherit;
+}
+
+.intbl {
+    margin: 0.5em;
+}
+
+.chart_sub{
+    width: auto;
+}
+
+.graphsub{
+  width: max-content;
+  top: 25%;
+  position: relative;
+}
+
+/* summary */
+
+.sumarycontainer{
+  content: "";
+  display: table;
+  clear: both;
+  width: 100%;
+}
+.sumary{
+	float: left;
+	margin: 0.5em;
+	border:1px #404040 solid;
+	border-radius: 1em;
+	width: 48%;
+	height: 220px;
+	background: #CCC;
+	padding: 2em;
+}
+.sumarycontainer h2 {
+	font-size: 2em;
+	text-align:center;
+}
+
+.tred{
+    color: red;
+}
+.tgreen{
+    color: green;
 }
