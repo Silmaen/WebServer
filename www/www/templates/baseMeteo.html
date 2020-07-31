@@ -61,25 +61,55 @@
 <div class="PageCenter"> <!-- conteneur global du contenu du site -->
     <div class="PageContent">
         {% block content %}
-        <div id="container" style="width: 100%;">
-          <canvas id="line-chart" style="display: block;width: 100%;height: 708px;"></canvas>
+        <div class="graph_container">
+          <canvas id="line-chart"></canvas>
         </div>
-        <div class="graphpilot">
-            <form action="{% url 'index' %}" method="post">
-                {% csrf_token %}
-                <label for="i_last">Period</label>
-                <select id="i_last" name="i_last">
-                    <option value = "day" {% if last == "day" %}selected{% endif %}>Current day</option>
-                    <option value = "3days" {% if last == "3days" %}selected{% endif %}>Three last days</option>
-                    <option value = "week" {% if last == "week" %}selected{% endif %}>Current week</option>
-                    <option value = "month" {% if last == "month" %}selected{% endif %}>Current Month</option>
-                    <option value = "year" {% if last == "year" %}selected{% endif %}>Current Year</option>
-                    <option value = "All" {% if last == "All" %}selected{% endif %}>All Data</option>
-                </select>
-                <label for="i_smoothing">Smoothing</label>
-                <input type="range" id="i_smoothing" value="{{ smoothing }}" name="i_smoothing" min="0" max="30" step="1">
-                <input type="submit" value="Update Graph">
-            </form>
+        <form action="{% url 'index' %}" method="post" class="graphpilot">
+            {% csrf_token %}
+            <div class="chart_option">
+                <div class="intbl"><span class="mdi mdi-periodic-table">
+                    <label for="i_last">Period: </label>
+                    <select id="i_last" name="i_last">
+                        <option value="day" {% if last == "day" %}selected{% endif %}>Current day</option>
+                        <option value="3days" {% if last == "3days" %}selected{% endif %}>Three last days</option>
+                        <option value="week" {% if last == "week" %}selected{% endif %}>Current week</option>
+                        <option value="month" {% if last == "month" %}selected{% endif %}>Current Month</option>
+                        <option value="year" {% if last == "year" %}selected{% endif %}>Current Year</option>
+                        <option value="All" {% if last == "All" %}selected{% endif %}>All Data</option>
+                    </select>
+                </span></div>
+                <div class="intbl"><span class="mdi mdi-chart-multiline">
+                    <label for="i_smoothing">Smoothing: </label>
+                    <input type="range" id="i_smoothing" value="{{ smoothing }}" name="i_smoothing" min="0" max="30" step="1">
+                </span></div>
+            </div>
+            <div class="chart_sub">
+                <button type="submit" class="userbtn graphsub">
+                    <span class="mdi mdi-database-refresh"> Update Graph</span>
+                </button>
+            </div>
+        </form>
+        <div class="sumarycontainer">
+            <div class="sumary actualtemperature">
+                <h2>Actual Temperature</h2>
+                <span class="mdi {{ current.temp_tendance }}" style="font-size:600%;"></span>
+                <span class="sumtext">{{ current.temperature }}°C</span>
+            </div>
+            <div class="sumary actualhumidity">
+                <h2>Actual Humidity</h2>
+                <span class="mdi {{ current.hum_tendance }}" style="font-size:600%;"></span>
+                <span class="sumtext">{{ current.humidity }}%</span>
+            </div>
+        </div>
+        <div class="sumarycontainer">
+            <div class="sumary rangetemperature">
+                <h2>Temperature Summary</h2>
+                <span class="mdi mdi-arrow-left-right-bold-outline" style="font-size:600%;"></span>
+            </div>
+            <div class="sumary rangehumidity">
+                <h2>Humidity Summary</h2>
+                <span class="mdi mdi-arrow-bottom-right-bold-outline" style="font-size:600%;"></span>
+            </div>
         </div>
         <script>
     var config = {
