@@ -44,15 +44,44 @@ def smooth_data(data, smooth_width):
 
 
 class displaydata:
-    def __init__(self, t=0, tt="", h=0, ht=""):
-        self.temperature = str(t)
-        self.temp_tendance = tt
-        self.humidity = str(h)
-        self.hum_tendance = ht
+    def __init__(self):
+        self.temperature = "0"
+        self.temp_tendance = ""
+        self.temp_max = "0"
+        self.temp_min = "0"
+        self.temp_max_date = "0"
+        self.temp_min_date = "0"
+        self.temp_mean = "0"
+        self.humidity = "0"
+        self.hum_tendance = ""
+        self.hum_max = "0"
+        self.hum_min = "0"
+        self.hum_max_date = "0"
+        self.hum_min_date = "0"
+        self.hum_mean = "0"
 
-    def compute_from_data(self, dta, dha):
-        ma = max(dta)
-        mi = min(dta)
+    def compute_from_data(self, dta, dha, date):
+        self.temp_max = -2000
+        self.temp_min = 2000
+        self.temp_mean = 0
+        for i, t in enumerate(dta):
+            self.temp_mean += t
+            if t > self.temp_max:
+                self.temp_max = t
+                self.temp_max_date = date[i]
+            if t < self.temp_min:
+                self.temp_min = t
+                self.temp_min_date = date[i]
+        if len(dta) > 0:
+            self.temp_mean = "{:.2f}".format(self.temp_mean / float(len(dta)))
+        self.temp_max = "{:.2f}".format(self.temp_max)
+        self.temp_min = "{:.2f}".format(self.temp_min)
+        if len(dta) > 20:
+            ma = max(dta[-20:])
+            mi = min(dta[-20:])
+        else:
+            ma = max(dta)
+            mi = min(dta)
         if abs(mi - dta[0]) < 0.2 and abs(ma - dta[-1]) < 0.2:
             self.temp_tendance = "mdi-arrow-up-bold-outline tred"
         elif abs(ma - dta[0]) < 0.2 and abs(mi - dta[-1]) < 0.2:
@@ -60,12 +89,32 @@ class displaydata:
         elif dta[0] > dta[-1]:
             self.temp_tendance = "mdi-arrow-top-right-bold-outline torange"
         elif dta[-1] > dta[0]:
-            self.temp_tendance = "mdi-arrow-bottom-right-outline tlightblue"
+            self.temp_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
         else:
-            self.temp_tendance = "mdi-arrow-left-right-outline tgreen"
+            self.temp_tendance = "mdi-arrow-left-right-bold-outline tgreen"
         self.temperature = "{:.2f}".format(dta[-1])
-        ma = max(dha)
-        mi = min(dha)
+
+        self.hum_max = -2000
+        self.hum_min = 2000
+        self.hum_mean = 0
+        for i, t in enumerate(dha):
+            self.hum_mean += t
+            if t > self.hum_max:
+                self.hum_max = t
+                self.hum_max_date = date[i]
+            if t < self.hum_min:
+                self.hum_min = t
+                self.hum_min_date = date[i]
+        if len(dha) > 0:
+            self.hum_mean = "{:.2f}".format(self.hum_mean / float(len(dha)))
+        self.hum_max = "{:.2f}".format(self.hum_max)
+        self.hum_min = "{:.2f}".format(self.hum_min)
+        if len(dha) > 20:
+            ma = max(dha[-20:])
+            mi = min(dha[-20:])
+        else:
+            ma = max(dha)
+            mi = min(dha)
         if abs(mi - dha[0]) < 0.2 and abs(ma - dha[-1]) < 0.2:
             self.hum_tendance = "mdi-arrow-up-bold-outline tred"
         elif abs(ma - dha[0]) < 0.2 and abs(mi - dha[-1]) < 0.2:
@@ -73,9 +122,9 @@ class displaydata:
         elif dta[0] > dha[-1]:
             self.hum_tendance = "mdi-arrow-top-right-bold-outline torange"
         elif dta[-1] > dha[0]:
-            self.hum_tendance = "mdi-arrow-bottom-right-outline tlightblue"
+            self.hum_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
         else:
-            self.hum_tendance = "mdi-arrow-left-right-outline tgreen"
+            self.hum_tendance = "mdi-arrow-left-right-bold-outline tgreen"
         self.humidity = "{:.2f}".format(dha[-1])
 
 
@@ -106,14 +155,11 @@ def index(request):
     i = 0
     for sset in data:
         i += 1
-        dates.append(str(sset.date))
+        dates.append(sset.date.strftime("%Y-%m-%d %H:%M:%S"))
         temperatures.append(sset.server_room_temperature)
         humidity.append(sset.server_room_humidity)
     d = displaydata()
-    if len(temperatures)> 20:
-        d.compute_from_data(temperatures[-20:], humidity[-20:])
-    else:
-        d.compute_from_data(temperatures, humidity)
+    d.compute_from_data(temperatures, humidity, dates)
     return render(request, "baseMeteo.html",
                   {'dates'       : dates,
                    'temperatures': temperatures,

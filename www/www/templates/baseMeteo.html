@@ -91,24 +91,28 @@
         </form>
         <div class="sumarycontainer">
             <div class="sumary actualtemperature">
-                <h2>Actual Temperature</h2>
+                <h2 class="mdi mdi-temperature-celsius"> Actual Temperature</h2>
                 <span class="mdi {{ current.temp_tendance }}" style="font-size:600%;"></span>
                 <span class="sumtext">{{ current.temperature }}°C</span>
             </div>
             <div class="sumary actualhumidity">
-                <h2>Actual Humidity</h2>
+                <h2 class="mdi mdi-water-percent"> Actual Humidity</h2>
                 <span class="mdi {{ current.hum_tendance }}" style="font-size:600%;"></span>
                 <span class="sumtext">{{ current.humidity }}%</span>
             </div>
         </div>
         <div class="sumarycontainer">
             <div class="sumary rangetemperature">
-                <h2>Temperature Summary</h2>
-                <span class="mdi mdi-arrow-left-right-bold-outline" style="font-size:600%;"></span>
+                <h2 class="mdi mdi-temperature-celsius"> Temperature Summary</h2>
+                <div class="repporttext">Min: {{ current.temp_min }}°C @ {{ current.temp_min_date }}</div>
+                <div class="repporttext">Max: {{ current.temp_max }}°C @ {{ current.temp_max_date }}</div>
+                <div class="repporttext">Mean: {{ current.temp_mean }}°C</div>
             </div>
             <div class="sumary rangehumidity">
-                <h2>Humidity Summary</h2>
-                <span class="mdi mdi-arrow-bottom-right-bold-outline" style="font-size:600%;"></span>
+                <h2 class="mdi mdi-water-percent"> Humidity Summary</h2>
+                <div class="repporttext">Min: {{ current.hum_min }}% @ {{ current.hum_min_date }}</div>
+                <div class="repporttext">Max: {{ current.hum_max }}% @ {{ current.hum_max_date }}</div>
+                <div class="repporttext">Mean: {{ current.hum_mean }}%</div>
             </div>
         </div>
         <script>
@@ -203,13 +207,6 @@
       var ctx = document.getElementById('line-chart').getContext('2d');
       window.myLine = new Chart(ctx, config);
     };
-    document.getElementById('update').addEventListener('click', function() {
-        var type = document.getElementById('type').value;
-        var dataset = chart.config.data.datasets[0];
-        dataset.type = type;
-        dataset.data = generateData();
-        chart.update();
-    });
         </script>
         {% endblock %}
     </div><!-- class="PageContent" -->

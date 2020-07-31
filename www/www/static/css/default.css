@@ -559,8 +559,18 @@ a:hover {
 	padding: 2em;
 }
 .sumarycontainer h2 {
-	font-size: 2em;
+	font-size: 2.5em;
 	text-align:center;
+	margin-bottom: .5em;
+}
+
+.sumtext{
+    font-size: 4em;
+}
+
+.repporttext{
+    font-size: 1.5em;
+    margin-top: 0.5em;
 }
 
 .tred{
@@ -568,4 +578,13 @@ a:hover {
 }
 .tgreen{
     color: green;
+}
+.tblue{
+    color: blue;
+}
+.torange{
+    color: orange;
+}
+.tlightblue{
+    color: lightblue;
 }
