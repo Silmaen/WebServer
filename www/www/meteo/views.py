@@ -76,20 +76,25 @@ class displaydata:
             self.temp_mean = "{:.2f}".format(self.temp_mean / float(len(dta)))
         self.temp_max = "{:.2f}".format(self.temp_max)
         self.temp_min = "{:.2f}".format(self.temp_min)
+
         if len(dta) > 20:
-            ma = max(dta[-20:])
-            mi = min(dta[-20:])
+            p1 = dta[-20]
+            p2 = dta[-10]
+            p3 = dta[-1]
         else:
-            ma = max(dta)
-            mi = min(dta)
-        if abs(mi - dta[0]) < 0.2 and abs(ma - dta[-1]) < 0.2:
-            self.temp_tendance = "mdi-arrow-up-bold-outline tred"
-        elif abs(ma - dta[0]) < 0.2 and abs(mi - dta[-1]) < 0.2:
-            self.temp_tendance = "mdi-arrow-down-bold-outline tblue"
-        elif dta[0] > dta[-1]:
+            p1 = dta[0]
+            p2 = dta[len(dta)/2]
+            p3 = dta[-1]
+        if abs(p3 - p2) < 0.1:
+            self.temp_tendance = "mdi-arrow-left-right-bold-outline tgreen"
+        elif (abs(p2 - p1) < 0.1 and p3 > p2) or (abs(p3 - p2) < 0.1 and p2 > p1):
             self.temp_tendance = "mdi-arrow-top-right-bold-outline torange"
-        elif dta[-1] > dta[0]:
+        elif (abs(p2 - p1) < 0.1 and p3 < p2) or (abs(p3 - p2) < 0.1 and p2 < p1):
             self.temp_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
+        elif p1 > p2 > p3:
+            self.temp_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
+        elif p1 < p2 < p3:
+            self.temp_tendance = "mdi-arrow-up-bold-outline tred"
         else:
             self.temp_tendance = "mdi-arrow-left-right-bold-outline tgreen"
         self.temperature = "{:.2f}".format(dta[-1])
@@ -110,19 +115,23 @@ class displaydata:
         self.hum_max = "{:.2f}".format(self.hum_max)
         self.hum_min = "{:.2f}".format(self.hum_min)
         if len(dha) > 20:
-            ma = max(dha[-20:])
-            mi = min(dha[-20:])
+            p1 = dha[-20]
+            p2 = dha[-10]
+            p3 = dha[-1]
         else:
-            ma = max(dha)
-            mi = min(dha)
-        if abs(mi - dha[0]) < 0.2 and abs(ma - dha[-1]) < 0.2:
-            self.hum_tendance = "mdi-arrow-up-bold-outline tred"
-        elif abs(ma - dha[0]) < 0.2 and abs(mi - dha[-1]) < 0.2:
-            self.hum_tendance = "mdi-arrow-down-bold-outline tblue"
-        elif dta[0] > dha[-1]:
+            p1 = dha[0]
+            p2 = dha[len(dha)/2]
+            p3 = dha[-1]
+        if abs(p3 - p2) < 0.1:
+            self.hum_tendance = "mdi-arrow-left-right-bold-outline tgreen"
+        elif (abs(p2 - p1) < 0.1 and p3 > p2) or (abs(p3 - p2) < 0.1 and p2 > p1):
             self.hum_tendance = "mdi-arrow-top-right-bold-outline torange"
-        elif dta[-1] > dha[0]:
+        elif (abs(p2 - p1) < 0.1 and p3 < p2) or (abs(p3 - p2) < 0.1 and p2 < p1):
             self.hum_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
+        elif p1 > p2 > p3:
+            self.hum_tendance = "mdi-arrow-bottom-right-bold-outline tlightblue"
+        elif p1 < p2 < p3:
+            self.hum_tendance = "mdi-arrow-up-bold-outline tred"
         else:
             self.hum_tendance = "mdi-arrow-left-right-bold-outline tgreen"
         self.humidity = "{:.2f}".format(dha[-1])
