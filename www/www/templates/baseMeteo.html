@@ -92,12 +92,12 @@
         <div class="sumarycontainer">
             <div class="sumary actualtemperature">
                 <h2 class="mdi mdi-temperature-celsius"> Actual Temperature</h2>
-                <span class="mdi {{ current.temp_tendance }}" style="font-size:600%;"></span>
+                <span class="tend mdi {{ current.temp_tendance }}"></span>
                 <span class="sumtext">{{ current.temperature }}°C</span>
             </div>
             <div class="sumary actualhumidity">
                 <h2 class="mdi mdi-water-percent"> Actual Humidity</h2>
-                <span class="mdi {{ current.hum_tendance }}" style="font-size:600%;"></span>
+                <span class="tend mdi {{ current.hum_tendance }}"></span>
                 <span class="sumtext">{{ current.humidity }}%</span>
             </div>
         </div>
