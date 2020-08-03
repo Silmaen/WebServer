@@ -1,4 +1,5 @@
-<!doctype html>
+<html lang="fr">
+<head>
 <title>Site Maintenance</title>
 <style>
   body { text-align: center; padding: 150px; }
@@ -8,7 +9,8 @@
   a { color: #dc8100; text-decoration: none; }
   a:hover { color: #333; text-decoration: none; }
 </style>
-
+</head>
+<body>
 <article>
     <h1>We&rsquo;ll be back soon!</h1>
     <div>
@@ -16,3 +18,5 @@
         <p>&mdash; The Team</p>
     </div>
 </article>
+</body>
+</html>
