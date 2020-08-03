@@ -20,6 +20,7 @@ def pop():
 	lines = f.readlines()
 	f.close()
 	i = 0
+	start = 0
 	for line in lines:
 		i += 1
 		line = line.strip()
@@ -27,11 +28,14 @@ def pop():
 			continue
 		if line.startswith("date"):
 			continue
+		if line.startswith("id"):
+			start = 1
+			continue
 		items = line.split()
-		datentime = items[0] + " " + items[1]
+		datentime = items[start] + " " + items[start + 1]
 		dt = datetime.datetime.strptime(datentime, "%Y-%m-%d %H:%M:%S")
 		dtt = dt.astimezone(tz)
-		m = MeteoValue(date=dtt, server_room_temperature=float(items[2]), server_room_humidity=float(items[3]))
+		m = MeteoValue(date=dtt, server_room_temperature=float(items[start + 2]), server_room_humidity=float(items[start + 3]))
 		m.save()
 		#if i >= 100:
 		#	break

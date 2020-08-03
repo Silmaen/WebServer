@@ -70,12 +70,9 @@
                 <div class="intbl"><span class="mdi mdi-periodic-table">
                     <label for="i_last">Period: </label>
                     <select id="i_last" name="i_last">
-                        <option value="day" {% if last == "day" %}selected{% endif %}>Current day</option>
-                        <option value="3days" {% if last == "3days" %}selected{% endif %}>Three last days</option>
-                        <option value="week" {% if last == "week" %}selected{% endif %}>Current week</option>
-                        <option value="month" {% if last == "month" %}selected{% endif %}>Current Month</option>
-                        <option value="year" {% if last == "year" %}selected{% endif %}>Current Year</option>
-                        <option value="All" {% if last == "All" %}selected{% endif %}>All Data</option>
+                        {% for tl in time_limit %}
+                        <option value={{ tl.name }} {% if last == tl.name %}selected{% endif %}>{{ tl.text }}</option>
+                        {% endfor %}
                     </select>
                 </span></div>
                 <div class="intbl"><span class="mdi mdi-chart-multiline">
@@ -157,7 +154,7 @@
         scales: {
             xAxes: [{
                 type: 'time',
-                distribution: 'series',
+                distribution: 'linear',
                 offset: true,
                 ticks: {
                     major: {
@@ -169,6 +166,16 @@
                     autoSkipPadding: 75,
                     maxRotation: 0,
                     sampleSize: 100
+                },
+                time: {
+                    displayFormats: {
+                        hour: 'HH:00',
+                        minutes: 'HH:mm',
+                        seconds: 'HH:mm:ss',
+                        milliseconds: 'HH:mm:ss.SSS',
+                        day: 'D MMM',
+                        week: 'D MMM YYYY',
+                    }
                 },
             }],
             yAxes: [{
