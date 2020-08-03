@@ -1,9 +1,31 @@
 """meteo.views"""
+import datetime
+import pytz
 from django.shortcuts import render
+
 from .models import MeteoValue
-import pytz, datetime
 
 tz = pytz.timezone("Europe/Paris")
+utz = pytz.timezone("UTC")
+
+
+class tlimit:
+
+    def __init__(self, name, text):
+        self.name = name
+        self.text = text
+
+
+time_limit = [
+    tlimit("All", "All Data"),
+    tlimit("day", "Current day"),
+    tlimit("24hours", "Last 24 hours"),
+    tlimit("3days", "Three last days"),
+    tlimit("7days", "Seven last days"),
+    tlimit("month", "Current month"),
+    tlimit("30days", "Last 30 days"),
+    tlimit("year", "Current year"),
+]
 
 
 def get_data(last):
@@ -13,14 +35,21 @@ def get_data(last):
     """
     if last == "All":
         return MeteoValue.objects.all()
-    limit = datetime.datetime.now().astimezone(tz).replace(hour=0, minute=0, second=0, microsecond=0)
+    limit = datetime.datetime.now().astimezone(utz)
+    if last == "24hours":
+        limit -= datetime.timedelta(hours=24)
+    else:
+        limit = limit.replace(hour=0, minute=0, second=0, microsecond=0)
+
     if last == "3days":
         limit -= datetime.timedelta(days=3)
-    if last == "week":
-        limit -= datetime.timedelta(weeks=1)
-    if last == "month":
+    elif last == "7days":
+        limit -= datetime.timedelta(days=7)
+    elif last == "month":
         limit = limit.replace(day=1)
-    if last == "year":
+    elif last == "30days":
+        limit -= datetime.timedelta(days=30)
+    elif last == "year":
         limit = limit.replace(day=1, month=1)
     return MeteoValue.objects.filter(date__gte=limit)
 
@@ -134,7 +163,6 @@ def index(request):
             smoo = 0
         try:
             ll = request.POST.get("i_last")
-            print(ll)
             if not ll:
                 ll = "All"
         except:
@@ -143,6 +171,7 @@ def index(request):
         data = smooth_data(get_data(ll), smoo)
     else:
         data = get_data(ll)
+    print(len(data))
     dates = []
     temperatures = []
     humidity = []
@@ -161,4 +190,5 @@ def index(request):
                    'smoothing'   : smoo,
                    'last'        : ll,
                    'current'     : d,
+                   'time_limit'            : time_limit,
                    })
