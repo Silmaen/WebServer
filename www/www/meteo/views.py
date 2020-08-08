@@ -51,7 +51,10 @@ def get_data(last):
         limit -= datetime.timedelta(days=30)
     elif last == "year":
         limit = limit.replace(day=1, month=1)
-    return MeteoValue.objects.filter(date__gte=limit)
+    val = MeteoValue.objects.filter(date__gte=limit)
+    if len(val) == 0:
+        val = MeteoValue.objects.all()
+    return val
 
 
 def smooth_data(data, smooth_width):
@@ -184,7 +187,8 @@ def index(request):
     d = displaydata()
     d.compute_from_data(temperatures, humidity, dates)
     return render(request, "baseMeteo.html",
-                  {'dates'       : dates,
+                  {"page": "Meteo",
+                   'dates'       : dates,
                    'temperatures': temperatures,
                    'humidity'    : humidity,
                    'smoothing'   : smoo,
