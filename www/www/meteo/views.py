@@ -32,6 +32,7 @@ def get_data(last):
     """
     get the database data on the last period
     :param last: duration of the  period
+    :return: the data
     """
     if last == "All":
         return MeteoValue.objects.all()
@@ -58,6 +59,12 @@ def get_data(last):
 
 
 def smooth_data(data, smooth_width):
+    """
+    smooth the curve plotted by data
+    :param data: the input data
+    :param smooth_width: the width of the mobile average
+    :return: the smoothed data
+    """
     out = []
     for i, dat in enumerate(data):
         low = max(0, i - smooth_width)
@@ -75,7 +82,28 @@ def smooth_data(data, smooth_width):
     return out
 
 
+def resample_data(data, entity_number):
+    """
+    limit the amount of dat
+    :param data: input data
+    :param entity_number: maximum number of entity in output
+    :return: he resampled data
+    """
+    if len(data) <= entity_number:
+        # not that many entity: nothing to do
+        return data
+    interval = int(len(data)/entity_number + 1)
+    out = []
+    for i, dat in enumerate(data):
+        if i % interval == 0:
+            out.append(dat)
+    return out
+
+
 class displaydata:
+    """
+    lass to encapsulate the meteo result to display
+    """
     def __init__(self):
         self.temperature = "0"
         self.temp_tendance = ""
@@ -170,10 +198,9 @@ def index(request):
                 ll = "All"
         except:
             ll = "All"
+    data = resample_data(get_data(ll), 1000)
     if smoo > 0:
-        data = smooth_data(get_data(ll), smoo)
-    else:
-        data = get_data(ll)
+        data = smooth_data(data, smoo)
     print(len(data))
     dates = []
     temperatures = []
@@ -194,5 +221,5 @@ def index(request):
                    'smoothing'   : smoo,
                    'last'        : ll,
                    'current'     : d,
-                   'time_limit'            : time_limit,
+                   'time_limit'  : time_limit,
                    })
