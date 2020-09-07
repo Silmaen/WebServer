@@ -12,6 +12,9 @@
     <meta name="viewport" content="initial-scale=1, maximum-scale=1">
     <!-- feuille de style -->
     <link rel="stylesheet" href="{% static 'css/default.css' %}">
+    <script src="{% static 'js/chartutils.js' %}"></script>
+    {%block additionnalhead %}
+    {%endblock%}
 </head>
 <body>
 <header class="site-header"> <!-- conteneur global de l'entête -->
@@ -58,15 +61,19 @@
                 </li>
                 <li class="inner-nav-item {{ 'Search'|pageSpecificBtn:page }}">
                     <a href="/research"><span class="icon"><i
-                            class="mdi mdi-card-search"></i></span><span>Recherche</span></a>
+                            class="mdi mdi-electron-framework"></i></span><span>Recherche</span></a>
                 </li>
                 <li class="inner-nav-item {{ 'Project'|pageSpecificBtn:page }}">
-                    <a href="/projects"><span class="icon"><i class="mdi mdi-worker"></i></span><span>Projets</span></a>
+                    <a href="/projects"><span class="icon"><i class="mdi mdi-pickaxe"></i></span><span>Projets</span></a>
                 </li>
                 <li class="inner-nav-item {{ 'Links'|pageSpecificBtn:page }}">
                     <a href="/links"><span class="icon"><i class="mdi mdi-link"></i></span><span>Liens</span></a>
                 </li>
                 {% if user.is_staff %}
+                <li class="inner-nav-item {{ 'Meteo'|pageSpecificBtn:page }}">
+                    <a href="/meteo"><span class="icon"><i
+                            class="mdi mdi-coolant-temperature"></i></span><span>Meteo</span></a>
+                </li>
                 <li class="inner-nav-item {{ 'Sysadmin'|pageSpecificBtn:page }}">
                     <a href="/sysadmin"><span class="icon"><i class="mdi mdi-cctv"></i></span><span>Server Admin</span></a>
                 </li>

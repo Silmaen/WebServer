@@ -1,63 +1,29 @@
 @charset "UTF-8";
-@import url(https://cdn.materialdesignicons.com/5.3.45/css/materialdesignicons.min.css);
+@import url(https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css);
 /* global default */
-html, body, div, span, applet, object, iframe,
-h1, h2, h3, h4, h5, h6, p, blockquote, pre,
-a, abbr, acronym, address, big, cite, code,
-del, dfn, em, img, ins, kbd, q, s, samp,
-small, strike, strong, sub, sup, tt, var,
-b, u, i, center,
-dl, dt, dd, ol, ul, li,
-fieldset, form, label, legend,
-table, caption, tbody, tfoot, thead, tr, th, td,
-article, aside, canvas, details, embed,
-figure, figcaption, footer, header, hgroup,
-menu, nav, output, ruby, section, summary,
-time, mark, audio, video {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-size: 100%;
-	font: inherit;
-}
-a,
-a code {
- color:#008cba;
- text-decoration: none;
-}
-a img,
-fieldset {
- border:0
-}
-* {
- box-sizing:inherit
-}
-html {
- box-sizing:border-box
-}
-body,
-form,
-html,
-ol,
-ul {
- margin:0;
- padding:0
-}
+html,body,p,ol,ul,li,dl,dt,dd,blockquote,figure,fieldset,legend,textarea,pre,iframe,hr,h1,h2,h3,h4,h5,h6{margin:0;padding:0}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal}ul{list-style:none}button,input,select,textarea{margin:0}html{box-sizing:border-box}*,*::before,*::after{box-sizing:inherit}img,video{height:auto;max-width:100%}iframe{border:0}table{border-collapse:collapse;border-spacing:0}td,th{padding:0}td:not([align]),th:not([align]){text-align:left}
 body{
-	background-color:#E4E6E9;
+	display:flex;
+	flex-direction: column;
+	text-align:center;
 	font-family:"Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
 	font-size:14px;
+	background-color:#E4E6E9;
 	color:#393939;
 	min-height:100%;
 }
+@media all and (max-width: 1000px) {
+body {
+font-size:2.1vw;
+}
+}
+
 a {
  text-decoration:none;
  transition:.3s;
  transition-property:color,background,box-shadow
 }
-a:active,
-a:focus,
-a:hover {
+a:active,a:focus,a:hover {
  text-decoration:underline
 }
 /* noprint */
@@ -66,26 +32,11 @@ a:hover {
 }
 /* main conteners */
 .PageCenter, .site-header, .site-footer{
-	width: auto;
-	right: 0;
-	left: 0;
-	border-color: #e7e7e7;
 	min-height: 45px;
 }
 .site-header, .site-footer{
 	background: #404040;
 	color:#E4E6E9;
-}
-.site-header {
-	flex: 1;
-	top: 0;
-}
-.site-footer {
-	flex:3;
-	bottom: 0;
-}
-.PageCenter {
-	flex:2;
 }
 
 /* header main conteners */
@@ -110,30 +61,14 @@ a:hover {
 	align-items: center;
 }
 .site-title h3{
-	font-size:23px;
+	font-size:220%;
 }
-@media all and (max-width: 1000px) and (orientation:portrait ){
-	.site-title h3{
-		font-size:0px;
-	}
-	.site-title img{
-		width:30px;
-		height:30px;
-	}
-}
-.site-topright {
-	top:0;
-	right:0;
-	width: auto;
-}
-@media all and (max-width: 1000px) {
-	.site-topright {
-		font-size:10px;
+@media all and (max-width: 1000px){
+	.site-title h3{	font-size:0;}
+	.site-title img{width:30px;	height:30px;
 	}
 }
 .site-user {
-	top:0;
-	right:0;
 	padding: 5px;
 	display:flex;
 	flex-wrap:nowrap;
@@ -151,6 +86,9 @@ a:hover {
 	border-color:#5090C1;
 	background-color:#7ab8eb;
 	text-align:center;
+}
+@media all and (max-width: 1000px){
+    padding: 1.4vw 1.8vw;
 }
 .userbtn:active,
 .userbtn:focus,
@@ -469,23 +407,25 @@ a:hover {
 }
 
 /* chart container */
-.graph_container{
-	width: 100%;
-}
 #line-chart {
 	display: block;
 	width: 100%;
+}
+.graph_container {
+width:100%;
 }
 
 /* pilote de graph */
 .graphpilot {
 	margin: 1em;
 	border:0;
-	border-radius: 5em;
+	border-radius: 2em;
 	background-color: #505050;
 	color: #E4E6E9;
 	padding: 1em;
 	display: flex;
+	flex-direction:row;
+	justify-content:space-between;
 	width: 100%;
 }
 .graphpilot span {
@@ -496,7 +436,7 @@ a:hover {
   opacity: 1;
 }
 .graphpilot select {
-	width: 25%;
+
 	padding: 0.1em;
   border: none;
   border-radius: .2em;
@@ -523,16 +463,14 @@ a:hover {
 	margin: 0;
 }
 .chart_option {
-    width: inherit;
+
 }
 
 .intbl {
     margin: 0.5em;
+    text-align: left;
 }
 
-.chart_sub{
-    width: auto;
-}
 
 .graphsub{
   width: max-content;
@@ -543,20 +481,18 @@ a:hover {
 /* summary */
 
 .sumarycontainer{
-  content: "";
-  display: table;
-  clear: both;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: stretch;
   width: 100%;
 }
 .sumary{
-	float: left;
-	margin: 0.5em;
-	border:1px #404040 solid;
-	border-radius: 1em;
+
+	margin: 1%;
+	border-radius: 1.3vw;
 	width: 48%;
-	height: 220px;
 	background: #CCC;
-	padding: 2em;
+	padding: 2%;
 }
 .sumarycontainer h2 {
 	font-size: 2.5em;

@@ -1,65 +1,8 @@
-{% load static template_extra %}
-<html lang="fr">
-<head>
-    <title>{% block title %}Site de Lachouette{% endblock %}</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <meta name="robots" content="index,follow">
-    <meta name="author" content="Argawaen">
-    <meta name="description" content="le contenu">
-    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}"/>
-    <meta name="keywords" content="FUCK!!">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-    <!-- feuille de style -->
-    <link rel="stylesheet" href="{% static 'css/default.css' %}">
+{% extends "base.html" %}
+    {%block additionnalhead %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
-    <script src="{% static 'js/chartutils.js' %}"></script>
-</head>
-<body>
-<header class="site-header"> <!-- conteneur global de l'entête -->
-    <div class="upper-header" role="banner">
-        <div class="site-title">
-            <a href="/" title="super site"><img alt="Accueil" src="{% static 'img/test.png' %}" width="90" height="90"></a>
-            <h3 class="noprint">La crypte de Lachouette</h3>
-        </div><!-- class="site-title" -->
-        <div class="site-topright">
-            <div class="site-user">
-                {% if user.is_authenticated %}
-                <div class="site-user">
-                    <p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %}</p>
-                    <p> {{ user.username }}</p>
-                </div>
-                <p>{#<a class="userbtn" href="{% url 'compte' %}">Settings</a>#}
-                    <a class="userbtn" href="{% url 'logout' %}"><span class="icon"><i
-                            class="mdi mdi-logout"></i></span><span>Sign out</span></a></p>
-                {% else %}
-                <p><a class="userbtn" href="{% url 'login' %}"><span class="icon"><i
-                        class="mdi mdi-login"></i></span><span>Sign in</span></a>
-                    <a class="userbtn" href="{% url 'signup' %}"><span class="icon"><i class="mdi mdi-account-plus"></i></span><span>Sign up</span></a>
-                </p>
-                {% endif %}
-            </div><!-- class="site-user" -->
-            <ul class="site-nav-menu">
-                <li class="site-nav-item menu-here"><a href="https://www.argawaen.net">Site Principal</a></li>
-                <li class="site-nav-item menu-ayoaron"><a href="https://ayoaron.argawaen.net">Ayoaron</a></li>
-                <li class="site-nav-item menu-testprojet"><a href="https://testsubject.argawaen.net">TestSubject</a>
-                </li>
-                {% if user.is_authenticated %}{% if user.has_Developper_Access %}
-                <li class="site-nav-item menu-mantis"><a href="https://mantis.argawaen.net">bug Tracker</a></li>
-                <li class="site-nav-item menu-tc"><a href="https://builder.argawaen.net">Builder</a></li>
-                {% endif %}{% endif %}
-            </ul>
-        </div><!-- class="site-topright" -->
-    </div><!-- class="upper-header" -->
-    <div class="lower-header">
-        <nav class="inner-nav">
-            {%block innernav %}{% endblock %}
-        </nav>
-    </div><!-- class="lower-header" -->
-</header><!-- class="site-header" -->
-<div class="PageCenter"> <!-- conteneur global du contenu du site -->
-    <div class="PageContent">
+    {%endblock%}
         {% block content %}
         <div class="graph_container">
           <canvas id="line-chart"></canvas>
@@ -97,8 +40,6 @@
                 <span class="tend mdi {{ current.hum_tendance }}"></span>
                 <span class="sumtext">{{ current.humidity }}%</span>
             </div>
-        </div>
-        <div class="sumarycontainer">
             <div class="sumary rangetemperature">
                 <h2 class="mdi mdi-temperature-celsius"> Temperature Summary</h2>
                 <div class="repporttext">Min: {{ current.temp_min }}°C @ {{ current.temp_min_date }}</div>
@@ -214,14 +155,5 @@
       var ctx = document.getElementById('line-chart').getContext('2d');
       window.myLine = new Chart(ctx, config);
     };
-        </script>
-        {% endblock %}
-    </div><!-- class="PageContent" -->
-</div><!-- class="PageCenter" -->
-<footer class="site-footer"> <!-- conteneur global du pied de page -->
-    <div class="FooterContent">
-        <p style="font-size:12px">&copy; Design by Argawaen, all rights reserved. The site design, the logo are trademarks and/or registered trademarks of Argawaen.</p>
-    </div><!-- class="FooterContent" -->
-</footer><!-- class="site-footer" -->
-</body>
-</html>
+    </script>
+{% endblock %}
