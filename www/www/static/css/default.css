@@ -223,48 +223,49 @@ a:active,a:focus,a:hover {
  background:#00ba8c
 }
 /*--- END SubMenu setup ---*/
-/*--- subSubMenu setup ---*/
-.super-inner-nav-menu {
+/*--- sub-SubMenu setup ---*/
+.sub-inner-nav-menu {
 	display: flex;
 	flex-wrap:nowrap;
 	flex: 1;
 	align-items:center;
 	flex-direction: row;
+	justify-content: center;
 	padding:5px;
 }
-.super-inner-nav-menu>li:not(:last-child) {
+.sub-inner-nav-menu>li:not(:last-child) {
 	margin-right:15px
 }
-.super-inner-nav-menu li {
+.sub-inner-nav-menu li {
 	list-style: none;
 }
-.super-inner-nav-menu .super-inner-nav-item {
+.sub-inner-nav-menu .sub-inner-nav-item {
 	position:relative;
 	display:block;
 	text-align:center
 }
-.super-inner-nav-menu .super-inner-nav-item.active>a::before {
+.sub-inner-nav-menu .sub-inner-nav-item.active>a::before {
 	transform:scale3d(1,1,1);
 	background:#759200
 }
-.super-inner-nav-menu .super-inner-nav-item>a {
-	color:#454545
+.sub-inner-nav-menu .sub-inner-nav-item>a {
+	color:#393939;
 }
-.super-inner-nav-menu .super-inner-nav-item a {
+.sub-inner-nav-menu .sub-inner-nav-item a {
 	display:block;
 	padding:0;
 	white-space:nowrap;
 	text-decoration:none
 }
-.super-inner-nav-menu .super-inner-nav-item a:focus,
-.super-inner-nav-menu .super-inner-nav-item a:hover {
+.sub-inner-nav-menu .sub-inner-nav-item a:focus,
+.sub-inner-nav-menu .sub-inner-nav-item a:hover {
  color:#008cba
 }
-.super-inner-nav-menu .super-inner-nav-item a:focus::before,
-.super-inner-nav-menu .super-inner-nav-item a:hover::before {
+.sub-inner-nav-menu .sub-inner-nav-item a:focus::before,
+.sub-inner-nav-menu .sub-inner-nav-item a:hover::before {
  background:#008cba
 }
-.super-inner-nav-menu .super-inner-nav-item>a::before {
+.sub-inner-nav-menu .sub-inner-nav-item>a::before {
   content:'';
   position:absolute;
   bottom:-4px;
@@ -276,21 +277,21 @@ a:active,a:focus,a:hover {
   transform:scale3d(0,1,1);
   transition:transform .2s
  }
-.super-inner-nav-menu .super-inner-nav-item>a:hover::before {
+.sub-inner-nav-menu .sub-inner-nav-item>a:hover::before {
   transform:scale3d(1,1,1)
- }
-.super-inner-nav-menu .current-subpage>a {
-	color:#008a4c
 }
-.super-inner-nav-menu .current-subpage a:focus,
-.super-inner-nav-menu .current-subpage a:hover {
- color:#008a4c
+.sub-inner-nav-menu .current-page>a {
+  color:#0087ff
 }
-.super-inner-nav-menu .current-subpage a:focus::before,
-.super-inner-nav-menu .current-subpage a:hover::before {
- background:#008a4c
+.sub-inner-nav-menu .current-page a:focus,
+.sub-inner-nav-menu .current-page a:hover {
+ color:#0087ff
 }
-/*--- END subSubMenu setup ---*/
+.sub-inner-nav-menu .current-page a:focus::before,
+.sub-inner-nav-menu .current-page a:hover::before {
+ background:#0087ff
+}
+/*--- END sub-SubMenu setup ---*/
 .PageContent {
 	display: flex;
 	flex-direction: column;
