@@ -9,3 +9,9 @@ def pageSpecificBtn(text, page):
     if text == page:
         return "current-page"
     return ""
+
+@register.filter
+def subpageSpecificBtn(text, subpage):
+    if text == subpage:
+        return "current-subpage"
+    return ""
