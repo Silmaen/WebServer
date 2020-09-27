@@ -267,4 +267,4 @@ def getData(ll, smoo):
 
 def get_actual_data():
     data = get_data("lastone")
-    return data[0].server_room_temperature, data[0].server_room_humidity
+    return "{:.2f}".format(data[0].server_room_temperature), "{:.2f}".format(data[0].server_room_humidity)
