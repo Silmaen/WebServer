@@ -82,10 +82,21 @@ WSGI_APPLICATION = 'www.wsgi.application'
 
 if platform.system() == "Windows":
     # local for testing
+    #DATABASES = {
+    #    'default': {
+    #        'ENGINE': 'django.db.backends.sqlite3',
+    #        'NAME': 'BaseSite.db',
+    #    }
+    #}
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': 'BaseSite.db',
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'BaseSite',
+            'USER': 'BASE_site',
+            'PASSWORD': '1234',
+            'HOST': '192.168.23.1',
+            'PORT': '3306',
+            'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
         }
     }
 else:

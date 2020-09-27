@@ -33,12 +33,21 @@ def request_meteodata(request: str):
     :return: the feteched result
     """
     import MySQLdb
-    MySQLParams = {
-        'host'  : "localhost",
-        'user'  : "MeteoRobot",
-        'passwd': "robot",
-        'db'    : "MeteoData"
-    }
+    import platform
+    if platform.system() == "Windows":
+        MySQLParams = {
+            'host'  : "192.168.23.1",
+            'user'  : "MeteoRobot",
+            'passwd': "robot",
+            'db'    : "MeteoData"
+        }
+    else:
+        MySQLParams = {
+            'host'  : "localhost",
+            'user'  : "MeteoRobot",
+            'passwd': "robot",
+            'db'    : "MeteoData"
+        }
     try:
         con = MySQLdb.connect(**MySQLParams)
         cur = con.cursor()
@@ -75,13 +84,6 @@ def get_data(last):
     :param last: duration of the  period
     :return: the data
     """
-    import MySQLdb
-    MySQLParams = {
-        'host'  : "localhost",
-        'user'  : "MeteoRobot",
-        'passwd': "robot",
-        'db'    : "MeteoData"
-    }
     Table = "ServerRoom"
     filter = ""
     if last == "lastone":
