@@ -3,7 +3,6 @@ definition of a sensor
 """
 import datetime
 import pytz
-from .models import MeteoValue
 
 class tlimit:
 
@@ -27,34 +26,94 @@ tz = pytz.timezone("Europe/Paris")
 utz = pytz.timezone("UTC")
 
 
+class SensorData:
+    date = datetime.datetime(1970, 1, 1, 0, 0, 0)
+    server_room_temperature = 0.0
+    server_room_humidity = 0.0
+
+    def __init__(self, d, t, h):
+        self.date = d
+        self.server_room_temperature = t
+        self.server_room_humidity = h
+
+    def __str__(self):
+        return str(self.date) + " {:.2f}°C {:.1f}%".format(self.server_room_temperature, self.server_room_humidity)
+
+
 def get_data(last):
     """
     get the database data on the last period
     :param last: duration of the  period
     :return: the data
     """
-    if last == "All":
-        return MeteoValue.objects.all()
-    limit = datetime.datetime.now().astimezone(utz)
-    if last == "24hours":
-        limit -= datetime.timedelta(hours=24)
-    else:
-        limit = limit.replace(hour=0, minute=0, second=0, microsecond=0)
-
-    if last == "3days":
-        limit -= datetime.timedelta(days=3)
-    elif last == "7days":
-        limit -= datetime.timedelta(days=7)
-    elif last == "month":
-        limit = limit.replace(day=1)
-    elif last == "30days":
-        limit -= datetime.timedelta(days=30)
-    elif last == "year":
-        limit = limit.replace(day=1, month=1)
-    val = MeteoValue.objects.filter(date__gte=limit)
-    if len(val) == 0:
-        val = MeteoValue.objects.all()
-    return val
+    import MySQLdb
+    MySQLParams = {
+        'host'  : "localhost",
+        'user'  : "MeteoRobot",
+        'passwd': "robot",
+        'db'    : "MeteoData"
+    }
+    Table = "ServerRoom"
+    filter = ""
+    if last != "All":
+        limit = datetime.datetime.now().astimezone(utz)
+        if last == "24hours":
+            limit -= datetime.timedelta(hours=24)
+        else:
+            limit = limit.replace(hour=0, minute=0, second=0, microsecond=0)
+        if last == "3days":
+            limit -= datetime.timedelta(days=3)
+        elif last == "7days":
+            limit -= datetime.timedelta(days=7)
+        elif last == "month":
+            limit = limit.replace(day=1)
+        elif last == "30days":
+            limit -= datetime.timedelta(days=30)
+        elif last == "year":
+            limit = limit.replace(day=1, month=1)
+        filter = " WHERE `date` > '" + str(limit) + "'"
+    order = " ORDER BY `date` ASC"
+    try:
+        con = MySQLdb.connect(**MySQLParams)
+    except MySQLdb.Error as err:
+        print(str(err), True)
+        return []
+    except Exception as err:
+        myprint(str(err), True)
+        return []
+    if not con:
+        print("Unknown error during connexion")
+        return []
+    cur = con.cursor()
+    req = "SELECT * FROM `" + Table + "`" + filter + order
+    try:
+        cur.execute(req)
+        con.commit()
+        data = cur.fetchall()
+    except MySQLdb.Error as err:
+        print(str(err))
+        return []
+    except Exception as err:
+        print(str(err))
+        return []
+    con.close()
+    if len(data) == 0:
+        print("no data: get all")
+        req = "SELECT * FROM `" + Table + "`" + order
+        try:
+            cur.execute(req)
+            con.commit()
+            data = cur.fetchall()
+        except MySQLdb.Error as err:
+            print(str(err))
+            return []
+        except Exception as err:
+            print(str(err))
+            return []
+    res = []
+    for d in data:
+        res.append(SensorData(d[1], d[2], d[3]))
+    return res
 
 
 def smooth_data(data, smooth_width):
@@ -77,7 +136,7 @@ def smooth_data(data, smooth_width):
             s_humidity += d.server_room_humidity
         s_temperature /= float(max(1, n))
         s_humidity /= float(max(1, n))
-        out.append(MeteoValue(date=dat.date, server_room_temperature=s_temperature, server_room_humidity=s_humidity))
+        out.append(SensorData(date=dat.date, server_room_temperature=s_temperature, server_room_humidity=s_humidity))
     return out
 
 
