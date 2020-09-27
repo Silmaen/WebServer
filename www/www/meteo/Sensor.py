@@ -26,6 +26,35 @@ tz = pytz.timezone("Europe/Paris")
 utz = pytz.timezone("UTC")
 
 
+def request_meteodata(request: str):
+    """
+    execute a request in the MeteoData database
+    :param request: the request to execute
+    :return: the feteched result
+    """
+    import MySQLdb
+    MySQLParams = {
+        'host'  : "localhost",
+        'user'  : "MeteoRobot",
+        'passwd': "robot",
+        'db'    : "MeteoData"
+    }
+    try:
+        con = MySQLdb.connect(**MySQLParams)
+        cur = con.cursor()
+        cur.execute(request)
+        con.commit()
+        data = cur.fetchall()
+    except MySQLdb.Error as err:
+        print(str(err))
+        return []
+    except Exception as err:
+        print(str(err))
+        return []
+    con.close()
+    return data
+
+
 class SensorData:
     date = datetime.datetime(1970, 1, 1, 0, 0, 0)
     server_room_temperature = 0.0
@@ -55,6 +84,14 @@ def get_data(last):
     }
     Table = "ServerRoom"
     filter = ""
+    if last == "lastone":
+        data = request_meteodata("SELECT * from `ServerRoom` ORDER BY id DESC LIMIT 1 ")
+        if (len(data) == 0):
+            return [SensorData(datetime.datetime.now(), 0, 0)]
+        res = []
+        for d in data:
+            res.append(SensorData(d[1], d[2], d[3]))
+        return res
     if last != "All":
         limit = datetime.datetime.now().astimezone(utz)
         if last == "24hours":
@@ -73,43 +110,12 @@ def get_data(last):
             limit = limit.replace(day=1, month=1)
         filter = " WHERE `date` > '" + str(limit) + "'"
     order = " ORDER BY `date` ASC"
-    try:
-        con = MySQLdb.connect(**MySQLParams)
-    except MySQLdb.Error as err:
-        print(str(err), True)
-        return []
-    except Exception as err:
-        myprint(str(err), True)
-        return []
-    if not con:
-        print("Unknown error during connexion")
-        return []
-    cur = con.cursor()
     req = "SELECT * FROM `" + Table + "`" + filter + order
-    try:
-        cur.execute(req)
-        con.commit()
-        data = cur.fetchall()
-    except MySQLdb.Error as err:
-        print(str(err))
-        return []
-    except Exception as err:
-        print(str(err))
-        return []
-    con.close()
+    data = request_meteodata(req)
     if len(data) == 0:
         print("no data: get all")
         req = "SELECT * FROM `" + Table + "`" + order
-        try:
-            cur.execute(req)
-            con.commit()
-            data = cur.fetchall()
-        except MySQLdb.Error as err:
-            print(str(err))
-            return []
-        except Exception as err:
-            print(str(err))
-            return []
+        data = request_meteodata(req)
     res = []
     for d in data:
         res.append(SensorData(d[1], d[2], d[3]))
@@ -203,6 +209,7 @@ class displaydata:
             return "mdi-arrow-left-right-bold-outline tgreen"
 
     def compute_from_data(self, dta, dha, date):
+        dlas = get_data("lastone")
         self.temp_max = -2000
         self.temp_min = 2000
         self.temp_mean = 0
@@ -218,7 +225,7 @@ class displaydata:
             self.temp_mean = "{:.2f}".format(self.temp_mean / float(len(dta)))
         self.temp_max = "{:.2f}".format(self.temp_max)
         self.temp_min = "{:.2f}".format(self.temp_min)
-        self.temperature = "{:.2f}".format(dta[-1])
+        self.temperature = "{:.2f}".format(dlas[1])
         self.temp_tendance = self.__tendance(dta, 0.05)
 
         self.hum_max = -2000
@@ -237,7 +244,7 @@ class displaydata:
         self.hum_max = "{:.2f}".format(self.hum_max)
         self.hum_min = "{:.2f}".format(self.hum_min)
         self.hum_tendance = self.__tendance(dha, 0.05)
-        self.humidity = "{:.2f}".format(dha[-1])
+        self.humidity = "{:.2f}".format(dlas[2])
 
 
 def getData(ll, smoo):
@@ -257,3 +264,8 @@ def getData(ll, smoo):
     d = displaydata()
     d.compute_from_data(temperatures, humidity, dates)
     return dates, temperatures, humidity, d
+
+
+def get_actual_data():
+    data = get_data("lastone")
+    return data[0].server_room_temperature, data[0].server_room_humidity
