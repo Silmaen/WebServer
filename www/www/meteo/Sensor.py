@@ -225,7 +225,7 @@ class displaydata:
             self.temp_mean = "{:.2f}".format(self.temp_mean / float(len(dta)))
         self.temp_max = "{:.2f}".format(self.temp_max)
         self.temp_min = "{:.2f}".format(self.temp_min)
-        self.temperature = "{:.2f}".format(dlas[1])
+        self.temperature = dlas[0]
         self.temp_tendance = self.__tendance(dta, 0.05)
 
         self.hum_max = -2000
@@ -244,7 +244,7 @@ class displaydata:
         self.hum_max = "{:.2f}".format(self.hum_max)
         self.hum_min = "{:.2f}".format(self.hum_min)
         self.hum_tendance = self.__tendance(dha, 0.05)
-        self.humidity = "{:.2f}".format(dlas[2])
+        self.humidity = dlas[1]
 
 
 def getData(ll, smoo):
@@ -268,4 +268,4 @@ def getData(ll, smoo):
 
 def get_actual_data():
     data = get_data("lastone")
-    return data[0].server_room_temperature, data[0].server_room_humidity
+    return "{:.2f}".format(data[0].server_room_temperature), "{:.2f}".format(data[0].server_room_humidity)
