@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="PageTitle">
+        {{ page_subtitle }}
+        <ul class="sub-inner-nav-menu">
+            {% for sp in subpages %}
+            <li class="sub-inner-nav-item {% if subpage == sp.name %}current-page{% endif %}"><a href="{{ sp.url }}"><span class="icon"><i class="{{ sp.icon }}"></i></span><span>{{ sp.name }}</span></a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% block InnerContent %}
+    <p>Empty</p>
+    {% endblock %}
+{% endblock %}

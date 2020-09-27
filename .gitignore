@@ -10,3 +10,4 @@ ayoaron/.*
 www2
 *.pyc
 .idea/workspace.xml
+.idea

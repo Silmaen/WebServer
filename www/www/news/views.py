@@ -49,33 +49,3 @@ def links(request):
     """
     articles = Article.objects.filter(categorie=4).order_by('-date')[:15]
     return render(request, "Links.html", {"page": "Links", 'derniers_articles': articles})
-
-
-def sysadmin(request, name):
-    """
-    sysadmin page
-    :param request: the page request
-    :param name: the subpage name
-    :return: the rendered page
-    """
-    try:
-        subpages = SysadminSubpages.objects.all()
-    except:
-        subpages = []
-    ok = False
-    for page in subpages:
-        if page.Url == name:
-            ok = True
-            name = page.Name
-    if not ok:
-        name = "General"
-    return render(request, "Sysadmin.html", {"page": "Sysadmin", "name": name, "SysadminSubpage": subpages})
-
-
-def sysadmin_base(request):
-    """
-    sysadmin main page
-    :param request: the page request
-    :return: the rendered page
-    """
-    return sysadmin(request, index)

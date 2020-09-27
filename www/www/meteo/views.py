@@ -9,6 +9,7 @@ subpages = [
     {"url": "station", "name": "station", "icon": "mdi mdi-cash-register"}
 ]
 
+
 def index(request):
     return summary(request)
 
@@ -52,6 +53,7 @@ def renderpage(request, subpage):
     dates, temperatures, humidity, d = getData(ll, smoo)
     return render(request, "MeteoServerRoom.html",
                   {"page": "Meteo",
+                   "page_subtitle": "Information Météo locale",
                    "subpage": subpage,
                    "subpages": subpages,
                    'dates': dates,
