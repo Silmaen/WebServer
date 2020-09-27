@@ -22,10 +22,11 @@ from django.views.generic.base import TemplateView
 urlpatterns = [
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), ),
     path('', include('news.urls')),
+    path('sysadmin/', include('sysadmin.urls')),
+    path('meteo/', include('meteo.urls')),
     path('users/', include('users.urls')),
     path('users/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
-    path('meteo/', include('meteo.urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
