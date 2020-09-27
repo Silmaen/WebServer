@@ -1,0 +1,13 @@
+{% extends "baseMeteo.html" %}
+{% block MeteoContent %}
+<div class="sumarycontainer">
+    <div class="sumary actualtemperature">
+        <h2 class="mdi mdi-thermometer"> Server Room Temperature</h2>
+        <span class="sumtext">{{ ServerRoomTemp }}°C</span>
+    </div>
+    <div class="sumary actualhumidity">
+        <h2 class="mdi mdi-water-percent"> Server Room Humidity</h2>
+        <span class="sumtext">{{ ServerRoomHumi }}%</span>
+    </div>
+</div>
+{% endblock %}

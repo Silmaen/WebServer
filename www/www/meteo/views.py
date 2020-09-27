@@ -1,10 +1,27 @@
 """meteo.views"""
-from .Sensor import getData, time_limit
+from .Sensor import getData, time_limit, get_actual_data
 from django.shortcuts import render
 
 
+subpages = [
+    {"url": "summary", "name": "summary", "icon": "mdi mdi-home"},
+    {"url": "desk", "name": "desk", "icon": "mdi mdi-desk"},
+    {"url": "station", "name": "station", "icon": "mdi mdi-cash-register"}
+]
+
 def index(request):
-    return renderpage(request, "desk")
+    return summary(request)
+
+
+def summary(request):
+    d = get_actual_data()
+    return render(request, "MeteoSummary.html",
+                  {"page": "Meteo",
+                   "subpage": "summary",
+                   "subpages": subpages,
+                   'ServerRoomTemp': d[0],
+                   'ServerRoomHumi': d[1],
+                   })
 
 
 def desk(request):
@@ -14,10 +31,6 @@ def desk(request):
 def station(request):
     return renderpage(request, "station")
 
-subpages = [
-    {"url": "desk", "fct": desk, "name": "desk", "icon": "mdi mdi-desk"},
-    {"url": "station", "fct": desk, "name": "station", "icon": "mdi mdi-cash-register"}
-]
 
 
 def renderpage(request, subpage):
@@ -37,7 +50,7 @@ def renderpage(request, subpage):
         except:
             ll = "All"
     dates, temperatures, humidity, d = getData(ll, smoo)
-    return render(request, "baseMeteo.html",
+    return render(request, "MeteoServerRoom.html",
                   {"page": "Meteo",
                    "subpage": subpage,
                    "subpages": subpages,
