@@ -136,7 +136,7 @@ def smooth_data(data, smooth_width):
             s_humidity += d.server_room_humidity
         s_temperature /= float(max(1, n))
         s_humidity /= float(max(1, n))
-        out.append(SensorData(date=dat.date, server_room_temperature=s_temperature, server_room_humidity=s_humidity))
+        out.append(SensorData(dat.date, s_temperature, s_humidity))
     return out
 
 
