@@ -86,7 +86,7 @@ def get_data(last):
     filter = ""
     if last == "lastone":
         data = request_meteodata("SELECT * from `ServerRoom` ORDER BY id DESC LIMIT 1 ")
-        if (len(data) == 0):
+        if len(data) == 0:
             return [SensorData(datetime.datetime.now(), 0, 0)]
         res = []
         for d in data:
@@ -209,7 +209,6 @@ class displaydata:
             return "mdi-arrow-left-right-bold-outline tgreen"
 
     def compute_from_data(self, dta, dha, date):
-        dlas = get_data("lastone")
         self.temp_max = -2000
         self.temp_min = 2000
         self.temp_mean = 0
@@ -225,7 +224,7 @@ class displaydata:
             self.temp_mean = "{:.2f}".format(self.temp_mean / float(len(dta)))
         self.temp_max = "{:.2f}".format(self.temp_max)
         self.temp_min = "{:.2f}".format(self.temp_min)
-        self.temperature = dlas[0]
+        self.temperature = "{:.2f}".format(dta[-1])
         self.temp_tendance = self.__tendance(dta, 0.05)
 
         self.hum_max = -2000
@@ -244,7 +243,7 @@ class displaydata:
         self.hum_max = "{:.2f}".format(self.hum_max)
         self.hum_min = "{:.2f}".format(self.hum_min)
         self.hum_tendance = self.__tendance(dha, 0.05)
-        self.humidity = dlas[1]
+        self.humidity = "{:.2f}".format(dha[-1])
 
 
 def getData(ll, smoo):
@@ -268,4 +267,4 @@ def getData(ll, smoo):
 
 def get_actual_data():
     data = get_data("lastone")
-    return "{:.2f}".format(data[0].server_room_temperature), "{:.2f}".format(data[0].server_room_humidity)
+    return data[0].server_room_temperature, data[0].server_room_humidity
