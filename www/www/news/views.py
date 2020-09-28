@@ -2,7 +2,6 @@
 from django.shortcuts import render
 
 from .models import Article
-from .models import SysadminSubpages
 
 
 def index(request):

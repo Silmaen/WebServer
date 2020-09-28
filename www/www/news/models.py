@@ -52,13 +52,32 @@ class Article(models.Model):
         return self.titre
 
 
-class SysadminSubpages(models.Model):
+class ServerPage(models.Model):
     """
-    Sub page for the Sysadmin
+    base class for pages, used for the semi-external pages (page on the same server but other adress)
     """
-    Name = models.CharField(max_length=30)
-    Url = models.CharField(max_length=30)
-    mdi_icon_name = models.CharField(max_length=30, blank=True)
+    name = models.CharField(max_length=30)
+    url = models.CharField(max_length=200)
+    icon = models.CharField(max_length=40)
+    needUser = models.BooleanField()
+    needDevAccess = models.BooleanField()
+    needHiddenAccess = models.BooleanField()
+    isActive = models.BooleanField()
 
-    def __str__(self):
-        return self.Name
+
+class WebPage(ServerPage):
+    """
+    class to handle the list of webpages inside this site
+    """
+    template = models.CharField(max_length=30)
+    title = models.CharField(max_length=30)
+    categorie = models.ForeignKey('Categorie', on_delete=models.CASCADE)
+    data = models.JSONField()
+
+
+class subWebPage(ServerPage):
+    """
+    class to handle sub pages in web pages
+    """
+    parent = models.ForeignKey('WebPage', on_delete=models.CASCADE)
+    data = models.JSONField()

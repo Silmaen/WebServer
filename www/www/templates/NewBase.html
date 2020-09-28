@@ -1,0 +1,114 @@
+{% load static template_extra %}
+<html lang="fr">
+<head>
+    <title>{% block title %}Site de Lachouette{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="robots" content="index,follow">
+    <meta name="author" content="Argawaen">
+    <meta name="description" content="le contenu">
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}"/>
+    <meta name="keywords" content="FUCK!!">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <!-- feuille de style -->
+    <link rel="stylesheet" href="{% static 'css/default.css' %}">
+    <script src="{% static 'js/chartutils.js' %}"></script>
+    {%block additionnalhead %}
+    {%endblock%}
+</head>
+<body>
+<header class="site-header"> <!-- conteneur global de l'entête -->
+    <div class="upper-header" role="banner">
+        <div class="site-title">
+            <a href="/" title="super site"><img alt="Accueil" src="{% static 'img/test.png' %}" width="90" height="90"></a>
+            <h3 class="noprint">La crypte de Lachouette</h3>
+            <!-- class="site-title" --></div>
+        <div class="site-topright">
+            <div class="site-user">
+                {% if user.is_authenticated %}
+                <div class="site-user">
+                    <p>{% if user.avatar.url != "" %}<img alt="" src="{{ user.avatar.url }}" width="30" height="30"> {% endif %}</p>
+                    <p> {{ user.username }}</p>
+                </div>
+                <p>{#<a class="userbtn" href="{% url 'compte' %}">Settings</a>#}
+                    <a class="userbtn" href="{% url 'logout' %}"><span class="icon"><i
+                            class="mdi mdi-logout"></i></span><span>Sign out</span></a></p>
+                {% else %}
+                <p><a class="userbtn" href="{% url 'login' %}"><span class="icon"><i
+                        class="mdi mdi-login"></i></span><span>Sign in</span></a>
+                    <a class="userbtn" href="{% url 'signup' %}"><span class="icon"><i class="mdi mdi-account-plus"></i></span><span>Sign up</span></a>
+                </p>
+                {% endif %}
+                <!-- class="site-user" --></div>
+            <ul class="site-nav-menu">
+                <li class="site-nav-item menu-here"><a href="https://www.argawaen.net">Site Principal</a></li>
+                <li class="site-nav-item menu-ayoaron"><a href="https://ayoaron.argawaen.net">Ayoaron</a></li>
+                <li class="site-nav-item menu-testprojet"><a href="https://testsubject.argawaen.net">TestSubject</a>
+                </li>
+                {% if user.is_authenticated %}{% if user.has_Developper_Access %}
+                <li class="site-nav-item menu-mantis"><a href="https://mantis.argawaen.net">bug Tracker</a></li>
+                <li class="site-nav-item menu-tc"><a href="https://builder.argawaen.net">Builder</a></li>
+                {% endif %}{% endif %}
+            </ul>
+            <!-- class="site-topright" --></div>
+        <!-- class="upper-header" --></div>
+    <div class="lower-header">
+        <nav class="inner-nav">
+            {%block innernav %}
+            <ul class="inner-nav-menu">
+                <li class="inner-nav-item {{ 'News'|pageSpecificBtn:page }}">
+                    <a href="/"><span class="icon"><i class="mdi mdi-email-newsletter"></i></span><span>News</span></a>
+                </li>
+                <li class="inner-nav-item {{ 'Search'|pageSpecificBtn:page }}">
+                    <a href="/research"><span class="icon"><i
+                            class="mdi mdi-electron-framework"></i></span><span>Recherche</span></a>
+                </li>
+                <li class="inner-nav-item {{ 'Project'|pageSpecificBtn:page }}">
+                    <a href="/projects"><span class="icon"><i class="mdi mdi-pickaxe"></i></span><span>Projets</span></a>
+                </li>
+                <li class="inner-nav-item {{ 'Links'|pageSpecificBtn:page }}">
+                    <a href="/links"><span class="icon"><i class="mdi mdi-link"></i></span><span>Liens</span></a>
+                </li>
+                {% if user.is_staff %}
+                <li class="inner-nav-item {{ 'Meteo'|pageSpecificBtn:page }}">
+                    <a href="/meteo"><span class="icon"><i
+                            class="mdi mdi-weather-windy-variant"></i></span><span>Meteo</span></a>
+                </li>
+                <li class="inner-nav-item {{ 'Sysadmin'|pageSpecificBtn:page }}">
+                    <a href="/sysadmin"><span class="icon"><i class="mdi mdi-cctv"></i></span><span>Server Admin</span></a>
+                </li>
+                <li class="inner-nav-item {{ 'admin'|pageSpecificBtn:page }}">
+                    <a href="/admin"><span class="icon"><i
+                            class="mdi mdi-account-tie"></i></span><span>Site Admin</span></a>
+                </li>
+                {% endif %}
+            </ul>
+            {% endblock %}
+        </nav>
+        <!-- class="lower-header" --></div>
+    <!-- class="site-header" --></header>
+<div class="PageCenter"> <!-- conteneur global du contenu du site -->
+    <div class="PageContent">
+        {% block content %}
+        <div class="PageTitle">
+        {{ page_subtitle }}
+        <ul class="sub-inner-nav-menu">
+            {% for sp in subpages %}
+            <li class="sub-inner-nav-item {% if subpage == sp.name %}current-page{% endif %}"><a href="{{ sp.url }}"><span class="icon"><i class="{{ sp.icon }}"></i></span><span>{{ sp.name }}</span></a></li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% block InnerContent %}
+    <p>Empty</p>
+    {% endblock %}
+        {% endblock %}
+        <!-- class="PageContent" --></div>
+    <!-- class="PageCenter" --></div>
+<footer class="site-footer"> <!-- conteneur global du pied de page -->
+    <div class="FooterContent">
+        <p style="font-size:12px">&copy; Design by Argawaen, all rights reserved. The site design, the logo are
+            trademarks and/or registered trademarks of Argawaen.</p>
+        <!-- class="FooterContent" --></div>
+    <!-- class="site-footer" --></footer>
+</body>
+</html>
