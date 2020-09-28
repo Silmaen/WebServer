@@ -64,6 +64,9 @@ class ServerPage(models.Model):
     needHiddenAccess = models.BooleanField(default=False)
     isActive = models.BooleanField(default=True)
 
+    def __str__(self):
+        return self.name
+
 
 class WebPage(ServerPage):
     """
