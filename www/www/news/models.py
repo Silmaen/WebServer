@@ -58,7 +58,7 @@ class ServerPage(models.Model):
     """
     name = models.CharField(max_length=30)
     url = models.CharField(max_length=200)
-    icon = models.CharField(max_length=40, default="")
+    icon = models.CharField(max_length=40, default="", blank=True)
     needUser = models.BooleanField(default=False)
     needDevAccess = models.BooleanField(default=False)
     needHiddenAccess = models.BooleanField(default=False)
