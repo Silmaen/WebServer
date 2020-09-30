@@ -529,3 +529,19 @@ width:100%;
 .tlightblue{
     color: #4466FF;
 }
+
+/* Sysadmin part */
+
+.MachineList {
+    margin-top: .5em;
+    background: #CCC;
+    border-radius: 1.3vw;
+    padding: 1%;
+}
+.MachineList table{
+    padding: 1%;
+    border-collapse: collapse;
+}
+.MachineList td, th{
+    padding: 0.1vw .5vw;
+}

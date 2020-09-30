@@ -47,7 +47,6 @@ def render_page(request, page_name, additional_data):
         if "subpage" in additional_data:
             for p in subpages:
                 if p.name == additional_data["subpage"]:
-                    print(p.name + str(" == ") + additional_data["subpage"])
                     this_subpage = p.name
                     data.update(p.data)
                     if p.template not in [None, ""]:
