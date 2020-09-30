@@ -1,7 +1,7 @@
 """meteo.views"""
 from .Sensor import getData, time_limit, get_actual_data
 from django.shortcuts import render
-
+from news.render_utils import render_page
 
 subpages = [
     {"url": "summary", "name": "summary", "icon": "mdi mdi-home"},
@@ -16,13 +16,14 @@ def index(request):
 
 def summary(request):
     d = get_actual_data()
-    return render(request, "MeteoSummary.html",
-                  {"page": "Meteo",
-                   "subpage": "summary",
-                   "subpages": subpages,
-                   'ServerRoomTemp': d[0],
-                   'ServerRoomHumi': d[1],
-                   })
+    return render_page(request, "Meteo", {"subpage": "Résumé météo"})
+#    return render(request, "MeteoSummary.html",
+#                  {"page": "Meteo",
+#                   "subpage": "summary",
+#                   "subpages": subpages,
+#                   'ServerRoomTemp': d[0],
+#                   'ServerRoomHumi': d[1],
+#                   })
 
 
 def desk(request):

@@ -2,7 +2,7 @@
 from django.shortcuts import render
 
 from .models import Article
-
+from .render_utils import render_page
 
 def index(request):
     """
@@ -47,4 +47,5 @@ def links(request):
     :return: the rendered page
     """
     articles = Article.objects.filter(categorie=4).order_by('-date')[:15]
-    return render(request, "Links.html", {"page": "Links", 'derniers_articles': articles})
+    return render_page(request, "Links", {'derniers_articles': articles})
+    #return render(request, "Links.html", {"page": "Links", 'derniers_articles': articles})

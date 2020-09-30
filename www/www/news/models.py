@@ -68,6 +68,13 @@ class ServerPage(models.Model):
         return self.name
 
 
+class ExtPage(ServerPage):
+    """
+    Class for exterior pages
+    """
+    Comment = models.TextField(default="", blank=True)
+
+
 class WebPage(ServerPage):
     """
     class to handle the list of webpages inside this site

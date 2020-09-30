@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.utils.text import Truncator
 
-from .models import Categorie, SousCategorie, Article, ServerPage, WebPage, subWebPage
+from .models import Categorie, SousCategorie, Article, ExtPage, WebPage, subWebPage
 
 
 class ArticleAdmin(admin.ModelAdmin):
@@ -47,6 +47,6 @@ admin.site.register(Categorie)
 admin.site.register(SousCategorie)
 admin.site.register(Article, ArticleAdmin)
 
-admin.site.register(ServerPage)
+admin.site.register(ExtPage)
 admin.site.register(WebPage)
 admin.site.register(subWebPage)
