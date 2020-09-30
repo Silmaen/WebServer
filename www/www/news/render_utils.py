@@ -45,7 +45,6 @@ def render_page(request, page_name, additional_data):
     if len(subpages) > 0:
         this_subpage = subpages[0].name
         if "subpage" in additional_data:
-            print("We got a subpage: " + additional_data["subpage"])
             for p in subpages:
                 if p.name == additional_data["subpage"]:
                     print(p.name + str(" == ") + additional_data["subpage"])
@@ -57,16 +56,12 @@ def render_page(request, page_name, additional_data):
     else:
         this_subpage = ""
     data.update(additional_data)
-    print("template:" + str(template))
-    print("Title   :" + str(this_page.title))
-    print("Name    :" + str(this_page.name))
-    print("Subpage :" + str(this_subpage))
     return render(request, template, {
         "extpages": extpages,
         "pages": pages,
         "subpages": subpages,
         "page_subtitle": this_page.title,
-        "page": this_page.name.lower(),
+        "page": this_page.name,
         "subpage": this_subpage,
         "data": data
     })

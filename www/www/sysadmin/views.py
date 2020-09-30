@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from news.render_utils import render_page
 
 # Create your views here.
 
@@ -13,18 +13,9 @@ def index(request):
 
 
 def summary(request):
-    return render(request, "baseWithSubPages.html",
-                  {"page": "Sysadmin",
-                   "page_subtitle": "Administration Système",
-                   "subpage": "Summary",
-                   "subpages": subpages,
-                   })
+    return render_page(request, "ServerAdmin", {"subpage": "Etat"})
 
 
 def mlist(request):
-    return render(request, "baseWithSubPages.html",
-                  {"page": "Sysadmin",
-                   "page_subtitle": "Administration Système",
-                   "subpage": "Machine list",
-                   "subpages": subpages,
-                   })
+    return render_page(request, "ServerAdmin", {"subpage": "Liste Machine"})
+
