@@ -1,4 +1,4 @@
-{% extends "baseWithSubPages.html" %}
+{% extends "base.html" %}
 {%block additionnalhead %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
@@ -13,14 +13,14 @@
         <div class="intbl"><span class="mdi mdi-periodic-table">
             <label for="i_last">Period: </label>
             <select id="i_last" name="i_last">
-                {% for tl in time_limit %}
+                {% for tl in data.time_limit %}
                 <option value={{ tl.name }} {% if last == tl.name %}selected{% endif %}>{{ tl.text }}</option>
                 {% endfor %}
             </select>
         </span></div>
         <div class="intbl"><span class="mdi mdi-chart-multiline">
             <label for="i_smoothing">Smoothing: </label>
-            <input type="range" id="i_smoothing" value="{{ smoothing }}" name="i_smoothing" min="0" max="30" step="1">
+            <input type="range" id="i_smoothing" value="{{ data.smoothing }}" name="i_smoothing" min="0" max="30" step="1">
         </span></div>
     </div>
     <div class="chart_sub">
@@ -32,34 +32,34 @@
 <div class="sumarycontainer">
     <div class="sumary actualtemperature">
         <h2 class="mdi mdi-thermometer"> Actual Temperature</h2>
-        <span class="tend mdi {{ current.temp_tendance }}"></span>
-        <span class="sumtext">{{ current.temperature }}°C</span>
+        <span class="tend mdi {{ data.current.temp_tendance }}"></span>
+        <span class="sumtext">{{ data.current.temperature }}°C</span>
     </div>
     <div class="sumary actualhumidity">
         <h2 class="mdi mdi-water-percent"> Actual Humidity</h2>
-        <span class="tend mdi {{ current.hum_tendance }}"></span>
-        <span class="sumtext">{{ current.humidity }}%</span>
+        <span class="tend mdi {{ data.current.hum_tendance }}"></span>
+        <span class="sumtext">{{ data.current.humidity }}%</span>
     </div>
     <div class="sumary rangetemperature">
         <h2 class="mdi mdi-thermometer"> Temperature Summary</h2>
-        <div class="repporttext">Min: {{ current.temp_min }}°C @ {{ current.temp_min_date }}</div>
-        <div class="repporttext">Max: {{ current.temp_max }}°C @ {{ current.temp_max_date }}</div>
-        <div class="repporttext">Mean: {{ current.temp_mean }}°C</div>
+        <div class="repporttext">Min: {{ data.current.temp_min }}°C @ {{ data.current.temp_min_date }}</div>
+        <div class="repporttext">Max: {{ data.current.temp_max }}°C @ {{ data.current.temp_max_date }}</div>
+        <div class="repporttext">Mean: {{ data.current.temp_mean }}°C</div>
     </div>
     <div class="sumary rangehumidity">
         <h2 class="mdi mdi-water-percent"> Humidity Summary</h2>
-        <div class="repporttext">Min: {{ current.hum_min }}% @ {{ current.hum_min_date }}</div>
-        <div class="repporttext">Max: {{ current.hum_max }}% @ {{ current.hum_max_date }}</div>
-        <div class="repporttext">Mean: {{ current.hum_mean }}%</div>
+        <div class="repporttext">Min: {{ data.current.hum_min }}% @ {{ data.current.hum_min_date }}</div>
+        <div class="repporttext">Max: {{ data.current.hum_max }}% @ {{ data.current.hum_max_date }}</div>
+        <div class="repporttext">Mean: {{ data.current.hum_mean }}%</div>
     </div>
 </div>
 <script>
     var config = {
       type: 'line',
       data: {
-        labels: {{ dates|safe }},
+        labels: {{ data.dates|safe }},
         datasets: [{
-          data: {{ temperatures|safe }},
+          data: {{ data.temperatures|safe }},
           label: 'Temperature',
           fill: false,
           pointRadius: 0,
@@ -68,7 +68,7 @@
           borderColor: mycolor(1),
           yAxisID: 'y-axis-1',
         }, {
-          data: {{ humidity|safe }},
+          data: {{ data.humidity|safe }},
           label: 'Humidity',
           fill: false,
           pointRadius: 0,
