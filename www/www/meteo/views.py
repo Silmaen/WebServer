@@ -1,6 +1,5 @@
 """meteo.views"""
 from .Sensor import getData, time_limit, get_actual_data
-from django.shortcuts import render
 from news.render_utils import render_page
 
 subpages = [
@@ -16,23 +15,18 @@ def index(request):
 
 def summary(request):
     d = get_actual_data()
-    return render_page(request, "Meteo", {"subpage": "Résumé météo"})
-#    return render(request, "MeteoSummary.html",
-#                  {"page": "Meteo",
-#                   "subpage": "summary",
-#                   "subpages": subpages,
-#                   'ServerRoomTemp': d[0],
-#                   'ServerRoomHumi': d[1],
-#                   })
+    return render_page(request, "Meteo", {"subpage": "Résumé météo",
+                                          'ServerRoomTemp': d[0],
+                                          'ServerRoomHumi': d[1]})
 
 
 def desk(request):
-    return renderpage(request, "desk")
+    print("coucou")
+    return renderpage(request, "Bureau")
 
 
 def station(request):
-    return renderpage(request, "station")
-
+    return renderpage(request, "Station")
 
 
 def renderpage(request, subpage):
@@ -52,16 +46,13 @@ def renderpage(request, subpage):
         except:
             ll = "All"
     dates, temperatures, humidity, d = getData(ll, smoo)
-    return render(request, "MeteoServerRoom.html",
-                  {"page": "Meteo",
-                   "page_subtitle": "Information Météo locale",
-                   "subpage": subpage,
-                   "subpages": subpages,
-                   'dates': dates,
-                   'temperatures': temperatures,
-                   'humidity': humidity,
-                   'smoothing': smoo,
-                   'last': ll,
-                   'current': d,
-                   'time_limit': time_limit,
-                   })
+
+    return render_page(request, "Meteo",
+                       {"subpage": subpage,
+                        'dates': dates,
+                        'temperatures': temperatures,
+                        'humidity': humidity,
+                        'smoothing': smoo,
+                        'last': ll,
+                        'current': d,
+                        'time_limit': time_limit})

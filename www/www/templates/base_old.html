@@ -41,9 +41,6 @@
                 {% endif %}
                 <!-- class="site-user" --></div>
             <ul class="site-nav-menu">
-                {% for sp in extpages %}
-                    <li class="site-nav-item mdi {{ sp.icon }}"><a href="{{ sp.link }}">{{ sp.name }}</a></li>
-                {% endfor %}<!--
                 <li class="site-nav-item menu-here"><a href="https://www.argawaen.net">Site Principal</a></li>
                 <li class="site-nav-item menu-ayoaron"><a href="https://ayoaron.argawaen.net">Ayoaron</a></li>
                 <li class="site-nav-item menu-testprojet"><a href="https://testsubject.argawaen.net">TestSubject</a>
@@ -51,7 +48,7 @@
                 {% if user.is_authenticated %}{% if user.has_Developper_Access %}
                 <li class="site-nav-item menu-mantis"><a href="https://mantis.argawaen.net">bug Tracker</a></li>
                 <li class="site-nav-item menu-tc"><a href="https://builder.argawaen.net">Builder</a></li>
-                {% endif %}{% endif %}-->
+                {% endif %}{% endif %}
             </ul>
             <!-- class="site-topright" --></div>
         <!-- class="upper-header" --></div>
@@ -92,20 +89,7 @@
     <!-- class="site-header" --></header>
 <div class="PageCenter"> <!-- conteneur global du contenu du site -->
     <div class="PageContent">
-        {% block content %}
-            <div class="PageTitle">
-                {{ page_subtitle }}
-                <ul class="sub-inner-nav-menu">
-                    {% for sp in subpages %}
-                    <li class="sub-inner-nav-item {% if subpage == sp.name %}current-page{% endif %}"><a href="{{ sp.url }}"><span class="icon"><i class="{{ sp.icon }}"></i></span><span>{{ sp.name }}</span></a></li>
-                    {% empty %}
-                    {% endfor %}
-                </ul>
-            </div>
-            {% block InnerContent %}
-            <p>Empty</p>
-            {% endblock %}
-        {% endblock %}
+        {% block content %}{% endblock %}
         <!-- class="PageContent" --></div>
     <!-- class="PageCenter" --></div>
 <footer class="site-footer"> <!-- conteneur global du pied de page -->
