@@ -36,7 +36,7 @@ def projects(request):
     :return: the rendered page
     """
     articles = Article.objects.filter(categorie=3).order_by('-date')[:15]
-    return render_page(request, "Links", {'derniers_articles': articles})
+    return render_page(request, "Projets", {'derniers_articles': articles})
 
 
 def links(request):
