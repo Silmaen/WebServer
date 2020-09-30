@@ -82,7 +82,7 @@ class WebPage(ServerPage):
     template = models.CharField(max_length=30)
     title = models.CharField(max_length=30)
     categorie = models.ForeignKey('Categorie', on_delete=models.CASCADE)
-    data = models.JSONField()
+    data = models.JSONField(blank=True)
 
 
 class subWebPage(ServerPage):
@@ -90,4 +90,5 @@ class subWebPage(ServerPage):
     class to handle sub pages in web pages
     """
     parent = models.ForeignKey('WebPage', on_delete=models.CASCADE)
-    data = models.JSONField()
+    template = models.CharField(max_length=30, blank=True)
+    data = models.JSONField(blank=True)
