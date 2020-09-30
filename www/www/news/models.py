@@ -52,13 +52,43 @@ class Article(models.Model):
         return self.titre
 
 
-class SysadminSubpages(models.Model):
+class ServerPage(models.Model):
     """
-    Sub page for the Sysadmin
+    base class for pages, used for the semi-external pages (page on the same server but other adress)
     """
-    Name = models.CharField(max_length=30)
-    Url = models.CharField(max_length=30)
-    mdi_icon_name = models.CharField(max_length=30, blank=True)
+    name = models.CharField(max_length=30)
+    url = models.CharField(max_length=200)
+    icon = models.CharField(max_length=40, default="", blank=True)
+    needUser = models.BooleanField(default=False)
+    needDevAccess = models.BooleanField(default=False)
+    needHiddenAccess = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.Name
+        return self.name
+
+
+class ExtPage(ServerPage):
+    """
+    Class for exterior pages
+    """
+    Comment = models.TextField(default="", blank=True)
+
+
+class WebPage(ServerPage):
+    """
+    class to handle the list of webpages inside this site
+    """
+    template = models.CharField(max_length=30)
+    title = models.CharField(max_length=30)
+    categorie = models.ForeignKey('Categorie', on_delete=models.CASCADE)
+    data = models.JSONField(blank=True)
+
+
+class subWebPage(ServerPage):
+    """
+    class to handle sub pages in web pages
+    """
+    parent = models.ForeignKey('WebPage', on_delete=models.CASCADE)
+    template = models.CharField(max_length=30, blank=True)
+    data = models.JSONField(blank=True)
