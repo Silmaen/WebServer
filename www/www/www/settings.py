@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'news.apps.NewsConfig',
     'users.apps.UsersConfig',
     'meteo.apps.MeteoConfig',
+    'sysadmin.apps.SysadminConfig',
 ]
 
 MIDDLEWARE = [
@@ -82,12 +83,6 @@ WSGI_APPLICATION = 'www.wsgi.application'
 
 if platform.system() == "Windows":
     # local for testing
-    #DATABASES = {
-    #    'default': {
-    #        'ENGINE': 'django.db.backends.sqlite3',
-    #        'NAME': 'BaseSite.db',
-    #    }
-    #}
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',

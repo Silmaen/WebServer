@@ -1,9 +1,6 @@
 {% extends "base.html" %}
-{% block content %}
-<div class="PageTitle">
-    {% block content_title %}PageTitle{% endblock %}
-</div>
-{% for article in derniers_articles %}
+{% block InnerContent %}
+{% for article in data.derniers_articles %}
 <div class="Article">
     <div class="ArticleHeader">
         <div class="ArticleTitle">
