@@ -14,7 +14,7 @@
             <label for="i_last">Period: </label>
             <select id="i_last" name="i_last">
                 {% for tl in data.time_limit %}
-                <option value={{ tl.name }} {% if last == tl.name %}selected{% endif %}>{{ tl.text }}</option>
+                <option value={{ tl.name }} {% if data.last == tl.name %}selected{% endif %}>{{ tl.text }}</option>
                 {% endfor %}
             </select>
         </span></div>
