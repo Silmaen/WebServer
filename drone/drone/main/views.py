@@ -8,4 +8,4 @@ def index(request):
     :param request: the page request
     :return: the redered page
     """
-    return render(request)
+    return render(request, "base.html", {})

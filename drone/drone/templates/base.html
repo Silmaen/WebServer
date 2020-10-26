@@ -1,0 +1,20 @@
+{% load static template_extra %}
+<html lang="fr">
+<head>
+    <title>{% block title %}Drone de Lachouette{% endblock %}</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+    <meta name="robots" content="index,follow">
+    <meta name="author" content="Argawaen">
+    <meta name="description" content="le contenu">
+    <link rel="shortcut icon" href="{% static 'img/favicon.ico' %}"/>
+    <meta name="keywords" content="FUCK!!">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <!-- feuille de style -->
+    <link rel="stylesheet" href="{% static 'css/default.css' %}">
+    {%block additionnalhead %}
+    {%endblock%}
+</head>
+<body>
+<p>coucou! ça marche</p>
+</body>
