@@ -38,7 +38,7 @@ class DroneComponent(models.Model):
     class to handle componets of drone
     """
     name = models.CharField(max_length=40)
-    category = models.ForeignKey('DroneComposantCategory', on_delete=models.CASCADE)
+    category = models.ForeignKey('DroneComponentCategory', on_delete=models.CASCADE)
     weight = models.FloatField(null=True)
     datasheet = models.URLField(null=True)
 
