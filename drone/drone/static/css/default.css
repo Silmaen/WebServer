@@ -228,6 +228,12 @@ color: #ccc;
 padding: .5em;
 min-width: 400px;
 }
+.Article a {
+    color: #ccc;
+}
+.Article a:hover {
+    color: #fcd649;
+}
 .ArticleHeader{
 display: flex;
 align-content: center;

@@ -13,7 +13,7 @@
     <h3>{{ comp.name }}</h3>
     <p>Catégorie: {{ comp.category.name }} {% if comp.category.onBoard %}volant{% else %}}au sol{% endif %}</p>
     <p>Poids: {{ comp.weight }}</p>
-    <p>Datasheet: <a href="{{ comp.datasheet }}">Ici</a> </p>
+    <a href="{{ comp.datasheet }}">Datasheet</a>
 </div>
 {% empty %}
 <p>Empty</p>
