@@ -86,7 +86,7 @@ if platform.system() == "Windows":
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'BaseSite',
+            'NAME': 'Site_Base',
             'USER': 'BASE_site',
             'PASSWORD': '1234',
             'HOST': '192.168.23.1',
@@ -99,7 +99,7 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'BaseSite',
+            'NAME': 'Site_Base',
             'USER': 'BASE_site',
             'PASSWORD': '1234',
             'HOST': '127.0.0.1',
