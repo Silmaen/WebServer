@@ -30,7 +30,10 @@ class DroneComponentCategory(models.Model):
     class to handle component types for drones
     """
     name = models.CharField(max_length=40)
-    onBoard = models.BooleanField(verbose_name="Onboard component of field component")
+    onBoard = models.BooleanField(verbose_name="Onboard component or Ground component")
+
+    def __str__(self):
+        return self.name
 
 
 class DroneComponent(models.Model):
@@ -41,6 +44,9 @@ class DroneComponent(models.Model):
     category = models.ForeignKey('DroneComponentCategory', on_delete=models.CASCADE)
     weight = models.FloatField(null=True)
     datasheet = models.URLField(null=True)
+
+    def __str__(self):
+        return self.name
 
 
 # Create your models here.
