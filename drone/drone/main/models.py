@@ -38,7 +38,7 @@ class DroneComponentCategory(models.Model):
 
 class DroneComponent(models.Model):
     """
-    class to handle componets of drone
+    class to handle components of drone
     """
     name = models.CharField(max_length=40)
     category = models.ForeignKey('DroneComponentCategory', on_delete=models.CASCADE)
