@@ -3,8 +3,48 @@ from django.db import models
 from django.utils import timezone
 
 
+class Article(models.Model):
+    """
+    object to manipulate articles
+    """
+    titre = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100)
+    auteur = models.CharField(max_length=42)
+    contenu = models.TextField(null=True)
+    date = models.DateTimeField(default=timezone.now,
+                                verbose_name="Date de parution")
+
+    class Meta:
+        """
+        Meta data for articles
+        """
+        verbose_name = "article"
+        ordering = ['date']
+
+    def __str__(self):
+        return self.titre
+
+
+class DroneComponentCategory(models.Model):
+    """
+    class to handle component types for drones
+    """
+    name = models.CharField(max_length=40)
+    onBoard = models.BooleanField(verbose_name="Onboard component of field component")
+
+
+class DroneComponent(models.Model):
+    """
+    class to handle componets of drone
+    """
+    name = models.CharField(max_length=40)
+    category = models.ForeignKey('DroneComposantCategory', on_delete=models.CASCADE)
+    weight = models.FloatField(null=True)
+    datasheet = models.URLField(null=True)
+
+
 # Create your models here.
-class DroneConfiguration(models):
+class DroneConfiguration(models.Model):
     """
     class for describing drone configuration
     """
@@ -29,7 +69,7 @@ class DroneConfiguration(models):
         return "Version " + str(self.version_number)
 
 
-class DroneFlight(models):
+class DroneFlight(models.Model):
     """
     class handling drone flights
     """

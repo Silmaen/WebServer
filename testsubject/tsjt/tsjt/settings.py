@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'tsjt.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'TestSubject',
+        'NAME': 'Site_TestSubject',
         'USER': 'TS_DJ_site',
         'PASSWORD': '1234',
         'HOST': '127.0.0.1',
