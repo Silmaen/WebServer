@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{%block topsection %}
+<div class="topcontent">
+    <h3>Les Vols</h3>
+</div>
+{%endblock%}
+
+
+{%block mainsection %}
+
+{% for vol in vols %}
+<div class="Article">
+    <h3>{{ vol.name }}</h3><h5>{{vol.date}}</h5>
+    <p>Météo: {{ vol.meteo }}</p>
+    <p>Drone: {{ vol.drone_configuration }}</p>
+    <p>Resumé: {{ vol.summary }} </p>
+    <p>Commentaires: {{ vol.comments }} </p>
+</div>
+{% empty %}
+<p>Empty</p>
+{% endfor %}
+
+{%endblock%}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{%block topsection %}
+<div class="topcontent">
+    <h3>Les Configurations de drone</h3>
+</div>
+{%endblock%}
+
+
+{%block mainsection %}
+
+{% for conf in configurations %}
+<div class="Article">
+    <h3>{{ conf }}</h3><h5>{{conf.date}}</h5>
+    <p>Améliorations: {{ vol.improvement_summary }} </p>
+    <p>Commentaires: {{ vol.comments }} </p>
+</div>
+{% empty %}
+<p>Empty</p>
+{% endfor %}
+
+{%endblock%}

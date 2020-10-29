@@ -1,34 +1,4 @@
 @import url(https://cdn.materialdesignicons.com/5.4.55/css/materialdesignicons.min.css);
-:root {
-  --blue: #007bff;
-  --indigo: #6610f2;
-  --purple: #6f42c1;
-  --pink: #e83e8c;
-  --red: #dc3545;
-  --orange: #fd7e14;
-  --yellow: #ffc107;
-  --green: #28a745;
-  --teal: #20c997;
-  --cyan: #17a2b8;
-  --white: #fff;
-  --gray: #6c757d;
-  --gray-dark: #343a40;
-  --primary: #007bff;
-  --secondary: #6c757d;
-  --success: #28a745;
-  --info: #17a2b8;
-  --warning: #ffc107;
-  --danger: #dc3545;
-  --light: #f8f9fa;
-  --dark: #343a40;
-  --breakpoint-xs: 0;
-  --breakpoint-sm: 576px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 992px;
-  --breakpoint-xl: 1200px;
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
 *,
 *::before,
 *::after {
@@ -48,11 +18,12 @@ html, body {
 	font-smoothing: antialiased;
 }
 h1,h2,h3,h4,h5,h6 { 
-	color: #20509e;
+	color: #fcd649;
 	margin: 0;
 	font-weight:500;
 	font-family: sans-serif;
 	line-height: normal;
+	text-transform: uppercase;
 }
 h1 {font-size: 70px;}
 h2 {font-size: 48px;}
@@ -72,7 +43,7 @@ body {
 	line-height: 1.5;
 	color: #212529;
 	text-align: left;
-	background-color: #fff;
+	background-color: #464646;
 }
 input:focus,
 select:focus,
@@ -225,6 +196,7 @@ i{
 
 .top-section {
     padding-top:4.7rem;
+    padding-bottom: 0.7rem;
     display: flex;
     flex-flow: column;
     align-items: center;
@@ -251,13 +223,17 @@ i{
 display: flex;
 flex-direction: column;
 border-radius: 1.5em;
-background-color: cornsilk;
+background-color: #464646;
+color: #ccc;
 padding: .5em;
 min-width: 400px;
 }
 .ArticleHeader{
 display: flex;
-
+align-content: center;
+flex-direction: row;
+flex-wrap: nowrap;
+justify-content: center;
 }
 .ArticleContent{
 display: flex;
