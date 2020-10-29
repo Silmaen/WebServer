@@ -1,7 +1,34 @@
 {% extends "base.html" %}
 {%block topsection %}
-
+<div class="topcontent">
+    <h3>Les dernières news!</h3>
+</div>
 {%endblock%}
 
+
 {%block mainsection %}
+
+{% for article in articles %}
+<div class="Article">
+    <div class="ArticleHeader">
+        <h4>{{ article.titre}}</h4>
+    </div>
+    <div class="ArticleContent">
+        {{ article.contenu|safe }}
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleAuthor">
+            <span class="icon"><i class="mdi mdi-account-circle"></i></span>
+            <span>{{ article.auteur }}</span>
+        </div>
+        <div class="ArticleDate">
+            <span class="icon"><i class="mdi mdi-clock-fast"></i></span>
+            <span>{{ article.date }}</span>
+        </div>
+    </div>
+</div>
+{% empty %}
+<p>Empty</p>
+{% endfor %}
+
 {%endblock%}

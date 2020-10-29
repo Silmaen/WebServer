@@ -222,12 +222,49 @@ i{
 .navbar-nav .current>a {
 	color:#fcd649
 }
- 
- 
+
+.top-section {
+    padding-top:4.7rem;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+}
+.topcontent {
+    text-align:center;
+}
+.main-section {
+	background-color: #ddd;
+    display: flex;
+    flex-flow: column;
+    align-items: center;
+    padding: 2.7em 3em;
+}
 .footer-section {
 	position: fixed;
 	width:100%;
 	bottom:0;
 	background-color: #0c0c0C;
 	padding-bottom: 0.1rem;
+}
+
+.Article{
+display: flex;
+flex-direction: column;
+border-radius: 1.5em;
+background-color: cornsilk;
+padding: .5em;
+min-width: 400px;
+}
+.ArticleHeader{
+display: flex;
+
+}
+.ArticleContent{
+display: flex;
+min-height: 100px;
+}
+.ArticleFooter{
+display: flex;
+flex-direction: row;
+justify-content: space-between;
 }

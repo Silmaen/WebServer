@@ -1,5 +1,6 @@
 """main.views"""
 from django.shortcuts import render
+from .models import Article
 
 
 def index(request):
@@ -8,7 +9,9 @@ def index(request):
     :param request: the page request
     :return: the redered page
     """
-    return render(request, "base.html", {"page": "news"})
+    articles = Article.objects.order_by('-date')[:15]
+    print(len(articles))
+    return render(request, "BaseArticles.html", {"page": "news", "articles": articles})
 
 
 def vols(request):
