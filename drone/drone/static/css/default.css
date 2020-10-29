@@ -16,6 +16,7 @@ html, body {
 	height: 100%;
 	font-family: sans-serif;
 	font-smoothing: antialiased;
+    color: #ccc;
 }
 h1,h2,h3,h4,h5,h6 { 
 	color: #fcd649;
@@ -33,7 +34,6 @@ h5 {font-size: 20px;}
 h6 {font-size: 14px;}
 p {
  font-size: 15.7px;
- color: #75849a;
  line-height: 1.6;
 }
 body {
