@@ -27,7 +27,7 @@ SECRET_KEY = '4m53$11i49muo$@i*y9jt$1%q9p9n=joif83m2jxe99!il0poh'
 if platform.system() == "Windows":
     DEBUG = True
 else:
-    DEBUG = True
+    DEBUG = False
 
 ALLOWED_HOSTS = ['127.0.0.1', 'drone.argawaen.net']
 
