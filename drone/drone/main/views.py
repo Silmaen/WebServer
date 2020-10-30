@@ -1,6 +1,6 @@
 """main.views"""
 from django.shortcuts import render
-from .models import Article
+from .models import Article, DroneComponent, DroneConfiguration, DroneFlight
 
 
 def index(request):
@@ -20,7 +20,8 @@ def vols(request):
     :param request: the page request
     :return: the redered page
     """
-    return render(request, "base.html", {"page": "vols"})
+    df = DroneFlight.objects.order_by("-date")
+    return render(request, "BaseFlight.html", {"page": "vols", "vols": df})
 
 
 def configurations(request):
@@ -29,7 +30,8 @@ def configurations(request):
     :param request: the page request
     :return: the redered page
     """
-    return render(request, "base.html", {"page": "confs"})
+    dc = DroneConfiguration.objects.order_by('-version_number')
+    return render(request, "BaseConfiguration.html", {"page": "confs", "configurations": dc})
 
 
 def composants(request):
@@ -38,4 +40,5 @@ def composants(request):
     :param request: the page request
     :return: the redered page
     """
-    return render(request, "base.html", {"page": "comps"})
+    dc = DroneComponent.objects.order_by("name")
+    return render(request, "BaseComposants.html", {"page": "comps", "composants": dc})
