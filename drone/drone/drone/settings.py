@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'markdownx', # adding support for markdown datafiles
     'main.apps.MainConfig'
 ]
 
@@ -161,3 +162,9 @@ MEDIA_URL = "/media/"
 
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
+
+# markdownx configuration
+# https://neutronx.github.io/django-markdownx/
+MARKDOWNX_MARKDOWN_EXTENSIONS = [
+    'markdown.extensions.extra'
+]
