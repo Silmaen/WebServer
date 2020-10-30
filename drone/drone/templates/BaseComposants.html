@@ -12,7 +12,11 @@
 <div class="Article">
     <h3>{{ comp.name }}</h3>
     <p>Catégorie: {{ comp.category.name }} {% if comp.category.onBoard %}volant{% else %}}au sol{% endif %}</p>
-    <p>Poids: {{ comp.weight }}</p>
+    {% for spec in comp.specs %}
+        <p>{{spec}}</p>
+    {% endfor %}
+    <img src="{{ comp.photo.url }}" width="100">
+    {{ comp.comments_md}}
     <a href="{{ comp.datasheet }}">Datasheet</a>
 </div>
 {% empty %}

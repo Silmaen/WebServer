@@ -1,11 +1,12 @@
 """main.admin"""
 from django.contrib import admin
+from markdownx.admin import MarkdownxModelAdmin
 from django.utils.text import Truncator
 from .models import *
 
 
 # Register your models here.
-class ArticleAdmin(admin.ModelAdmin):
+class ArticleAdmin(MarkdownxModelAdmin):
     """
     Admin page for articles
     """
@@ -46,6 +47,6 @@ class ArticleAdmin(admin.ModelAdmin):
 
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(DroneComponentCategory)
-admin.site.register(DroneComponent)
-admin.site.register(DroneConfiguration)
-admin.site.register(DroneFlight)
+admin.site.register(DroneComponent, MarkdownxModelAdmin)
+admin.site.register(DroneConfiguration, MarkdownxModelAdmin)
+admin.site.register(DroneFlight, MarkdownxModelAdmin)
