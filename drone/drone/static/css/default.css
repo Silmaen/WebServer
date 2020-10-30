@@ -212,9 +212,11 @@ i{
 .main-section {
 	background-color: #ddd;
     display: flex;
-    flex-flow: column;
-    align-items: center;
-    padding: 2.7em 3em;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: stretch;
+    align-content: stretch;
+    padding: 1.7em;
     padding-bottom:4.7rem;
 }
 .footer-section {
@@ -232,8 +234,9 @@ border-radius: 1.5em;
 background-color: #464646;
 color: #ccc;
 padding: .5em;
-min-width: 400px;
-max-width: 800px;
+margin: 1%;
+min-width: 25%;
+max-width: 47%;
 }
 .Article a {
     color: #ccc;
