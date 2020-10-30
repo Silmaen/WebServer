@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{%block topsection %}
+<div class="topcontent">
+    <h3>Les Composants</h3>
+</div>
+{%endblock%}
+
+
+{%block mainsection %}
+
+{% for comp in composants %}
+<div class="Article">
+    <h3>{{ comp.name }}</h3>
+    <p>Catégorie: {{ comp.category.name }} {% if comp.category.onBoard %}volant{% else %}}au sol{% endif %}</p>
+    <p>Poids: {{ comp.weight }}</p>
+    <a href="{{ comp.datasheet }}">Datasheet</a>
+</div>
+{% empty %}
+<p>Empty</p>
+{% endfor %}
+
+{%endblock%}
