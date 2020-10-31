@@ -12,7 +12,7 @@ class Article(models.Model):
     titre = models.CharField(max_length=100, verbose_name="Titre de l'article")
     slug = models.SlugField(max_length=100, verbose_name="slug de l'article")
     auteur = models.CharField(max_length=42, verbose_name="Auteur de l'article")
-    contenu = MarkdownxField(null=True, verbose_name="Contenu de l'article au format Markdown")
+    contenu = MarkdownxField(blank=True, default="", verbose_name="Contenu de l'article au format Markdown")
     date = models.DateTimeField(default=timezone.now,
                                 verbose_name="Date de parution")
 
@@ -47,10 +47,10 @@ class DroneComponent(models.Model):
     """
     name = models.CharField(max_length=40, verbose_name="Nom du composant")
     category = models.ForeignKey('DroneComponentCategory', on_delete=models.CASCADE, verbose_name="Catégorie")
-    specs = models.JSONField(null=True, verbose_name="Caractéristiques")
-    comments = MarkdownxField(null=True, verbose_name="Commentaires")
-    datasheet = models.URLField(null=True, verbose_name="Liens vers la datasheet")
-    photo = models.ImageField(null=True, verbose_name="Photo du composant")
+    specs = models.JSONField(blank=True, default=dict, verbose_name="Caractéristiques")
+    comments = MarkdownxField(blank=True, default="", verbose_name="Commentaires")
+    datasheet = models.URLField(null=True, blank=True, verbose_name="Liens vers la datasheet")
+    photo = models.ImageField(null=True, blank=True, verbose_name="Photo du composant")
 
     def __str__(self):
         return self.name
@@ -65,11 +65,12 @@ class DroneConfiguration(models.Model):
     class for describing drone configuration
     """
     version_number = models.CharField(max_length=10, verbose_name="Numéro de version")
-    nick_name = models.CharField(max_length=40, null=True, verbose_name="Surnon de la version")
-    specs = models.JSONField(null=True, verbose_name="Caractéristiques")
-    comments = MarkdownxField(null=True, verbose_name="Commentaires")
+    nick_name = models.CharField(max_length=40, blank=True, default="", verbose_name="Surnon de la version")
     date = models.DateTimeField(default=timezone.now, verbose_name="Date de realisation")
-    photo = models.ImageField(null=True, verbose_name="Photo de la configuration")
+    Composants = models.ManyToManyField(DroneComponent)
+    version_logiciel = models.CharField(max_length=40, blank=True, default="", verbose_name="Version du logiciel du contrôleur de vol")
+    description = MarkdownxField(blank=True, default="", verbose_name="Commentaires")
+    photo = models.ImageField(null=True, blank=True, verbose_name="Photo de la configuration")
 
     class Meta:
         """
@@ -78,8 +79,8 @@ class DroneConfiguration(models.Model):
         verbose_name = "Configuration Drone"
         ordering = ['date']
 
-    def comments_md(self):
-        return markdownify(self.comments)
+    def description_md(self):
+        return markdownify(self.description)
 
     def __str__(self):
         if self.nick_name not in [None, ""]:
@@ -92,18 +93,17 @@ class DroneFlight(models.Model):
     class handling drone flights
     """
     date = models.DateTimeField(default=timezone.now, verbose_name="Date de realisation")
-    name = models.CharField(max_length=40, null=True)
-    meteo = models.TextField(null=True)
-    summary = MarkdownxField()
-    comments = MarkdownxField()
+    name = models.CharField(max_length=40, blank=True, default="")
+    meteo = models.JSONField(blank=True, default=dict)
     drone_configuration = models.ForeignKey('DroneConfiguration', on_delete=models.CASCADE)
+    summary = MarkdownxField()
 
     class Meta:
         """
         Meta data for drone
         """
         verbose_name = "Vol de  Drone"
-        ordering = ['date']
+        ordering = ['-date']
 
     def comments_md(self):
         return markdownify(self.comments)
