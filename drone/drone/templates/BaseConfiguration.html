@@ -10,9 +10,18 @@
 
 {% for conf in configurations %}
 <div class="Article">
-    <h3>{{ conf }}</h3><h5>{{conf.date}}</h5>
-    <p>Améliorations: {{ vol.improvement_summary }} </p>
-    <p>Commentaires: {{ vol.comments }} </p>
+    <div class="ArticleHeader">
+        <h4>{{ conf }}</h4> <h6>{{conf.date}}</h6>
+    </div>
+    <div class="ArticleContent">
+        {% if conf.photo %}
+        <div class="image_desc"><img src="{{ conf.photo.url }}"></div>
+        {% endif %}
+        {{ conf.description_md| safe }}
+    </div>
+    <div class="ArticleFooter">
+        {{ conf.version_logiciel }}
+    </div>
 </div>
 {% empty %}
 <p>Empty</p>
