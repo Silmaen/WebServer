@@ -1,11 +1,10 @@
 """main.forms"""
+from django.contrib.auth.forms import UserCreationForm
 from django import forms
+from .models import ArticleComments
 
-from markdownx.fields import MarkdownxFormField
 
+class CustomUserCreationForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = UserCreationForm.Meta.fields + ("first_name", "last_name", "email")
 
-class MdForm(forms.Form):
-    """
-    form to render markdown
-    """
-    content = MarkdownxFormField()
