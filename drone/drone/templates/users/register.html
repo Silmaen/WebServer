@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{%block topsection %}
+<div class="topcontent">
+    <h3>Nouvel utilisateur</h3>
+</div>
+{%endblock%}
+
+{%block mainsection %}
+<div class="LoginItem">
+    {% if not isgood %}<p>ERROR: mauvais renseignements<p>{%endif%}
+    <form method="post">
+        {% csrf_token %}
+        {{form}}
+        <input type="submit" value="Register">
+    </form>
+    <a href="{% url 'login' %}">Back to login</a>
+</div>
+{% endblock %}

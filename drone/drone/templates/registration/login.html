@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{%block topsection %}
+<div class="topcontent">
+    <h3>Login Page</h3>
+</div>
+{%endblock%}
+
+{%block mainsection %}
+<div class="LoginItem">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Login">
+    </form>
+    <a href="{% url 'register' %}">Register</a>
+    <a href="{% url 'news' %}">Retour</a>
+</div>
+{%endblock%}
