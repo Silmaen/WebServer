@@ -11,7 +11,7 @@
 {% for article in articles %}
 <div class="Article">
     <div class="ArticleHeader">
-        <h4>{{ article.titre }}</h4>
+        <a href ="news/{{ article.id }}"><h4>{{ article.titre }}</h4></a>
     </div>
     <div class="ArticleContent">
         {{ article.contenu_md|safe }}
