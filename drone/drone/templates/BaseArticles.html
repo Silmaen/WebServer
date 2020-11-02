@@ -30,7 +30,7 @@
             <span>{{ article.date }}</span>
         </div>
     </div>
-    {% if conf.nb_comments > 0 %}
+    {% if article.nb_comments > 0 %}
     <div class="Comments">
         {% for cc in article.get_comments %}
             <div class="c_head">
