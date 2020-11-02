@@ -1,7 +1,6 @@
 """main.admin"""
 from django.contrib import admin
 from markdownx.admin import MarkdownxModelAdmin
-from django.utils.text import Truncator
 from .models import *
 
 
@@ -30,7 +29,7 @@ class ArticleAdmin(MarkdownxModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        obj.user = request.user
+        obj.auteur = request.user
         super(ArticleAdmin, self).save_model(request, obj, form, change)
 
     def content_overview(self, article):
@@ -69,10 +68,40 @@ class DroneComponentAdmin(MarkdownxModelAdmin):
     search_fields = ('name', 'category')
 
 
+class DroneComponentCommentsAdmin(MarkdownxModelAdmin):
+    list_display = ('user', 'contenu', 'article', 'date', 'active')
+    list_filter = ('user', 'date', 'active')
+    ordering = ('article', '-date', 'user',)
+    search_fields = ('user', 'contenu')
+    actions = ['approve_comments']
+
+    def approve_comments(self, request, queryset):
+        queryset.update(active=True)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super(DroneComponentCommentsAdmin, self).save_model(request, obj, form, change)
+
+
 class DroneConfigurationAdmin(MarkdownxModelAdmin):
     list_display = ('version_number', 'nick_name', 'date', 'version_logiciel')
     list_filter = ('version_number', 'nick_name', 'date', 'version_logiciel')
     search_fields = ('version_number', 'nick_name', 'date', 'version_logiciel')
+
+
+class DroneConfigurationCommentsAdmin(MarkdownxModelAdmin):
+    list_display = ('user', 'contenu', 'article', 'date', 'active')
+    list_filter = ('user', 'date', 'active')
+    ordering = ('article', '-date', 'user',)
+    search_fields = ('user', 'contenu')
+    actions = ['approve_comments']
+
+    def approve_comments(self, request, queryset):
+        queryset.update(active=True)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super(DroneConfigurationCommentsAdmin, self).save_model(request, obj, form, change)
 
 
 class DroneFlightAdmin(MarkdownxModelAdmin):
@@ -81,10 +110,30 @@ class DroneFlightAdmin(MarkdownxModelAdmin):
     search_fields = ('name', 'date', 'drone_configuration')
 
 
+class DroneFlightCommentsAdmin(MarkdownxModelAdmin):
+    list_display = ('user', 'contenu', 'article', 'date', 'active')
+    list_filter = ('user', 'date', 'active')
+    ordering = ('article', '-date', 'user',)
+    search_fields = ('user', 'contenu')
+    actions = ['approve_comments']
+
+    def approve_comments(self, request, queryset):
+        queryset.update(active=True)
+
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        super(DroneFlightCommentsAdmin, self).save_model(request, obj, form, change)
+
+
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticleComments, ArticleCommentsAdmin)
 
 admin.site.register(DroneComponentCategory, DroneComponentCategoryAdmin)
 admin.site.register(DroneComponent, DroneComponentAdmin)
+admin.site.register(DroneComponentComments, DroneComponentCommentsAdmin)
+
 admin.site.register(DroneConfiguration, DroneConfigurationAdmin)
+admin.site.register(ConfigurationComments, DroneConfigurationCommentsAdmin)
+
 admin.site.register(DroneFlight, DroneFlightAdmin)
+admin.site.register(FlightComments, DroneFlightCommentsAdmin)
