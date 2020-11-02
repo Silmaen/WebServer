@@ -54,7 +54,7 @@ def detailed_vol(request, vol_id):
     if not request.user.is_authenticated:
         return redirect("/")
     vol = get_object_or_404(DroneFlight, pk=vol_id)
-    return render(request, "DetailedFlight.html", {"page": "news", "vol": vol})
+    return render(request, "DetailedFlight.html", {"page": "vols", "vol": vol})
 
 
 def configurations(request):

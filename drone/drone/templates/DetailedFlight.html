@@ -1,19 +1,28 @@
 {% extends "base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <h3>Les Vols</h3>
+    <a href ="/vols"><h3>Les Vols</h3></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
-{% for vol in vols %}
-<div class="Article">
+<div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/vols/{{ vol.id }}"><h4>{{ vol }}</h4></a>
+        <a href ="/vols"><h4>{{ vol }}</h4></a>
     </div>
     <div class="ArticleContent">
         <p>Météo: {{ vol.render_meteo|safe }}</p>
-        {{ vol.summary_md|safe }}
+        {{ vol.summary_all_md|safe }}
+        {% if vol.datalog %}
+        <a href="{{ vol.datalog.url }}"><span class="mdi mdi-database-export"></span><span>Datalog</span></a>
+        {% else %}
+        <span><span class="mdi mdi-database-remove"></span><span>no datalog</span></span>
+        {% endif %}
+        {% if vol.video %}
+        <a href="{{ vol.video.url }}"><span class="mdi mdi-video-outline"></span><span>Vidéo</span></a>
+        {% else %}
+        <span><span class="mdi mdi-video-off-outline"></span><span>no Vidéo</span></span>
+        {% endif %}
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor">
@@ -36,12 +45,9 @@
             <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
             <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
             </div>
-            <div class="c_body">{{cc.contenu_md| safe}}</div>
+            <div class="c_body">{{cc.contenu_all_md| safe}}</div>
         {% endfor%}
     </div>
     {% endif %}
 </div>
-{% empty %}
-<p>Empty</p>
-{% endfor %}
 {%endblock%}
