@@ -10,9 +10,40 @@
 
 {% for conf in configurations %}
 <div class="Article">
-    <h3>{{ conf }}</h3><h5>{{conf.date}}</h5>
-    <p>Améliorations: {{ vol.improvement_summary }} </p>
-    <p>Commentaires: {{ vol.comments }} </p>
+    <div class="ArticleHeader">
+        <h4>{{ conf }}</h4>
+    </div>
+    <div class="ArticleContent">
+        {% if conf.photo %}
+        <div class="image_desc"><img src="{{ conf.photo.url }}"></div>
+        {% endif %}
+        {{ conf.description_md| safe }}
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleAuthor">
+            <span class="mdi mdi-engine-outline"></span>
+            <span>{{ conf.version_logiciel }}</span>
+        </div>
+        <div class="ArticleComments">
+            <span class="mdi mdi-comment-outline"></span>
+            <span>{{ conf.nb_comments }}</span>
+        </div>
+        <div class="ArticleDate">
+            <span class="mdi mdi-clock-fast"></span>
+            <span>{{ conf.date }}</span>
+        </div>
+    </div>
+    {% if conf.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in article.get_comments %}
+            <div class="c_head">
+            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
+            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+            </div>
+            <div class="c_body">{{cc.contenu_md| safe}}</div>
+        {% endfor%}
+    </div>
+    {% endif %}
 </div>
 {% empty %}
 <p>Empty</p>
