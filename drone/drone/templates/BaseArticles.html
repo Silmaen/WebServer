@@ -11,24 +11,39 @@
 {% for article in articles %}
 <div class="Article">
     <div class="ArticleHeader">
-        <h4>{{ article.titre}}</h4>
+        <h4>{{ article.titre }}</h4>
     </div>
     <div class="ArticleContent">
-        {{ article.contenu_md |safe }}
+        {{ article.contenu_md|safe }}
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor">
-            <span class="icon"><i class="mdi mdi-account-circle"></i></span>
+            <span class="mdi mdi-account-circle"></span>
             <span>{{ article.auteur }}</span>
         </div>
+        <div class="ArticleComments">
+            <span class="mdi mdi-comment-outline"></span>
+            <span>{{ article.nb_comments }}</span>
+        </div>
         <div class="ArticleDate">
-            <span class="icon"><i class="mdi mdi-clock-fast"></i></span>
+            <span class="mdi mdi-clock-fast"></span>
             <span>{{ article.date }}</span>
         </div>
     </div>
+    {% if conf.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in article.get_comments %}
+            <div class="c_head">
+            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
+            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+            </div>
+            <div class="c_body">{{cc.contenu_md| safe}}</div>
+        {% endfor%}
+    </div>
+    {% endif %}
 </div>
 {% empty %}
-<p>Empty</p>
+<p>Login required...</p>
 {% endfor %}
 
 {%endblock%}

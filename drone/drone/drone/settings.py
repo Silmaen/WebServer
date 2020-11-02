@@ -168,3 +168,4 @@ LOGOUT_REDIRECT_URL = '/'
 MARKDOWNX_MARKDOWN_EXTENSIONS = [
     'markdown.extensions.extra'
 ]
+
