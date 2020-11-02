@@ -1,35 +1,46 @@
 {% extends "base.html" %}
+{% load static template_drone_extra %}
 {%block topsection %}
 <div class="topcontent">
-    <a href ="/news"><h3>Les dernières news!</h3></a>
+    <a href ="/confs"><h3>Les Configurations de drone</h3></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/news"><h4>{{ article.titre }}</h4></a>
+        <a href ="/confs"><h4>{{ conf }}</h4></a>
     </div>
     <div class="ArticleContent">
-        {{ article.contenu_all_md|safe }}
+        <div class="specifications">
+            {% if conf.photo %}
+            <div class="image_desc"><img src="{{ conf.photo.url }}"></div>
+            {% endif %}
+            <ul class="composants">
+                {% for comp in conf.Composants.all %}
+                <li><a href="/comps/{{comp.id}}">{{ comp }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {{ conf.description_all_md|safe}}
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor">
-            <span class="mdi mdi-account-circle"></span>
-            <span>{{ article.auteur }}</span>
+            <span class="mdi mdi-engine-outline"></span>
+            <span>{{ conf.version_logiciel }}</span>
         </div>
         <div class="ArticleComments">
             <span class="mdi mdi-comment-outline"></span>
-            <span>{{ article.nb_comments }}</span>
+            <span>{{ conf.nb_comments }}</span>
         </div>
         <div class="ArticleDate">
             <span class="mdi mdi-clock-fast"></span>
-            <span>{{ article.date }}</span>
+            <span>{{ conf.date }}</span>
         </div>
     </div>
-    {% if article.nb_comments > 0 %}
+    {% if conf.nb_comments > 0 %}
     <div class="Comments">
-        {% for cc in article.get_all_comments %}
+        {% for cc in conf.get_all_comments %}
             <div class="c_head">
             <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
             <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>

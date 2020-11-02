@@ -69,17 +69,17 @@ def configurations(request):
     return render(request, "BaseConfiguration.html", {"page": "confs", "configurations": dc})
 
 
-def detailed_configuration(request, configurtion_id):
+def detailed_configuration(request, conf_id):
     """
     page for one article with details
     :param request: the page request
-    :param configurtion_id: the id of the article to find
+    :param conf_id: the id of the article to find
     :return: the rendered page
     """
     if not request.user.is_authenticated:
         return redirect("/")
-    dc = get_object_or_404(DroneConfiguration, pk=configurtion_id)
-    return render(request, "DetailedConfiguration.html", {"page": "confs", "configuration": dc})
+    dc = get_object_or_404(DroneConfiguration, pk=conf_id)
+    return render(request, "DetailedConfiguration.html", {"page": "confs", "conf": dc})
 
 
 def composants(request):
