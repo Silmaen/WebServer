@@ -5,7 +5,6 @@ from django.utils import timezone
 from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
 from django.utils.text import Truncator
-from html5lib_truncation import truncate_html
 
 
 truncation = 200
@@ -19,7 +18,6 @@ class Article(models.Model):
     """
     titre = models.CharField(max_length=100, verbose_name="Titre de l'article")
     slug = models.SlugField(max_length=100, verbose_name="slug de l'article")
-    # auteur = models.CharField(max_length=42, verbose_name="Auteur de l'article")
     auteur = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Auteur de l'article")
     contenu = MarkdownxField(blank=True, default="", verbose_name="Contenu de l'article au format Markdown")
     date = models.DateTimeField(default=timezone.now,
@@ -30,7 +28,7 @@ class Article(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.contenu)), truncation, end='...', break_words=True)
+        return Truncator(markdownify(str(self.contenu))).chars(truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -51,7 +49,7 @@ class Article(models.Model):
         return the last 3 comments for this object
         :return: last 3 comments
         """
-        return self.comments.filter(active=True).order_by("-date")[:3]
+        return self.get_all_comments()[:3]
 
     def get_all_comments(self):
         """
@@ -59,13 +57,6 @@ class Article(models.Model):
         :return: all comments
         """
         return self.comments.filter(active=True).order_by("-date")
-
-    def content_overview(self):
-        """
-        Returns the 40 first characters of the article's content,
-        followed by '...' is text is longer.
-        """
-        return Truncator(self.contenu).chars(truncation, truncate='...')
 
     class Meta:
         """
@@ -99,7 +90,7 @@ class ArticleComments(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.contenu)), comment_truncation, end='...', break_words=True)
+        return Truncator(markdownify(str(self.contenu))).chars(comment_truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -157,7 +148,7 @@ class DroneComponent(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.description)), truncation, end='...', break_words=True)
+        return Truncator(markdownify(str(self.description))).chars(truncation, truncate='...', html=True)
 
     def description_all_md(self):
         """
@@ -178,7 +169,7 @@ class DroneComponent(models.Model):
         return the last 3 comments for this object
         :return: last 3 comments
         """
-        return self.comments.filter(active=True).order_by("-date")[:3]
+        return self.get_all_comments()[:3]
 
     def get_all_comments(self):
         """
@@ -209,7 +200,8 @@ class DroneComponentComments(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.contenu)), comment_truncation, end='...', break_words=True)
+
+        return Truncator(markdownify(str(self.contenu))).chars(comment_truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -217,13 +209,6 @@ class DroneComponentComments(models.Model):
         :return: the html output
         """
         return markdownify(str(self.contenu))
-
-    def content_overview(self):
-        """
-        Returns the 40 first characters of the article's content,
-        followed by '...' is text is longer.
-        """
-        return Truncator(self.contenu).chars(comment_truncation, truncate='...')
 
     class Meta:
         """
@@ -267,7 +252,7 @@ class DroneConfiguration(models.Model):
         render the description as Markdown
         :return: the html output
         """
-        return markdownify(str(self.content_overview()))
+        return Truncator(markdownify(str(self.description))).chars(truncation, truncate='...', html=True)
 
     def description_all_md(self):
         """
@@ -288,7 +273,7 @@ class DroneConfiguration(models.Model):
         get the last 3 comments
         :return: last tree comments
         """
-        return self.comments.filter(active=True)[:3]
+        return self.get_all_comments()[:3]
 
     def get_all_comments(self):
         """
@@ -326,7 +311,7 @@ class ConfigurationComments(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.contenu)), comment_truncation, end='...', break_words=True)
+        return Truncator(markdownify(str(self.contenu))).chars(comment_truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -334,13 +319,6 @@ class ConfigurationComments(models.Model):
         :return: the html output
         """
         return markdownify(str(self.contenu))
-
-    def content_overview(self):
-        """
-        Returns the 40 first characters of the article's content,
-        followed by '...' is text is longer.
-        """
-        return Truncator(self.contenu).chars(comment_truncation, truncate='...')
 
     class Meta:
         """
@@ -400,9 +378,12 @@ class FlightComments(models.Model):
                                 on_delete=models.CASCADE,
                                 verbose_name="Article du commentaire",
                                 related_name="comments")
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, on_delete=models.CASCADE, verbose_name="Auteur du commentaire")
-    contenu = MarkdownxField(blank=True, default="", verbose_name="Contenu de l'article au format Markdown")
-    date = models.DateTimeField(default=timezone.now, verbose_name="Date de parution")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, editable=False, on_delete=models.CASCADE,
+                             verbose_name="Auteur du commentaire")
+    contenu = MarkdownxField(blank=True, default="",
+                             verbose_name="Contenu de l'article au format Markdown")
+    date = models.DateTimeField(default=timezone.now,
+                                verbose_name="Date de parution")
     active = models.BooleanField(default=False)
 
     def contenu_md(self):
@@ -410,7 +391,7 @@ class FlightComments(models.Model):
         render the content as Markdown
         :return: the html output
         """
-        return truncate_html(markdownify(str(self.contenu)), comment_truncation, end='...', break_words=True)
+        return Truncator(markdownify(str(self.contenu))).chars(comment_truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -418,13 +399,6 @@ class FlightComments(models.Model):
         :return: the html output
         """
         return markdownify(str(self.contenu))
-
-    def content_overview(self):
-        """
-        Returns the 40 first characters of the article's content,
-        followed by '...' is text is longer.
-        """
-        return Truncator(self.contenu).chars(comment_truncation, truncate='...')
 
     class Meta:
         """
@@ -435,4 +409,3 @@ class FlightComments(models.Model):
 
     def __str__(self):
         return str(self.user) + "_" + str(self.date)
-
