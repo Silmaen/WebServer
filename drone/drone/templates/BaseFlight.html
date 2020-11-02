@@ -12,7 +12,7 @@
         <a href ="/vols/{{ vol.id }}"><h4>{{ vol }}</h4></a>
     </div>
     <div class="ArticleContent">
-        <p>Météo: {{ vol.render_meteo|safe }}</p>
+        {{ vol.render_meteo|safe }}
         {{ vol.summary_md|safe }}
     </div>
     <div class="ArticleFooter">

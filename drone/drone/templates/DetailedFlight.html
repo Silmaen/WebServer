@@ -11,7 +11,7 @@
         <a href ="/vols"><h4>{{ vol }}</h4></a>
     </div>
     <div class="ArticleContent">
-        <p>Météo: {{ vol.render_meteo|safe }}</p>
+        {{ vol.render_meteo|safe }}
         {{ vol.summary_all_md|safe }}
         {% if vol.datalog %}
         <a href="{{ vol.datalog.url }}"><span class="mdi mdi-database-export"></span><span>Datalog</span></a>
