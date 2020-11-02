@@ -13,9 +13,9 @@ class ArticleAdmin(MarkdownxModelAdmin):
     list_display = ('titre', 'auteur', 'date', 'content_overview')
     list_filter = ('auteur', 'date')
     date_hierarchy = 'date'
-    ordering = ('date', 'auteur',)
+    ordering = ('-date', 'auteur',)
     search_fields = ('titre', 'contenu')
-    prepopulated_fields = {'slug': ('titre',),}
+    prepopulated_fields = {'slug': ('titre',)}
     # Configuration du formulaire d'édition
     fieldsets = (
         # Fieldset 1 : meta-info (titre, auteur…)
@@ -46,6 +46,7 @@ class ArticleAdmin(MarkdownxModelAdmin):
 class ArticleCommentsAdmin(MarkdownxModelAdmin):
     list_display = ('user', 'contenu', 'article', 'date', 'active')
     list_filter = ('user', 'date', 'active')
+    ordering = ('article', '-date', 'user',)
     search_fields = ('user', 'contenu')
     actions = ['approve_comments']
 

@@ -237,6 +237,9 @@ margin: 1%;
 min-width: 5%;
 max-width: 27%;
 }
+.Article_detail {
+max-width: 90%;
+}
 .Article a {
     color: #ccc;
 }

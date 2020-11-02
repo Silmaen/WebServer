@@ -11,7 +11,7 @@
 {% for conf in configurations %}
 <div class="Article">
     <div class="ArticleHeader">
-        <h4>{{ conf }}</h4>
+        <a href ="confs/{{ conf.id }}"><h4>{{ conf }}</h4></a>
     </div>
     <div class="ArticleContent">
         {% if conf.photo %}
