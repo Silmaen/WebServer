@@ -26,16 +26,6 @@ h1,h2,h3,h4,h5,h6 {
 	line-height: normal;
 	text-transform: uppercase;
 }
-h1 {font-size: 70px;}
-h2 {font-size: 48px;}
-h3 {font-size: 30px;}
-h4 {font-size: 24px;}
-h5 {font-size: 20px;}
-h6 {font-size: 14px;}
-p {
- font-size: 15.7px;
- line-height: 1.6;
-}
 body {
 	margin: 0;
 	font-size: 1rem;
@@ -44,6 +34,25 @@ body {
 	color: #212529;
 	text-align: left;
 	background-color: #464646;
+	font-size: 14px;
+}
+h1 {font-size: 70px;}
+h2 {font-size: 48px;}
+h3 {font-size: 30px;}
+h4 {font-size: 24px;}
+h5 {font-size: 20px;}
+h6 {font-size: 14px;}
+
+@media all and (max-width: 1000px) {
+body {
+font-size:2.1vw;
+}
+h1 {font-size: 10.5vw;}
+h2 {font-size: 7.2vw;}
+h3 {font-size: 4.5vw;}
+h4 {font-size: 3.6vw;}
+h5 {font-size: 3vw;}
+h6 {font-size: 2.1vw;}
 }
 input:focus,
 select:focus,
@@ -104,6 +113,14 @@ i{
 	line-height: inherit;
 	white-space: nowrap;
 }
+@media all and (max-width: 1000px) {
+
+.navbar{
+    font-size: 0.55rem;
+    flex-flow:row wrap;
+}
+
+}
 .navbar a h3{
 	display:inline-block;
 	padding: 11px 11px;
@@ -122,13 +139,22 @@ i{
 	white-space: nowrap;
 	height: 50px;
 }
+@media all and (max-width: 1000px) {
+.site-logo {
+	height: 20px;
+}
+.navbar a h3 {
+	font-size: 2.1vw;
+	padding: 3px 3px;
+}
+}
 .site-logo img{
     /* height: 50px; */
     max-width: 100%;
     max-height: 100%;
     display: block;
 }
-}
+
 .navbarbar{
 	display: flex !important;
 	flex-basis: auto;
@@ -165,6 +191,15 @@ i{
 	text-transform: uppercase;
 	font-weight: bold;
 	font-family: sans-serif;
+}
+@media all and (max-width: 1000px) {
+.navbar-nav li {
+	padding:0.2rem;
+	padding-bottom: 0.4rem;
+}
+.navbar-nav li a{
+    font-size: 2.1vw;
+}
 }
 .navbar-nav .nav-item>a::before {
 	transform:scale3d(1,1,1);
