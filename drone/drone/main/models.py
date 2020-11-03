@@ -331,7 +331,7 @@ class ConfigurationComments(models.Model):
         """
         Meta data for articles
         """
-        verbose_name = "Commentaire d'article"
+        verbose_name = "Commentaire de configuration de drone"
         ordering = ['-date']
 
     def __str__(self):
