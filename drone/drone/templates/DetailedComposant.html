@@ -9,11 +9,10 @@
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/comps"><h4>{{ comp.name }}</h4></a>
+        <a href ="/comps"><h4>{{ comp.name }}</h4></a>{{ comp.category.render_all|safe }}
     </div>
     <div class="ArticleContent">
         <div class="specifications">
-            <p>Catégorie: {{ comp.category.name }} {% if comp.category.onBoard %}volant{% else %}}au sol{% endif %}</p>
             <div class="image_desc"><img src="{{ comp.photo.url }}"></div>
             <table>
                 {% for spec,val in comp.specs.items %}

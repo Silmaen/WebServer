@@ -12,10 +12,9 @@
 {% for comp in composants %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href ="comps/{{ comp.id }}"><h4>{{ comp.name }}</h4></a>
+        <a href ="comps/{{ comp.id }}"><h4>{{ comp.name }}</h4></a>{{ comp.category.render_all|safe }}
     </div>
     <div class="ArticleContent">
-        <p>Catégorie: {{ comp.category.name }} {% if comp.category.onBoard %}volant{% else %}}au sol{% endif %}</p>
         <div class="specifications">
             <div class="image_desc"><img src="{{ comp.photo.url }}"></div>
         </div>
