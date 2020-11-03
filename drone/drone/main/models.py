@@ -128,6 +128,48 @@ class DroneComponentCategory(models.Model):
     def __str__(self):
         return self.name
 
+    def render_onboard(self):
+        """get icon for flying/ ground definition"""
+        #                              ground        flying
+        return '<span class="mdi ' + ["mdi-download", "mdi-upload"][self.onBoard] + '"></span>'
+
+    def render_name(self):
+        stri = '<span class="mdi '
+        if self.name == "Hélice":
+            stri += 'mdi-fan"></span><span>Hélice</span>'
+        elif self.name == "Batterie":
+            stri += 'mdi-battery-outline"></span><span>Batterie</span>'
+        elif self.name == "Moteur":
+            stri += 'mdi-cog-outline"></span><span>Moteur</span>'
+        elif self.name == "ESC (contrôleur de puissance moteur)":
+            stri += 'mdi-car-cruise-control"></span><span>ESC</span>'
+        elif self.name == "Caméra":
+            stri += 'mdi-video-outline"></span><span>Caméra</span>'
+        elif self.name == "VTX (transmetteur vidéo)":
+            stri += 'mdi-video-wireless-outline"></span><span>VTX</span>'
+        elif self.name == "Récepteur Vidéo":
+            stri += 'mdi-camera-wireless-outline"></span><span>VRX</span>'
+        elif self.name == "Télécommande":
+            stri += 'mdi-controller-classic-outline"></span><span>Télécommande</span>'
+        elif self.name == "Récepteur télémétrie":
+            stri += 'mdi-home-thermometer-outline></span><span>Télémétrie sol</span>'
+        elif self.name == "Module de radio commande":
+            stri += 'mdi-antenna"></span><span>radio commande</span>'
+        elif self.name == "Distributeur de puissance":
+            stri += 'mdi-power-plug-outline"></span><span>Distributeur de puissance</span>'
+        elif self.name == "Module de Télémétrie":
+            stri += 'mdi-router-wireless"></span><span>Module Telemétrie</span>'
+        elif self.name == "Controleur de vol":
+            stri += 'mdi-chip"></span><span>radio commande</span>'
+        elif self.name == "Cadre":
+            stri += 'mdi-quadcopter"></span><span>radio commande</span>'
+        else:
+            stri += 'mdi-cogs"></span><span>' + str(self.name) + '</span>'
+        return stri
+
+    def render_all(self):
+        return self.render_name() + self.render_onboard()
+
 
 class DroneComponent(models.Model):
     """
