@@ -1,4 +1,5 @@
 """main.views"""
+from django.contrib.auth.views import PasswordResetView
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.urls import reverse
@@ -208,11 +209,11 @@ def register(request):
             login(request, user)
             return redirect(reverse("news"))
         good = False
-    return render(request, "users/register.html", {"form": CustomUserCreationForm, "isgood": good})
+    return render(request, "registration/register.html", {"form": CustomUserCreationForm, "isgood": good})
 
 
 def profile(request):
-    return render(request, "users/profile.html", {"user": request.user})
+    return render(request, "registration/profile.html", {"user": request.user})
 
 
 def profile_edit(request):
@@ -225,4 +226,13 @@ def profile_edit(request):
         good = False
     else:
         form = CustomUserChangeForm(instance=request.user)
-    return render(request, "users/profile_change.html", {"form": form, "isgood": good})
+    return render(request, "registration/profile_change.html", {"form": form, "isgood": good})
+
+
+class CustomPasswordResetView(PasswordResetView):
+    """
+    custom class for password reset
+    """
+    from_email = "webmaster@argawaen.net"
+    html_email_template_name = 'registration/password_reset_email.html'
+

@@ -83,10 +83,9 @@ if platform.system() == "Windows":
 else:
     EMAIL_HOST = "127.0.0.1"
 EMAIL_PORT = "587"
-EMAIL_HOST_USER = "argawaen"
-EMAIL_HOST_PASSWORD = "cyanide"
-EMAIL_USE_TSL = True
-EMAIL_USE_SSL = True
+EMAIL_HOST_USER = "site@argawaen.net"
+EMAIL_HOST_PASSWORD = "site"
+EMAIL_USE_TLS = True
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

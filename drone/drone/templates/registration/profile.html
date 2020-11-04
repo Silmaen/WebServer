@@ -20,7 +20,7 @@
                 {% if user|has_group:"Moderateurs" %}<span class="mdi mdi-shield-star-outline"></span>{% endif %}
             </td></tr>
         </table>
-        <a class="comment-btn mdi mdi-account-key-outline" href="{% url 'password_change' %}">Changer passwd</a>
+        <a class="comment-btn mdi mdi-account-key-outline" href="{% url 'password' %}">Changer passwd</a>
         <a class="comment-btn mdi mdi-account-edit-outline" href="{% url 'profile_edit' %}">Editer le profil</a>
     </div>
     <div class="ArticleFooter">

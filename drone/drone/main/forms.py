@@ -1,5 +1,5 @@
 """main.forms"""
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserCreationForm, UserChangeForm, PasswordResetForm
 from .models import *
 from markdownx.forms import forms
 
