@@ -17,25 +17,16 @@
         {{ article.contenu_md|safe }}
     </div>
     <div class="ArticleFooter">
-        <div class="ArticleAuthor">
-            <span class="mdi mdi-account-circle"></span>
-            <span>{{ article.auteur }}</span>
-        </div>
-        <div class="ArticleComments">
-            <span class="mdi mdi-comment-outline"></span>
-            <span>{{ article.nb_comments }}</span>
-        </div>
-        <div class="ArticleDate">
-            <span class="mdi mdi-clock-fast"></span>
-            <span>{{ article.date }}</span>
-        </div>
+        <div class="ArticleAuthor mdi mdi-account-circle">{{ article.auteur }}</div>
+        <div class="ArticleComments mdi mdi-comment-outline">{{ article.nb_comments }}</div>
+        <div class="ArticleDate mdi mdi-clock-fast">{{ article.date }}</div>
     </div>
     {% if article.nb_comments > 0 %}
     <div class="Comments">
         {% for cc in article.get_comments %}
             <div class="c_head">
-            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
-            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+                <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
+                <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
             </div>
             <div class="c_body">{{cc.contenu_md| safe}}</div>
         {% endfor%}
@@ -43,7 +34,10 @@
     {% endif %}
 </div>
 {% empty %}
+<div class="Article">
 <p>Login required...</p>
+<a class="comment-btn mdi mdi-login" href="{% url 'login' %}">Login</a>
+</div>
 {% endfor %}
 
 {%endblock%}

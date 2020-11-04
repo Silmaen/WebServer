@@ -20,25 +20,16 @@
         {{ conf.description_md| safe }}
     </div>
     <div class="ArticleFooter">
-        <div class="ArticleAuthor">
-            <span class="mdi mdi-engine-outline"></span>
-            <span>{{ conf.version_logiciel }}</span>
-        </div>
-        <div class="ArticleComments">
-            <span class="mdi mdi-comment-outline"></span>
-            <span>{{ conf.nb_comments }}</span>
-        </div>
-        <div class="ArticleDate">
-            <span class="mdi mdi-clock-fast"></span>
-            <span>{{ conf.date }}</span>
-        </div>
+        <div class="ArticleAuthor mdi mdi-engine-outline">{{ conf.version_logiciel }}</div>
+        <div class="ArticleComments mdi mdi-comment-outline">{{ conf.nb_comments }}</div>
+        <div class="ArticleDate mdi mdi-clock-fast">{{ conf.date }}</div>
     </div>
     {% if conf.nb_comments > 0 %}
     <div class="Comments">
         {% for cc in article.get_comments %}
             <div class="c_head">
-            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
-            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+                <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
+                <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
             </div>
             <div class="c_body">{{cc.contenu_md| safe}}</div>
         {% endfor%}

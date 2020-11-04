@@ -21,22 +21,16 @@
         {{ comp.description_md|safe}}
     </div>
     <div class="ArticleFooter">
-        <div class="ArticleAuthor">
-            <a href="{{ comp.datasheet }}"><span class="mdi mdi-crane"></span>Datasheet</a>
-        </div>
-        <div class="ArticleComments">
-            <span class="mdi mdi-comment-outline"></span>
-            <span>{{ comp.nb_comments }}</span>
-        </div>
-        <div class="ArticleDate">
-        </div>
+        <div class="ArticleAuthor"><a href="{{ comp.datasheet }}" class="mdi mdi-crane">Datasheet</a></div>
+        <div class="ArticleComments mdi mdi-comment-outline">{{ comp.nb_comments }}</div>
+        <div class="ArticleDate"></div>
     </div>
     {% if comp.nb_comments > 0 %}
     <div class="Comments">
         {% for cc in comp.get_comments %}
             <div class="c_head">
-            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
-            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+                <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
+                <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
             </div>
             <div class="c_body">{{cc.contenu_md| safe}}</div>
         {% endfor%}
