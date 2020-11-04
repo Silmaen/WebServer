@@ -47,7 +47,7 @@
 <section class="bottom-section">
     <div class="comment-subbing">
     {% if new_comment %}
-        {% if new_comment.article != article %}
+        {% if new_comment.article != conf %}
             <div class="alert alert-fail mdi mdi-alert-outline" role="alert">
                 Le commentaire soumi a des problèmes et ne peut être sauvé.
             </div>
