@@ -265,6 +265,9 @@ padding-right: 0.5em;
 	bottom:0;
 	background-color: #0c0c0C;
 	padding-bottom: 0.1rem;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+    align-items: center;
 }
 
 .Article{

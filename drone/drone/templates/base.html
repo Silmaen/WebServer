@@ -55,10 +55,9 @@
 {%block additionnalsection %}
 {%endblock%}
 <footer class="footer-section">
-	<div class="container-fluid">
-		<p>&copy; Designed by Argawaen, all rights reserved.
-			The site design, the logo are trademarks and/or registered trademarks of Argawaen.</p>
-	</div>
+	<p>&copy; Designed by Argawaen, all rights reserved.
+		The site design, the logo are trademarks and/or registered trademarks of Argawaen.</p>
+	{% if user.is_staff %}<a class="comment-btn mdi mdi-account-hard-hat" href="/admin">admin</a>{% endif %}
 </footer>
 </body>
 </html>
