@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.urls import reverse
 from .forms import *
-from django.core import mail
+
 
 def index(request):
     """
@@ -12,7 +12,6 @@ def index(request):
     :param request: the page request
     :return: the rendered page
     """
-    mail.get_connection()
     if request.user.is_authenticated:
         articles = Article.objects.order_by('-date')[:15]
         return render(request, "BaseArticles.html", {"page": "news", "articles": articles})
@@ -198,6 +197,10 @@ def detailed_composant(request, comp_id):
         "new_comment": new_comment,
         "comment_form": comment_form
     })
+
+#
+# vues liées aux users
+#
 
 
 def register(request):

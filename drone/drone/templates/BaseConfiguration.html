@@ -26,7 +26,7 @@
     </div>
     {% if conf.nb_comments > 0 %}
     <div class="Comments">
-        {% for cc in article.get_comments %}
+        {% for cc in conf.get_comments %}
             <div class="c_head">
                 <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
                 <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
