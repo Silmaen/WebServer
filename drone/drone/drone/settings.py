@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'markdownx', # adding support for markdown datafiles
+    'markdownx',  # adding support for markdown datafiles
     'main.apps.MainConfig'
 ]
 
@@ -76,6 +76,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'drone.wsgi.application'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+if platform.system() == "Windows":
+    EMAIL_HOST = "192.168.23.1"
+else:
+    EMAIL_HOST = "127.0.0.1"
+EMAIL_PORT = "587"
+EMAIL_HOST_USER = "argawaen"
+EMAIL_HOST_PASSWORD = "cyanide"
+EMAIL_USE_TSL = True
+EMAIL_USE_SSL = True
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

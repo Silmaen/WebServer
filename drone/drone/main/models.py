@@ -413,7 +413,37 @@ class DroneFlight(models.Model):
         """
         render the flight weather
         """
-        return str(self.meteo)
+        ret = '<div class="meteo">\n'
+        ret += '  <span class="mdi mdi-weather-windy-variant"></span>'
+        ret += '  <div class="meteo_couverture">Météo: '
+        if "couverture" in self.meteo:
+            if self.meteo["couverture"] in ["ensoleillé", "dégagé"]:
+                ret += '<span class="mdi mdi-weather-sunny"></span>\n'
+            elif self.meteo["couverture"] in ["partiellement couvert"]:
+                ret += '<span class="mdi mdi-weather-partly-cloudy"></span>\n'
+            elif self.meteo["couverture"] in ["couvert"]:
+                ret += '<span class="mdi mdi-weather-cloudy"></span>\n'
+            elif self.meteo["couverture"] in ["brumeux"]:
+                ret += '<span class="mdi mdi-weather-hazy"></span>\n'
+            elif self.meteo["couverture"] in ["brouillard"]:
+                ret += '<span class="mdi mdi-weather-fog"></span>\n'
+            else:
+                ret += '<span class="mdi mdi-weather-cloudy-alert">' + self.meteo["couverture"] + '</span>\n'
+        else:
+            ret += '<span class="mdi mdi-weather-sunny"></span>\n'
+        ret += '  </div>\n'
+        if "force_vent" in self.meteo:
+            ret += '  <div class="meteo_force_vent"> '
+            ret += '<span class="mdi mdi-weather-windy"></span>'
+            ret += '<span>' + self.meteo["force_vent"] + '</span>'
+            ret += '  </div>\n'
+        if "direction_vent" in self.meteo:
+            ret += '  <div class="meteo_direction_vent">'
+            ret += '<span class="mdi mdi-compass-rose"></span>'
+            ret += '<span>' + self.meteo["direction_vent"] + '</span>'
+            ret += '  </div>\n'
+        ret += '</div>\n'
+        return ret
 
     def summary_md(self):
         """

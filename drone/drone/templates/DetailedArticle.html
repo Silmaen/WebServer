@@ -14,25 +14,16 @@
         {{ article.contenu_all_md|safe }}
     </div>
     <div class="ArticleFooter">
-        <div class="ArticleAuthor">
-            <span class="mdi mdi-account-circle"></span>
-            <span>{{ article.auteur }}</span>
-        </div>
-        <div class="ArticleComments">
-            <span class="mdi mdi-comment-outline"></span>
-            <span>{{ article.nb_comments }}</span>
-        </div>
-        <div class="ArticleDate">
-            <span class="mdi mdi-clock-fast"></span>
-            <span>{{ article.date }}</span>
-        </div>
+        <div class="ArticleAuthor mdi mdi-account-circle">{{ article.auteur }}</div>
+        <div class="ArticleComments mdi mdi-comment-outline">{{ article.nb_comments }}</div>
+        <div class="ArticleDate mdi mdi-clock-fast">{{ article.date }}</div>
     </div>
     {% if article.nb_comments > 0 %}
     <div class="Comments">
         {% for cc in article.get_all_comments %}
             <div class="c_head">
-            <div class="c_author"><span class="mdi mdi-account-circle"></span>{{cc.user}}</div>
-            <div class="c_date"><span class="mdi mdi-clock-fast"></span>{{cc.date}}</div>
+                <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
+                <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
             </div>
             <div class="c_body">{{cc.contenu_all_md| safe}}</div>
         {% endfor%}
@@ -46,28 +37,26 @@
     <div class="comment-subbing">
     {% if new_comment %}
         {% if new_comment.article != article %}
-            <div class="alert alert-fail" role="alert">
-                <span class="mdi mdi-alert-outline"></span>Le commentaire soumi a des problèmes et ne peut être sauvé.
+            <div class="alert alert-fail mdi mdi-alert-outline" role="alert">
+                Le commentaire soumi a des problèmes et ne peut être sauvé.
             </div>
         {% else %}
             {% if new_comment.active %}
-                <div class="alert alert-success" role="alert">
-                  <span class="mdi mdi-send-check-outline"></span>Le commentaire soumi a bien été enregistré et est directement visible
-                  car vous êtes modérateur.
+                <div class="alert alert-success mdi mdi-send-check-outline" role="alert">
+                  Le commentaire soumi a bien été enregistré et est directement visible car vous êtes modérateur.
                 </div>
             {% else %}
-                <div class="alert alert-success" role="alert">
-                  <span class="mdi mdi-send-clock-outline"></span>Le commentaire soumi a bien été enregistré et est en attente de
-                  modération avant de pouvoir être visible.
+                <div class="alert alert-success mdi mdi-send-clock-outline" role="alert">
+                  Le commentaire soumi a bien été enregistré et est en attente de modération avant de pouvoir être visible.
                 </div>
             {% endif %}
         {% endif %}
     {% else %}
-        <h5><span class="mdi mdi-card-bulleted-outline"></span>Ajouter un commentaire:</h5>
+        <h5 class="mdi mdi-card-bulleted-outline">Ajouter un commentaire:</h5>
         <form method="post">
             {% csrf_token %}
             {{ comment_form }}
-            <button type="submit" class="comment-btn"><span class="mdi mdi-send-outline"></span> Soumettre</button>
+            <button type="submit" class="comment-btn mdi mdi-send-outline">Soumettre</button>
         </form>
         {{ comment_form.media }}
     {% endif %}
