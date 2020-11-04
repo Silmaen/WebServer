@@ -354,13 +354,14 @@ justify-content: space-between;
     display: flex;
     flex-flow: column nowrap;
 }
-.Comments::after {
+.comment::before {
     position: relative;
     content:"";
     height: 2px;
     left:5%;
     width:90%;
     background-color:#464646;
+    display: inline-block;
 }
 .c_head {
     display: flex;
