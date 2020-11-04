@@ -25,6 +25,6 @@ urlpatterns = static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += [
     path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain"), ),
     path('', include('main.urls')),
-    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls, name='admin'),
     url(r'^markdownx/', include(markdownx)),
 ]
