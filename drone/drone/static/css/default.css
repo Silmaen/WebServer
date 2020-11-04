@@ -6,7 +6,6 @@
 }
 html {
   font-family: sans-serif;
-  line-height: 1.15;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   -ms-overflow-style: scrollbar;
@@ -23,14 +22,12 @@ h1,h2,h3,h4,h5,h6 {
 	margin: 0;
 	font-weight:500;
 	font-family: sans-serif;
-	line-height: normal;
 	text-transform: uppercase;
 }
 body {
 	margin: 0;
 	font-size: 1rem;
 	font-weight: 400;
-	line-height: 1.5;
 	color: #212529;
 	text-align: left;
 	background-color: #464646;
@@ -82,6 +79,9 @@ article, aside, dialog, figcaption, figure, footer, header, hgroup, main, nav, s
 i{
 	margin-right:0.25rem;
 }
+.mdi::before{
+padding-right: 0.5em;
+}
 .container-fluid {
     width: 100%;
     padding-right: 15px;
@@ -109,14 +109,11 @@ i{
 	align-items: end;
 	justify-content: space-between;
 	color: #fff;
-	font-size: 1.25rem;
-	line-height: inherit;
 	white-space: nowrap;
 }
 @media all and (max-width: 1000px) {
 
 .navbar{
-    font-size: 0.55rem;
     flex-flow:row wrap;
 }
 
@@ -135,7 +132,6 @@ i{
 	padding-bottom: .3125rem;
 	margin-right: 1rem;
 	font-size: 1.25rem;
-	line-height: inherit;
 	white-space: nowrap;
 	height: 50px;
 }
@@ -158,8 +154,6 @@ i{
 .navbarbar{
 	display: flex !important;
 	flex-basis: auto;
-	flex-grow: 1;
-	box-align: center;
 	align-items: center;
 }
 .navbar-nav{
@@ -275,7 +269,7 @@ i{
 
 .Article{
 display: flex;
-flex-direction: column;
+flex-flow: column nowrap;
 border-radius: 1.5em;
 background-color: #464646;
 color: #ccc;
@@ -342,13 +336,13 @@ justify-content: space-between;
     align-items: center;
     align-content: center;
 }
-.user_info a{
+/*.user_info a{
     padding-left: 0.5em;
     display:inline-block;
 	padding: 0px 11px;
 	color: #fff;
 	text-transform: uppercase;
-}
+}*/
 .Comments {
     margin: 1em;
     padding: 1em;
@@ -413,6 +407,7 @@ justify-content: space-between;
     margin: 0.5em;
 	text-transform: uppercase;
 	font-weight: bold;
+	text-align: center;
 }
 .comment-btn:hover {
     background-color: #363636;
@@ -430,3 +425,16 @@ justify-content: space-between;
 	text-transform: uppercase;
 	font-weight: bold;
 }
+.user_form {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    /*min-width: 200px;*/
+    max-width: 100%;
+}
+.nologin {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-evenly;
+}
+

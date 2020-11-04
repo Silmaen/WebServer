@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.urls import reverse
 from .forms import *
-
+from django.core import mail
 
 def index(request):
     """
@@ -11,6 +11,7 @@ def index(request):
     :param request: the page request
     :return: the rendered page
     """
+    mail.get_connection()
     if request.user.is_authenticated:
         articles = Article.objects.order_by('-date')[:15]
         return render(request, "BaseArticles.html", {"page": "news", "articles": articles})
@@ -208,3 +209,20 @@ def register(request):
             return redirect(reverse("news"))
         good = False
     return render(request, "users/register.html", {"form": CustomUserCreationForm, "isgood": good})
+
+
+def profile(request):
+    return render(request, "users/profile.html", {"user": request.user})
+
+
+def profile_edit(request):
+    good = True
+    if request.method == "POST":
+        form = CustomUserChangeForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect(reverse("profile"))
+        good = False
+    else:
+        form = CustomUserChangeForm(instance=request.user)
+    return render(request, "users/profile_change.html", {"form": form, "isgood": good})

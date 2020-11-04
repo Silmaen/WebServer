@@ -1,6 +1,7 @@
 """main.urls"""
 from django.urls import path
 from django.conf.urls import include, url
+from django.contrib.auth import views as passvw
 from . import views
 
 urlpatterns = [
@@ -15,4 +16,7 @@ urlpatterns = [
     path('comps/<int:comp_id>', views.detailed_composant, name='detailed_comps'),
     url(r"^accounts/", include("django.contrib.auth.urls")),
     url(r"^register/", views.register, name="register"),
+    url(r"^profile/$", views.profile, name="profile"),
+    url(r"^profile/edit/", views.profile_edit, name="profile_edit"),
+    url(r"^profile/password/", passvw.PasswordChangeView.as_view() , name="password"),
 ]

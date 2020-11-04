@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 
+
 {%block mainsection %}
 <div class="Article user_form">
     <div class="ArticleHeader">
-        <h4>Nouvel utilisateur</h4>
+        <h4 class="mdi mdi-account-circle">{{ user }}</h4>
     </div>
     <div class="ArticleContent user_form">
         {% if not isgood %}
@@ -11,15 +12,14 @@
             <p>ERROR: mauvais renseignements</p>
         </div>
         {%endif%}
-        <p>Veuillez remplir ce formulaire afin d'être enregistré comme utilisateur:</p>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button id="submit" class="comment-btn mdi mdi-account-plus-outline">Register</button>
+            <button id="submit" class="comment-btn mdi mdi-account-plus-outline">Sauver</button>
         </form>
     </div>
     <div class="ArticleFooter">
-        <a class="comment-btn mdi mdi-arrow-left-circle-outline"  href="{% url 'login' %}">Retour</a>
+        <a class="comment-btn mdi mdi-arrow-left-circle-outline"  href="{% url 'profile' %}">Retour</a>
     </div>
 </div>
 {% endblock %}
