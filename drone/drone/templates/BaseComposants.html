@@ -2,7 +2,7 @@
 {% load static template_drone_extra %}
 {%block topsection %}
 <div class="topcontent">
-    <h3>Les Composants</h3>
+    <h1>Les Composants</h1>
 </div>
 {%endblock%}
 
@@ -12,13 +12,14 @@
 {% for comp in composants %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href ="comps/{{ comp.id }}"><h4>{{ comp.name }}</h4></a>{{ comp.category.render_all|safe }}
+        <a href ="comps/{{ comp.id }}"><h1>{{ comp.name }}</h1>{{ comp.category.render_all|safe }}</a>
     </div>
     <div class="ArticleContent">
         <div class="specifications">
             <div class="image_desc"><img src="{{ comp.photo.url }}"></div>
         </div>
         {{ comp.description_md|safe}}
+        <a href="comps/{{ comp.id }}" class="comment-btn comment-btn-small mdi mdi-loupe">Détails...</a>
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor"><a href="{{ comp.datasheet }}" class="mdi mdi-crane">Datasheet</a></div>

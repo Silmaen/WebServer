@@ -2,14 +2,14 @@
 {% load static template_drone_extra %}
 {%block topsection %}
 <div class="topcontent">
-    <a href ="/comps"><h3>Les Composants</h3></a>
+    <a href ="/comps"><h1>Les Composants</h1></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/comps"><h4>{{ comp.name }}</h4></a>{{ comp.category.render_all|safe }}
+        <a href ="/comps"><h1>{{ comp.name }}</h1>{{ comp.category.render_all|safe }}</a>
     </div>
     <div class="ArticleContent">
         <div class="specifications">

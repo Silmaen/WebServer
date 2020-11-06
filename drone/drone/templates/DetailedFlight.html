@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <a href ="/vols"><h3>Les Vols</h3></a>
+    <a href ="/vols"><h1>Les Vols</h1></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/vols"><h4>{{ vol }}</h4></a>
+        <a href ="/vols"><h1>{{ vol }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ vol.render_meteo|safe }}
