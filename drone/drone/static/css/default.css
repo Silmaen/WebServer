@@ -33,23 +33,21 @@ body {
 	background-color: #464646;
 	font-size: 14px;
 }
-h1 {font-size: 70px;}
-h2 {font-size: 48px;}
-h3 {font-size: 30px;}
-h4 {font-size: 24px;}
-h5 {font-size: 20px;}
-h6 {font-size: 14px;}
+h1 {font-size: 27px;}
+h2 {font-size: 25px;}
+h3 {font-size: 23px;}
+h4 {font-size: 21px;}
+h5 {font-size: 17px;}
+h6 {font-size: 15px;}
 
 @media all and (max-width: 1000px) {
-body {
-font-size:2.1vw;
-}
-h1 {font-size: 10.5vw;}
-h2 {font-size: 7.2vw;}
-h3 {font-size: 4.5vw;}
-h4 {font-size: 3.6vw;}
-h5 {font-size: 3vw;}
-h6 {font-size: 2.1vw;}
+body {font-size:2.1vw;}
+h1 {font-size: 4.05vw;}
+h2 {font-size: 3.75vw;}
+h3 {font-size: 3.45vw;}
+h4 {font-size: 3.15vw;}
+h5 {font-size: 2.55vw;}
+h6 {font-size: 2.25vw;}
 }
 input:focus,
 select:focus,
@@ -299,6 +297,9 @@ flex-wrap: nowrap;
 justify-content: center;
 padding: 0.5em 0.1em;
 }
+.ArticleHeader a:hover h1{
+    color: #fff;
+}
 .ArticleContent{
 display: flex;
 flex-direction: column;
@@ -339,13 +340,6 @@ justify-content: space-between;
     align-items: center;
     align-content: center;
 }
-/*.user_info a{
-    padding-left: 0.5em;
-    display:inline-block;
-	padding: 0px 11px;
-	color: #fff;
-	text-transform: uppercase;
-}*/
 .Comments {
     margin: 1em;
     padding: 1em;
@@ -412,6 +406,9 @@ justify-content: space-between;
 	text-transform: uppercase;
 	font-weight: bold;
 	text-align: center;
+}
+.comment-btn-small {
+    width: max-content;
 }
 .comment-btn:hover {
     background-color: #363636;

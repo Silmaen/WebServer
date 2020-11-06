@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <a href ="/news"><h3>Les dernières news!</h3></a>
+    <a href ="/news"><h1>Les dernières news!</h1></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="/news"><h4>{{ article.titre }}</h4></a>
+        <a href ="/news"><h1>{{ article.titre }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ article.contenu_all_md|safe }}

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <h3>Les Configurations de drone</h3>
+    <h1>Les Configurations de drone</h1>
 </div>
 {%endblock%}
 
@@ -11,13 +11,14 @@
 {% for conf in configurations %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href ="confs/{{ conf.id }}"><h4>{{ conf }}</h4></a>
+        <a href ="confs/{{ conf.id }}"><h1>{{ conf }}</h1></a>
     </div>
     <div class="ArticleContent">
         {% if conf.photo %}
         <div class="image_desc"><img src="{{ conf.photo.url }}"></div>
         {% endif %}
         {{ conf.description_md| safe }}
+        <a href="confs/{{ conf.id }}" class="comment-btn comment-btn-small mdi mdi-loupe">Détails...</a>
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor mdi mdi-engine-outline">{{ conf.version_logiciel }}</div>

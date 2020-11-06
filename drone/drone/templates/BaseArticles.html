@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <h3>Les dernières news!</h3>
+    <h1>Les dernières news!</h1>
 </div>
 {%endblock%}
 
@@ -11,10 +11,11 @@
 {% for article in articles %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href ="news/{{ article.id }}"><h4>{{ article.titre }}</h4></a>
+        <a href="news/{{ article.id }}"><h1>{{ article.titre }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ article.contenu_md|safe }}
+        <a href="news/{{ article.id }}" class="comment-btn comment-btn-small mdi mdi-loupe">Détails...</a>
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor mdi mdi-account-circle">{{ article.auteur }}</div>
