@@ -12,7 +12,7 @@ urlpatterns = [
     path('article/<int:id>-<slug:slug>', lire, name='lire'),
     path('about', about),
     path('blog', blog),
-    path('media', media),
+    path('medium', media),
     path('admin/', admin.site.urls),
     path('markdownx/', include('markdownx.urls')),  # Pour le décodage de Markdown.
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)
