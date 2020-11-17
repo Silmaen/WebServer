@@ -17,38 +17,38 @@
             </div>
             <div class="top_nav">
                 {% if page == "Home" %}
-                <a class="nav_home_active" href="/">
+                <a class="nav_home_active" href="{% url 'index' %}">
                     <span>Home</span>
                 </a>
                 {% else %}
-                <a class="nav_home" href="/">
+                <a class="nav_home" href="{% url 'index' %}">
                     <span>Home</span>
                 </a>
                 {% endif %}
                 {% if page == "About" %}
-                <a class="nav_about_active" href="/about">
+                <a class="nav_about_active" href="{% url 'about' %}">
                     <span>About</span>
                 </a>
                 {% else %}
-                <a class="nav_about" href="/about">
+                <a class="nav_about" href="{% url 'about' %}">
                     <span>About</span>
                 </a>
                 {% endif %}
                 {% if page == "Blog" %}
-                <a class="nav_blog_active" href="/blog">
+                <a class="nav_blog_active" href="{% url 'blog' %}">
                     <span>Blog</span>
                 </a>
                 {% else %}
-                <a class="nav_blog" href="/blog">
+                <a class="nav_blog" href="{% url 'blog' %}">
                     <span>Blog</span>
                 </a>
                 {% endif %}
                 {% if page == "Media" %}
-                <a class="nav_media_active" href="/media">
+                <a class="nav_media_active" href="{% url 'media' %}">
                     <span>Media</span>
                 </a>
                 {% else %}
-                <a class="nav_media" href="/media">
+                <a class="nav_media" href="{% url 'media' %}">
                     <span>Media</span>
                 </a>
                 {% endif %}
@@ -71,7 +71,7 @@
                     <div class="sidebar">
                         {% block sidebar %}
                         <div class="sidebar_logo">
-                            <img src="/static/img/tsjt/BBLogoEyBrSl_small.png" alt="BigBrain" width="320">
+                            <img src="{% static 'img/tsjt/BBLogoEyBrSl_small.png' %}" alt="BigBrain" width="320">
                         </div>
                         {% endblock %}
                     </div>
