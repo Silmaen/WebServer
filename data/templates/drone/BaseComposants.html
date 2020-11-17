@@ -31,7 +31,7 @@
         {% for cc in comp.get_comments %}
             <div class="comment">
                 <div class="c_head">
-                    <div class="c_author mdi mdi-account-circle">{{cc.user}}</div>
+                    <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
                     <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
                 </div>
                 <div class="c_body">{{cc.contenu_md| safe}}</div>
