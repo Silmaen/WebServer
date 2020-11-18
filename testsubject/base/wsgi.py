@@ -1,1 +1,0 @@
-../tsjt/tsjt/wsgi.py
