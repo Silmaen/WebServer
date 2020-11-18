@@ -1,6 +1,8 @@
 """
 gathering functions to render pages
 """
+from django.shortcuts import get_object_or_404
+
 from .models import Article
 from common.user_utils import user_is_developper, user_is_validated
 
@@ -85,6 +87,9 @@ page_info = {
     },
     "meteo": {
         "Title": "Relevés Météo",
+    },
+    "Potager": {
+        "Title": "Plan du potager",
     }
 }
 
@@ -141,6 +146,16 @@ internal_pages = [
         "NeedValidatedUser": True,
     },
     {
+        "name": "Potager",
+        "url": "potager",
+        "icon": "mdi-barley",
+        "Active": True,
+        "NeedUser": True,
+        "NeedStaff": False,
+        "NeedDev": False,
+        "NeedValidatedUser": True,
+    },
+    {
         "name": "Network admin",
         "url": "netadmin",
         "icon": "mdi-cctv",
@@ -176,6 +191,21 @@ def get_articles(user, category):
         return Article.objects.filter(categorie=category, staff=False)
     else:
         return Article.objects.filter(categorie=category)
+
+
+def get_article(user, article_id):
+    """
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    :param user:
+    :param article_id:
+    :return:
+    """
+    article = get_object_or_404(Article, pk=article_id)
+    if not user.is_authenticated and article.private:
+        return None
+    elif not user.is_staff and article.staff:
+        return None
+    return article
 
 
 def get_ext_pages(user):
@@ -247,3 +277,39 @@ def get_page_data(user, page_name):
             "page_subtitle": page_info[page_name]["Title"],
             "page": page_name,
             "subpage": ""}
+
+# helpers pour le potager
+
+
+class casePotager:
+    css_class = "terre"
+    content_icon = ""
+
+
+nb_ligne = 32
+nb_col = 23
+
+
+def get_potager_data():
+    contenu = []
+    for i in range(nb_ligne):
+        ligne = []
+        for j in range(nb_col):
+            ligne.append(casePotager())
+        contenu.append(ligne)
+    # les sentiers
+    for i in [3, 4, 16, 17, 27, 28]:
+        for j in range(3, 20):
+            contenu[i][j].css_class = "senti"
+    for j in [3, 4, 11, 18, 19]:
+        for i in range(3, 29):
+            contenu[i][j].css_class = "senti"
+    for j in range(3):
+        for i in range(14, 18):
+            contenu[i][j].css_class = "senti"
+    # tests de plantation
+    # # oignons
+    for j in range(8):
+        for i in range(3):
+            contenu[i][j].content_icon = "oignon"
+    return contenu

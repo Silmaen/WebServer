@@ -1,0 +1,20 @@
+{% extends "www/base.html" %}
+{% load static %}
+{%block additionnalhead %}
+<link rel="stylesheet" href="{% static 'css/potager.css' %}">
+{%endblock%}
+{% block InnerContent %}
+
+<div class="article">
+<table class="potager">
+    {% for line in map %}
+    <tr>
+        {% for cel in line %}
+        <td class="{{cel.css_class}}">{% if cel.content_icon %}<span class="pti pti-{{cel.content_icon}}"></span>{% endif %}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
+</div>
+
+{% endblock %}

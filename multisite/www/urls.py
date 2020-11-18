@@ -9,9 +9,11 @@ from .views import *
 urlpatterns = [
     path("", index),
     path('www/', index, name='index'),
+    path('news/<int:article_id>', detailed_news, name='detailed_news'),
     path('research', research, name='research'),
     path('projects', projects, name='projects'),
     path('links', links, name='links'),
+    path('potager/', potager, name='potager'),
     path('meteo/', include('www_meteo.urls')),
     path('netadmin/', include('www_netadmin.urls')),
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)
