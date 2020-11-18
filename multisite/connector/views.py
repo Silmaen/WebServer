@@ -19,25 +19,32 @@ def profile(request):
 
 def register(request):
     """Register new user."""
-    good = True
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
-        profile_form = ProfileForm(request.POST, instance=request.user.userprofile)
+        profile_form = ProfileForm(request.POST)
         if form.is_valid() and profile_form.is_valid():
+            print("le formulaire est valide")
             user = form.save()
             profile_form.save()
             login(request, user)
-            return redirect(reverse("news"))
-        good = False
-    return render(request, "registration/register.html",
-                  {**settings.base_info, "form": CustomUserCreationForm, "profile_form": ProfileForm, "is_good": good})
+            return redirect(reverse("index"))
+        return render(request, "registration/register.html", {
+            **settings.base_info,
+            "form": form,
+            "profile_form": profile_form
+        })
+    else:
+        return render(request, "registration/register.html", {
+            **settings.base_info,
+            "form": CustomUserCreationForm,
+            "profile_form": ProfileForm
+        })
 
 
 def profile_edit(request):
     """
     User wants to edit its profile.
     """
-    good = True
     if request.method == "POST":
         form = CustomUserChangeForm(request.POST, instance=request.user)
         profile_form = ProfileForm(request.POST, instance=request.user.userprofile)
@@ -45,12 +52,14 @@ def profile_edit(request):
             form.save()
             profile_form.save()
             return redirect(reverse("profile"))
-        good = False
     else:
         form = CustomUserChangeForm(instance=request.user)
-        profile_form = ProfileForm(instance=request.user)
-    return render(request, "registration/profile_change.html",
-                  {**settings.base_info, "form": form, "profile_form": profile_form, "is_good": good})
+        profile_form = ProfileForm(instance=request.user.userprofile)
+    return render(request, "registration/profile_change.html", {
+        **settings.base_info,
+        "form": form,
+        "profile_form": profile_form
+    })
 
 
 class CustomPasswordResetView(PasswordResetView):
