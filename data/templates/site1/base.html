@@ -1,0 +1,14 @@
+{% extends "common_base.html" %}
+{% block content %}
+<header class="header-section">
+	c'est le haut du site
+</header>
+<section class="main-section">
+	{%block mainsection %}
+    yes, première page
+	{%endblock%}
+</section>
+<footer class="footer-section">
+	c'est le bas du site
+</footer>
+{% endblock %}
