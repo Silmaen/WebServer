@@ -1,7 +1,7 @@
 """Fichier admin.py exemple de profil user"""
 from django.contrib import admin
-from common.admin import SiteArticleAdmin
-from .models import Category, SubCategory, Article
+from common.admin import SiteArticleAdmin, SiteArticleCommentAdmin
+from .models import Category, SubCategory, Article, ArticleComment
 
 
 class ArticleAdmin(SiteArticleAdmin):
@@ -23,3 +23,5 @@ class ArticleAdmin(SiteArticleAdmin):
 admin.site.register(Category)
 admin.site.register(SubCategory)
 admin.site.register(Article, ArticleAdmin)
+
+admin.site.register(ArticleComment, SiteArticleCommentAdmin)

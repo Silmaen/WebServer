@@ -1,28 +1,45 @@
 {% extends "www/base.html" %}
 {% block InnerContent %}
-{% for article in data.derniers_articles %}
+{% for article in derniers_articles %}
 <div class="Article">
     <div class="ArticleHeader">
         <div class="ArticleTitle">
+            {% if page == 'news' %}
+            <a href="{% url 'detailed_news' article.id %}"
             {% if article.sous_categorie.mdi_icon_name != "" %}
-            <span class="icon"><i class="mdi {{ article.sous_categorie.mdi_icon_name }}"></i></span>
+            class="mdi {{ article.sous_categorie.mdi_icon_name }}"
+            {% endif %}>
+                {{ article.titre}}</a>
+            {% else %}
+            <span {% if article.sous_categorie.mdi_icon_name != "" %}
+            class="mdi {{ article.sous_categorie.mdi_icon_name }}"
+            {% endif %}>{{ article.titre}}</span>
             {% endif %}
-            <span>{{ article.titre}}</span>
         </div>
     </div>
     <div class="ArticleContent">
-        {{ article.contenu_all_md|safe }}
+        {{ article.contenu_md|safe }}
     </div>
     <div class="ArticleFooter">
-        <div class="ArticleAuthor">
-            <span class="icon"><i class="mdi mdi-account-circle"></i></span>
-            <span>{{ article.auteur }}</span>
-        </div>
-        <div class="ArticleDate">
-            <span class="icon"><i class="mdi mdi-clock-fast"></i></span>
-            <span>{{ article.date }}</span>
-        </div>
+        <div class="ArticleAuthor mdi mdi-account-circle">{{ article.auteur }}</div>
+        {% if page == 'news' %}
+        <div class="ArticleComments mdi mdi-comment-outline">{{ article.nb_comments }}</div>
+        {% endif %}
+        <div class="ArticleDate mdi mdi-clock-fast">{{ article.date }}</div>
     </div>
+    {% if article.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in article.get_comments %}
+            <div class="comment">
+                <div class="c_head">
+                    <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                    <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                </div>
+                <div class="c_body">{{cc.contenu_md| safe}}</div>
+            </div>
+        {% endfor%}
+    </div>
+    {% endif %}
 </div>
 {% empty %}
 <p>Empty</p>

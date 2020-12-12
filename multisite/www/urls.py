@@ -9,6 +9,7 @@ from .views import *
 urlpatterns = [
     path("", index),
     path('www/', index, name='index'),
+    path('news/<int:article_id>', detailed_news, name='detailed_news'),
     path('research', research, name='research'),
     path('projects', projects, name='projects'),
     path('links', links, name='links'),

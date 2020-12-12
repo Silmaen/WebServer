@@ -1,6 +1,6 @@
 """model.py exemple de profile user"""
 from django.db import models
-from common.models import SiteArticle
+from common.models import SiteArticle, SiteArticleComment
 
 
 class Category(models.Model):
@@ -42,4 +42,16 @@ class Article(SiteArticle):
         Meta data for articles
         """
         verbose_name = "www article"
+        ordering = ['-date']
+
+
+class ArticleComment(SiteArticleComment):
+    """
+    Classe pour les commentaires d’article
+    """
+    class Meta:
+        """
+        Meta data
+        """
+        verbose_name = "Commentaire d'article"
         ordering = ['-date']
