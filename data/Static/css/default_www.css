@@ -42,7 +42,7 @@ a:active,a:focus,a:hover {
 /* header main conteners */
 .FooterContent, .PageContent, .upper-header, .lower-header {
 	margin:0 auto;
-	max-width: 990px;
+	max-width: 1690px;
 	padding: 10px 0px;
 	display: flex;
 	flex-wrap: nowrap;
