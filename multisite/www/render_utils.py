@@ -1,6 +1,8 @@
 """
 gathering functions to render pages
 """
+from django.shortcuts import get_object_or_404
+
 from .models import Article
 from common.user_utils import user_is_developper, user_is_validated
 
@@ -176,6 +178,21 @@ def get_articles(user, category):
         return Article.objects.filter(categorie=category, staff=False)
     else:
         return Article.objects.filter(categorie=category)
+
+
+def get_article(user, article_id):
+    """
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    :param user:
+    :param article_id:
+    :return:
+    """
+    article = get_object_or_404(Article, pk=article_id)
+    if not user.is_authenticated and article.private:
+        return None
+    elif not user.is_staff and article.staff:
+        return None
+    return article
 
 
 def get_ext_pages(user):

@@ -1,14 +1,11 @@
-{% extends "drone/base.html" %}
-{%block topsection %}
-<div class="topcontent">
-    <a href ="{% url 'index' %}"><h1>Les dernières news!</h1></a>
-</div>
-{%endblock%}
-
-{%block mainsection %}
-<div class="Article Article_detail">
+{% extends "www/base.html" %}
+{% block InnerContent %}
+<section class="Article">
     <div class="ArticleHeader">
-        <a href ="{% url 'index' %}"><h1>{{ article.titre }}</h1></a>
+        <div class="ArticleTitle">
+            <a href="{% url 'index' %}" {% if article.sous_categorie.mdi_icon_name != "" %}class="mdi {{ article.sous_categorie.mdi_icon_name }}" {% endif %}>
+                {{ article.titre}}</a>
+        </div>
     </div>
     <div class="ArticleContent">
         {{ article.contenu_all_md|safe }}
@@ -31,10 +28,8 @@
         {% endfor%}
     </div>
     {% endif %}
-</div>
-{%endblock%}
+</section>
 
-{%block additionnalsection %}
 <section class="bottom-section">
     <div class="comment-subbing">
     {% if new_comment %}
@@ -64,4 +59,4 @@
     {% endif %}
     </div>
 </section>
-{%endblock%}
+{% endblock %}
