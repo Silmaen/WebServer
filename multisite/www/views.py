@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 
 from common.user_utils import user_is_moderator
 from . import settings
-from .render_utils import get_page_data, get_articles, get_article
+from .render_utils import get_page_data, get_articles, get_article, get_potager_data
 from .forms import ArticleCommentForm
 
 
@@ -96,4 +96,19 @@ def links(request):
     return render(request, "www/baseWithArticles.html", {
         **settings.base_info, **data,
         'derniers_articles': articles
+    })
+
+
+def potager(request):
+    """
+    Page du potager
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "Potager")
+    contenu = get_potager_data()
+    print(data)
+    return render(request, "www/baseWithPotager.html", {
+        **settings.base_info, **data,
+        "map": contenu
     })

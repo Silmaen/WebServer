@@ -87,6 +87,9 @@ page_info = {
     },
     "meteo": {
         "Title": "Relevés Météo",
+    },
+    "Potager": {
+        "Title": "Plan du potager",
     }
 }
 
@@ -136,6 +139,16 @@ internal_pages = [
         "name": "Meteo",
         "url": "meteo",
         "icon": "mdi-weather-windy-variant",
+        "Active": True,
+        "NeedUser": True,
+        "NeedStaff": False,
+        "NeedDev": False,
+        "NeedValidatedUser": True,
+    },
+    {
+        "name": "Potager",
+        "url": "potager",
+        "icon": "mdi-barley",
         "Active": True,
         "NeedUser": True,
         "NeedStaff": False,
@@ -264,3 +277,39 @@ def get_page_data(user, page_name):
             "page_subtitle": page_info[page_name]["Title"],
             "page": page_name,
             "subpage": ""}
+
+# helpers pour le potager
+
+
+class casePotager:
+    css_class = "terre"
+    content_icon = ""
+
+
+nb_ligne = 32
+nb_col = 23
+
+
+def get_potager_data():
+    contenu = []
+    for i in range(nb_ligne):
+        ligne = []
+        for j in range(nb_col):
+            ligne.append(casePotager())
+        contenu.append(ligne)
+    # les sentiers
+    for i in [3, 4, 16, 17, 27, 28]:
+        for j in range(3, 20):
+            contenu[i][j].css_class = "senti"
+    for j in [3, 4, 11, 18, 19]:
+        for i in range(3, 29):
+            contenu[i][j].css_class = "senti"
+    for j in range(3):
+        for i in range(14, 18):
+            contenu[i][j].css_class = "senti"
+    # tests de plantation
+    # # oignons
+    for j in range(8):
+        for i in range(3):
+            contenu[i][j].content_icon = "oignon"
+    return contenu
