@@ -29,6 +29,7 @@
   background-color: #FAA;
 }
 
+/* Legumes */
 .pti-artichaut {
   mask: url(/media/www/potager/Artichaut.svg);
   mask-size: cover;
@@ -37,15 +38,53 @@
   mask: url(/media/www/potager/aubergine.svg);
   mask-size: cover;
 }
+.pti-carotte {
+  mask: url(/media/www/potager/Carotte.svg);
+  mask-size: cover;
+}
 .pti-courgette {
   mask: url(/media/www/potager/courgette.svg);
+  mask-size: cover;
+}
+.pti-fenouil {
+  mask: url(/media/www/potager/Fenouil.svg);
+  mask-size: cover;
+}
+.pti-navet {
+  mask: url(/media/www/potager/Navet.svg);
   mask-size: cover;
 }
 .pti-oignon {
   mask: url(/media/www/potager/oignon.svg);
   mask-size: cover;
 }
+.pti-panais {
+  mask: url(/media/www/potager/Panais.svg);
+  mask-size: cover;
+}
+.pti-piment {
+  mask: url(/media/www/potager/Piment.svg);
+  mask-size: cover;
+}
+.pti-poireau {
+  mask: url(/media/www/potager/Poireau.svg);
+  mask-size: cover;
+}
+.pti-poivron {
+  mask: url(/media/www/potager/Poivron.svg);
+  mask-size: cover;
+}
+.pti-radis {
+  mask: url(/media/www/potager/Radis.svg);
+  mask-size: cover;
+}
 .pti-tomate {
   mask: url(/media/www/potager/tomate.svg);
+  mask-size: cover;
+}
+
+/* Aromatique */
+.pti-aromatiques {
+  mask: url(/media/www/potager/Aromatiques.svg);
   mask-size: cover;
 }
