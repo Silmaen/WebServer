@@ -1,11 +1,66 @@
 
-.potager {
-    color: #007700;
+.Potager_container {
+    display:flex;
+    width: 100%;
+    padding: 1em;
 }
 
+
+.Potager_Detail {
+    display:flex;
+    flex-flow: column;
+    padding: 1em;
+    width: 50%;
+    background-color: #888;
+    border-radius: 2em;
+    margin-left: 1em;
+}
+
+.Potager_Detail_Title span {
+    width: 32px;
+    height: 32px;
+    background-color: #444;
+}
+.Potager_Detail_Title span:hover {
+    background-color: #444;
+}
+
+.Potager_Detail_Title {
+    padding: 1em;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.Potager_Detail_Description {
+    display:flex;
+    padding: 1em;
+    flex-direction: column;
+    justify-content: left;
+}
+
+.Potager_map {
+    width: 50%;
+    padding-bottom: 66.66%; /* 16:9 */
+    position: relative;
+}
+
+.potager {
+    position: absolute;
+    top: 0; bottom: 0; left: 0; right: 0;
+    color: #007700;
+    width:100%;
+    height:100%;
+}
+
+
+
+
+
+
 .potager td {
-    width: 40px;
-    height: 40px;
+    width: 4.34%;
+    height: 3.125%;
 }
 
 .terre {

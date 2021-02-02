@@ -1,9 +1,14 @@
-{% extends "www/base.html" %}
+{% extends "potager/base.html" %}
 {% load static %}
-{%block additionnalhead %}
-<link rel="stylesheet" href="{% static 'css/potager.css' %}">
+
+
+{%block topsection %}
+<div class="topcontent">
+    <h1>Le Plan!</h1>
+</div>
 {%endblock%}
-{% block InnerContent %}
+
+{% block mainsection %}
 
 <div class="Potager_container">
     <div class="Potager_map">

@@ -3,22 +3,22 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 
-url_vhost = "drone.urls_base"
+url_vhost = "potager.urls_base"
 
 
 # Create your tests here.
-class DroneTest(TestCase):
+class PotagerTest(TestCase):
     def test_should_not_respond_for_www(self):
         client = Client(HTTP_HOST="www.argawaen.net")
         view = reverse("index1", urlconf=url_vhost)
         response = client.get(view)
         self.assertEqual(response.status_code, 404)
 
-    def test_should_respond_for_drone(self):
+    def test_should_not_respond_for_drone(self):
         client = Client(HTTP_HOST="drone.argawaen.net")
         view = reverse("index1", urlconf=url_vhost)
         response = client.get(view)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 404)
 
     def test_should_not_respond_for_testsubject(self):
         client = Client(HTTP_HOST="testsubject.argawaen.net")
@@ -32,8 +32,8 @@ class DroneTest(TestCase):
         response = client.get(view)
         self.assertEqual(response.status_code, 404)
 
-    def test_should_not_respond_for_potager(self):
+    def test_should_respond_for_potager(self):
         client = Client(HTTP_HOST="potager.argawaen.net")
         view = reverse("index1", urlconf=url_vhost)
         response = client.get(view)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)

@@ -1,0 +1,43 @@
+{% extends "potager/base.html" %}
+{% load static %}
+
+{%block topsection %}
+<div class="topcontent">
+    <h1>Les Semences!</h1>
+</div>
+{%endblock%}
+
+{% block mainsection %}
+{% for plant in plants %}
+<div class="Article">
+    <div class="ArticleHeader">
+        <a href="{% url 'potager_plants_details' plant.id %}"><span class="pti pti-{{ plant.icon }}"></span><h1>{{ plant.name }}</h1></a>
+    </div>
+    <div class="ArticleContent">
+        {{ plant.description_md|safe }}
+        <a href="{% url 'potager_plants_details' plant.id %}" class="comment-btn comment-btn-small mdi mdi-loupe">Détails...</a>
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleComments mdi mdi-comment-outline">{{ plant.nb_comments }}</div>
+    </div>
+    {% if plant.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in plant.get_comments %}
+            <div class="comment">
+                <div class="c_head">
+                    <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                    <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                </div>
+                <div class="c_body">{{cc.contenu_md| safe}}</div>
+            </div>
+        {% endfor%}
+    </div>
+    {% endif %}
+</div>
+{% empty %}
+<div class="Article">
+<p>Login required...</p>
+<a class="comment-btn mdi mdi-login" href="{% url 'login' %}">Login</a>
+</div>
+{% endfor %}
+{% endblock %}

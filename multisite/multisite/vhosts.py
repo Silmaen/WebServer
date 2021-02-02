@@ -4,7 +4,8 @@ virtual_hosts = {
     "drone.argawaen.net": "drone.urls_base",
     "testsubject.argawaen.net": "tsjt.urls_base",
     "ayoaron.argawaen.net": "ayoaron.urls_base",
-    "127.0.0.1": "www.urls_base"
+    "potager.argawaen.net": "potager.urls_base",
+    "127.0.0.1": "potager.urls_base"
 }
 
 
