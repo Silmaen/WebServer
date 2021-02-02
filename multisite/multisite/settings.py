@@ -18,7 +18,7 @@ SECRET_KEY = '(qu$15^l4oqf9d+^-lb-ih#^i3xoh+vn=#sp)u)&k_fli*sd64'
 DEBUG = True
 
 MyDomain = ".argawaen.net"
-subdomains = ["www", "testsubject", "drone", "ayoaron"]
+subdomains = ["www", "testsubject", "drone", "ayoaron", "potager"]
 
 ALLOWED_HOSTS = ['127.0.0.1'] + [a + MyDomain for a in subdomains]
 
