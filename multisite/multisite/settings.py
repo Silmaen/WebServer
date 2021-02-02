@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'drone.apps.DroneConfig',
     'ayoaron.apps.AyoaronConfig',
     'tsjt.apps.TsjtConfig',
+    'potager.apps.PotagerConfig',
     'www_meteo.apps.WwwmeteoConfig',
     'www_netadmin.apps.WwwnetadminConfig',
 ]
