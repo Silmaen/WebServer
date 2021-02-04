@@ -4,7 +4,7 @@
 {%block topsection %}
 <div class="topcontent">
     {% if user.is_authenticated %}
-    <h1>Les Semences!</h1>
+    <h1>Semences</h1>
     {% else %}
     <h1>Il faut s'identifier</h1>
     {% endif %}
@@ -15,7 +15,7 @@
 {% for plant in plants %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href="{% url 'potager_plants_details' plant.id %}"><h1 class="pti pti-{{ plant.icon }}">{{ plant.name }}</h1></a>
+        <a href="{% url 'potager_plants_details' plant.id %}"><h1><i class="pti pti-{{ plant.icon }}"></i>{{ plant.name }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ plant.description_md|safe }}

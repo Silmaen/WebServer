@@ -1,14 +1,14 @@
 {% extends "potager/base.html" %}
 {%block topsection %}
 <div class="topcontent">
-    <a href ="{% url 'index' %}"><h1>Les dernières news!</h1></a>
+    <a href ="{% url 'index' %}"><h1>Semence</h1></a>
 </div>
 {%endblock%}
 
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="{% url 'potager_plant' %}"><h1 class="pti pti-{{ plant.icon }}">{{ plant.name }}</h1></a>
+        <a href ="{% url 'potager_plant' %}"><h1><i class="pti pti-{{ plant.icon }}"></i>{{ plant.name }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ plant.description_all_md|safe }}
