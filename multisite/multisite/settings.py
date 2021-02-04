@@ -148,7 +148,6 @@ STATICFILES_DIRS = [SITE_DIR / 'data' / 'static']
 # Les medias
 MEDIA_URL = "/media/"
 MEDIA_ROOT = SITE_DIR / 'data' / 'media'
-print(MEDIA_ROOT)
 
 # Login redirection
 LOGIN_REDIRECT_URL = '/'
