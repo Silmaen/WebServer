@@ -13,3 +13,15 @@ class PlantTypeCommentForm(forms.ModelForm):
         """
         model = PlantTypeComment
         fields = ('contenu',)
+
+
+class PlantationCommentForm(forms.ModelForm):
+    """
+    Form for comment creation
+    """
+    class Meta:
+        """
+        Meta informations
+        """
+        model = PlantationComment
+        fields = ('contenu',)

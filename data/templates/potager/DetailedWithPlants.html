@@ -8,7 +8,7 @@
 {%block mainsection %}
 <div class="Article Article_detail">
     <div class="ArticleHeader">
-        <a href ="{% url 'potager_plant' %}"><span class="pti pti-{{ plant.icon }}"></span><h1>{{ plant.name }}</h1></a>
+        <a href ="{% url 'potager_plant' %}"><h1 class="pti pti-{{ plant.icon }}">{{ plant.name }}</h1></a>
     </div>
     <div class="ArticleContent">
         {{ plant.description_all_md|safe }}
