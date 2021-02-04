@@ -20,13 +20,9 @@ class PlantTypeAdmin(admin.ModelAdmin):
         ('General', {
             'fields': ('name', 'vendeur', 'icon'),
         }),
-        # Fieldset 1 : meta-info (titre, auteur…)
-        ('calendrier', {
-            'fields': ('semis_abris', 'semis_terre', 'harvest'),
-        }),
         # Fieldset 3 : contenu de l'article
         ('Description', {
-            'fields': ('description',)
+            'fields': ('specifications', 'description',)
         }),
     )
 
@@ -50,10 +46,10 @@ class PlantationAdmin(admin.ModelAdmin):
     """
     Admin page for plant type
     """
-    list_display = ('Semis', 'SemisTerre', 'Harvested')
-    list_filter = ('Semis', 'SemisTerre', 'Harvested')
-    ordering = ('Semis',)
-    search_fields = ('Semis', 'SemisTerre', 'Harvested')
+    list_display = ('graine', 'Semis', 'SemisTerre', 'Harvested')
+    list_filter = ('graine', 'Semis', 'SemisTerre', 'Harvested')
+    ordering = ('graine', 'Semis',)
+    search_fields = ('graine', 'Semis', 'SemisTerre', 'Harvested')
     # Configuration du formulaire d’édition
     fieldsets = (
         # Fieldset 1 : meta-info (titre, auteur…)
@@ -62,7 +58,7 @@ class PlantationAdmin(admin.ModelAdmin):
         }),
         # Fieldset 2 : meta-info (titre, auteur…)
         ('General', {
-            'fields': ('CoordX', 'CoordY',),
+            'fields': ('graine', 'Coordinates',),
         }),
         # Fieldset 3 : contenu de l'article
         ('Description', {

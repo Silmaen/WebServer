@@ -13,56 +13,6 @@ comment_truncation = 100  # Longueur de la troncature dans les commentaires
 nb_last_comments = 3  # Le nombre de commentaires à renvoyer en mode tronqué
 
 
-def intToMonthStrList(mcode: int):
-    """
-    Convert month code to string list of months
-    :param mcode: month code
-    :return: list of month name
-    """
-    res = []
-    for i, m in enumerate(strMois):
-        if mcode & (1 << i):
-            res.append(m)
-    return res
-
-
-def intToMonthIdList(mcode: int):
-    """
-    Convert month code to id list of months
-    :param mcode: month code
-    :return: list of month id (1 for the first month)
-    """
-    res = []
-    for i in range(len(strMois)):
-        if mcode & (1 << i):
-            res.append(i+1)
-    return res
-
-
-def monthListTomcode(months: list):
-    """
-    convert a month list into month code
-    :param months: list of month (name or month number)
-    :return: the month code
-    """
-    res = 0
-    for m in months:
-        if type(m) == int:
-            if m < 0 or m > 12:  # bad number
-                continue
-            res |= 1 << (m-1)
-        if type(m) == str:
-            if m not in strMois:  # bad name
-                continue
-            res |= 1 << strMois.index(m)
-    return res
-
-
-def addMonthTomcode(mcode:int, month: int):
-    mcode |= (1 << month)
-    return mcode
-
-
 class PlantType(models.Model):
     """
     Variété de plant
@@ -78,20 +28,9 @@ class PlantType(models.Model):
             blank=True,
             default="",
             verbose_name="nom de l'icône")
-    semis_abris = models.PositiveSmallIntegerField(
-            verbose_name="Mois de semis sous abris",
-            blank=True,
-            default=0,
-    )
-    semis_terre = models.PositiveSmallIntegerField(
-            verbose_name="Mois de semis en pleine terre",
-            blank=True,
-            default=0,
-    )
-    harvest = models.PositiveSmallIntegerField(
-            verbose_name="Mois de récolte",
-            blank=True,
-            default=0,
+    specifications = models.JSONField(
+            default=dict,
+            verbose_name="Informations supplémentaires"
     )
     description = MarkdownxField(
             blank=True,
@@ -99,14 +38,54 @@ class PlantType(models.Model):
             verbose_name="Description de la variété au format Markdown"
     )
 
+    def __str__(self):
+        return self.name + " (" + self.vendeur + ")"
+
+    def render_dates(self, classes: str = "plant_date"):
+        if ("semis" not in self.specifications) and \
+                ("enterre" not in self.specifications) and \
+                ("recolte" not in self.specifications and "recolte"):
+            return ""
+        result = "<table"
+        if classes not in ["", None]:
+            result += ' class="' + classes + '"'
+        result += ">\n"
+        result += "<tr><td></td><td>J</td><td>F</td><td>M</td><td>A</td><td>M</td><td>J</td><td>J</td><td>A</td><td>S</td><td>O</td><td>N</td><td>D</td></tr>\n"
+        if "semis" in self.specifications:
+            result += "<tr><td>Semi sous abris</td>"
+            for m in self.specifications["semis"]:
+                if m > 0:
+                    result += '<td class="semi_actif"></td>'
+                else:
+                    result += '<td></td>'
+            result += "</tr>\n"
+        if "enterre" in self.specifications:
+            result += "<tr><td>Semi en pleine terre</td>"
+            for m in self.specifications["enterre"]:
+                if m > 0:
+                    result += '<td class="enterre_actif"></td>'
+                else:
+                    result += '<td></td>'
+            result += "</tr>\n"
+        if "recolte" in self.specifications:
+            result += "<tr><td>Récolte</td>"
+            for m in self.specifications["recolte"]:
+                if m > 0:
+                    result += '<td class="recolte_actif"></td>'
+                else:
+                    result += '<td></td>'
+            result += "</tr>\n"
+        result += "</table>\n"
+        return result
+
     def semis_abris_months(self):
-        return intToMonthStrList(self.semis_abris)
+        return []
 
     def semis_terre_months(self):
-        return intToMonthStrList(self.semis_terre)
+        return []
 
     def harvest_months(self):
-        return intToMonthStrList(self.harvest)
+        return []
 
     def description_md(self):
         """
@@ -195,45 +174,108 @@ class Plantation(models.Model):
     """
     Semis = models.DateField(
             blank=True,
+            null=True,
             verbose_name="Date du semi sous abri")
     SemisTerre = models.DateField(
             blank=True,
+            null=True,
             verbose_name="Date du semi en pleine terre")
     Harvested = models.DateField(
             blank=True,
+            null=True,
             verbose_name="Date de la récolte")
-    CoordX = models.PositiveIntegerField(
-            default=0,
-            verbose_name="Placement en X")
-    CoordY = models.PositiveIntegerField(
-            default=0,
-            verbose_name="Placement en Y")
+    Coordinates = models.JSONField(
+            verbose_name="liste des coordonnées",
+    )
+    graine = models.ForeignKey(
+            'PlantType',
+            on_delete=models.CASCADE,
+            verbose_name="Ce qui est planté")
     Commentaires = MarkdownxField(
             blank=True,
             default="",
-            verbose_name="Commentaires de cette plantation au format Markdown"
-    )
+            verbose_name="Commentaires de cette plantation au format Markdown")
 
     def commentaire_md(self):
+        """
+        Rendu tronqué du contenu markdown.
+         :return : La sortie html.
+        """
+        return Truncator(markdownify(str(self.Commentaires))).chars(truncation, truncate='...', html=True)
+
+    def commentaire_all_md(self):
         """
         Rendu complet du contenu markdown.
          :return : La sortie html.
         """
         return markdownify(str(self.Commentaires))
 
+    def nb_comments(self):
+        """
+        Obtient le nombre de commentaires associés à l’article.
+         :return : Nombre de commentaires.
+        """
+        return len(self.get_all_comments())
+
+    def get_comments(self):
+        """
+        Fonction qui renvoie les `nb_last_comments` derniers commentaires.
+         :return : Les nb_last_comments derniers commentaires.
+        """
+        return self.get_all_comments()[:nb_last_comments]
+
+    def get_all_comments(self):
+        """
+        Renvoie la liste de tous les commentaires.
+         :return : Tous les commentaires
+        """
+        return self.comments.filter(active=True).order_by("-date")
+
+    def is_harvested(self):
+        """
+        renvoie si cette récolte a déjà été ramassée
+        :return: True si déjà ramassé
+        """
+        now = timezone.now().date()
+        if self.Harvested not in ["", None]:
+            if self.Harvested < now:
+                return True
+        return False
+
     def is_in_potager(self):
         """
         Est-ce que le plant est encore dans le potager?
         """
         now = timezone.now()
-        if self.SemisTerre == "":
+        if self.SemisTerre in ["", None]:  # s'il n'y a pas de date de semi en terre, alors pas dans le potager
             return False
-        if self.SemisTerre > now:
+        if self.SemisTerre > now:  # si la date de semis est plus tard que maintenant, alors pas dans le potager
             return False
-        if self.Harvested != "":
-            if self.Harvested < now:
-                return False
-        return True
+        return not self.is_harvested()
+
+    def display_in_potager(self):
+        """
+        Est-ce que le plant est dans le potager ou est planifié
+        """
+        if self.SemisTerre in ["", None]:
+            return False
+        return not self.is_harvested()
+
+    def is_at_coord(self, row: int, col: int):
+        """
+        check the location
+        """
+        if "coords" not in self.Coordinates:
+            return False
+        for cc in self.Coordinates["coords"]:
+            if cc[0] == col and cc[1] == row:
+                return True
+        return False
+
+    def get_coord_list(self):
+        if "coords" not in self.Coordinates:
+            return []
+        return self.Coordinates["coords"]
 
 
 class PlantationComment(models.Model):
