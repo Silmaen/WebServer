@@ -33,14 +33,23 @@ body {
 	color: #212529;
 	text-align: left;
 	background-color: #464646;
-	font-size: 14px;
 }
+/*
+body {font-size: 14px;}
 h1 {font-size: 27px;}
 h2 {font-size: 25px;}
 h3 {font-size: 23px;}
 h4 {font-size: 21px;}
 h5 {font-size: 17px;}
-h6 {font-size: 15px;}
+h6 {font-size: 15px;}*/
+
+body {font-size: 1rem;}
+h1 {font-size: 1.93rem;}
+h2 {font-size: 1.79rem;}
+h3 {font-size: 1.64rem;}
+h4 {font-size: 1.50rem;}
+h5 {font-size: 1.21rem;}
+h6 {font-size: 1.07rem;}
 
 @media all and (max-width: 1000px) {
 body {font-size:2.1vw;}
@@ -453,28 +462,45 @@ justify-content: space-between;
 .potager_map_container {
     width: 50%;
     max-width: 100%;
-    padding-top: 66%;
+    padding-top: 69.5%;
     position:relative;
 }
 .potager_detail_container {
     width: 50%;
     max-width: 100%;
 }
+@media all and (max-width: 1000px) {
+    .potager_container {
+        flex-flow: column nowrap;
+    }
+    .potager_map_container {
+        width: 100%;
+        padding-top: 139%;
+    }
+    .potager_detail_container {
+        width: 100%;
+    }
+}
 
 .potager_map {
   position: absolute;
-  top: 10;
-  left: 10;
-  bottom: 10;
-  right: 10;
-  width: 98%;
-height: 98%;
+  top: 0.5rem;
+  left: 0.5rem;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  width: calc(100% - 1rem);
+  height: calc(100% - 1rem);
+  font-size: 1.5vmax;
+}
+@media all and (max-width: 1000px) {
+.potager_map {
+  font-size: 2vmax;
+}
 }
 .potager_map td{
-    width: 4.348%;
-    height: 3.125%;
-    font-size: 1.5vw;
-    text-align: center;
+  width: 4.348%;
+  height: 3.125%;
+  text-align: center;
 }
 .potager_map .pti::before{
     padding: 0;
@@ -489,14 +515,18 @@ height: 98%;
 
 .plant_date {
     color: #AAA;
-
+    background-color: #444;
 }
 
 .plant_date td{
     border: 1px #333 solid;
-    padding: 0.1em;
+    padding: 0.2em 0.4em;
 }
-
+@media all and (max-width: 1000px) {
+.plant_date td{
+    font-size:2.1vw;
+}
+}
 .semi_actif {
     background-color: #1A0;
 }
@@ -505,4 +535,8 @@ height: 98%;
 }
 .recolte_actif {
     background-color: #880;
+}
+
+.inplan_seed {
+    background-color: #333;
 }

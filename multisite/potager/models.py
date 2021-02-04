@@ -50,7 +50,7 @@ class PlantType(models.Model):
         if classes not in ["", None]:
             result += ' class="' + classes + '"'
         result += ">\n"
-        result += "<tr><td></td><td>J</td><td>F</td><td>M</td><td>A</td><td>M</td><td>J</td><td>J</td><td>A</td><td>S</td><td>O</td><td>N</td><td>D</td></tr>\n"
+        result += "<tr><td></td><td> J </td><td> F </td><td> M </td><td> A </td><td> M </td><td> J </td><td> J </td><td> A </td><td> S </td><td> O </td><td> N </td><td> D </td></tr>\n"
         if "semis" in self.specifications:
             result += "<tr><td>Semi sous abris</td>"
             for m in self.specifications["semis"]:
