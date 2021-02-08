@@ -16,13 +16,13 @@ les pages html !
  * [X] ![](svg/aubergine.svg) Aubergine
  * [ ] Betterave
  * [ ] Blette
- * [ ] Brocoli
- * [ ] Butternut
+ * [X] ![](svg/brocoli.svg) Brocoli
+ * [X] ![](svg/butternut.svg) Butternut
  * [ ] Cardon
- * [x] ![](svg/carotte.svg) Carotte
+ * [X] ![](svg/carotte.svg) Carotte
  * [ ] Céleri
- * [ ] Chou
- * [ ] Chou-fleur
+ * [X] ![](svg/chou.svg) chou
+ * [X] ![](svg/chou-fleur.svg) Chou-fleur
  * [ ] Concombre
  * [ ] Cornichon
  * [ ] Courge
