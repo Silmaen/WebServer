@@ -12,6 +12,7 @@
     </div>
     <div class="ArticleContent">
         {{ plant.description_all_md|safe }}
+        {{ plant.render_dates|safe }}
     </div>
     <div class="ArticleFooter">
         <div class="ArticleComments mdi mdi-comment-outline">{{ plant.nb_comments }}</div>

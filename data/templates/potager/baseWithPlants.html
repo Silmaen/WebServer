@@ -19,6 +19,7 @@
     </div>
     <div class="ArticleContent">
         {{ plant.description_md|safe }}
+        {{ plant.render_dates|safe }}
         <a href="{% url 'potager_plants_details' plant.id %}" class="comment-btn comment-btn-small mdi mdi-loupe">Détails...</a>
     </div>
     <div class="ArticleFooter">
