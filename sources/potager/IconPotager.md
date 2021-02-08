@@ -30,17 +30,17 @@ les pages html !
  * [ ] Épinard
  * [X] ![](svg/fenouil.svg) Fenouil
  * [ ] Fève
- * [ ] Haricot
- * [ ] Melon
+ * [X] ![](svg/haricot.svg) Haricot
+ * [X] ![](svg/melon.svg) Melon
  * [X] ![](svg/navet.svg) Navet
  * [X] ![](svg/oignon.svg) Oignon
  * [ ] Oseille
- * [X] ![](svg/Panais.svg) Panais
+ * [X] ![](svg/panais.svg) Panais
  * [ ] Pastèque
  * [X] ![](svg/piment.svg) Piment
  * [X] ![](svg/poireau.svg) Poireau
  * [X] ![](svg/poivron.svg) Poivron
- * [ ] Pomme de terre
+ * [X] ![](svg/patate.svg) Pomme de terre
  * [ ] Potimarron
  * [ ] Potiron
  * [X] ![](svg/radis.svg) Radis
