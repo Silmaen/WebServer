@@ -1,9 +1,9 @@
 @font-face {
-  font-family: 'Potager';
+  font-family: 'potager';
   src:
-    url('/static/font/Potager.ttf?y8zd0y') format('truetype'),
-    url('/static/font/Potager.woff?y8zd0y') format('woff'),
-    url('/static/font/Potager.svg?y8zd0y#Potager') format('svg');
+    url('/static/font/potager.ttf?30839m') format('truetype'),
+    url('/static/font/potager.woff?30839m') format('woff'),
+    url('/static/font/potager.svg?30839m#potager') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -11,7 +11,7 @@
 
 [class^="pti-"], [class*=" pti-"] {
   /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: 'Potager' !important;
+  font-family: 'potager' !important;
   speak: never;
   font-style: normal;
   font-weight: normal;
@@ -24,48 +24,60 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.pti-aromatiques:before {
-  content: "\e901";
-}
-.pti-artichaut:before {
-  content: "\e902";
-}
-.pti-aubergine:before {
-  content: "\e903";
-}
-.pti-carotte:before {
-  content: "\e904";
-}
-.pti-courgette:before {
-  content: "\e905";
-}
-.pti-fenouil:before {
-  content: "\e906";
-}
-.pti-navet:before {
-  content: "\e907";
-}
-.pti-oignon:before {
-  content: "\e908";
-}
-.pti-panais:before {
-  content: "\e909";
-}
-.pti-piment:before {
-  content: "\e90a";
-}
-.pti-poireau:before {
-  content: "\e90b";
-}
-.pti-poivron:before {
-  content: "\e90c";
-}
-.pti-radis:before {
-  content: "\e90d";
-}
-.pti-tomate:before {
-  content: "\e90e";
+.pti-chou:before {
+  content: "\e900";
 }
 .pti-ail:before {
-  content: "\e900";
+  content: "\e901";
+}
+.pti-aromatiques:before {
+  content: "\e902";
+}
+.pti-artichaut:before {
+  content: "\e903";
+}
+.pti-aubergine:before {
+  content: "\e904";
+}
+.pti-brocoli:before {
+  content: "\e905";
+}
+.pti-butternut:before {
+  content: "\e906";
+}
+.pti-carotte:before {
+  content: "\e907";
+}
+.pti-chou-fleur:before {
+  content: "\e908";
+}
+.pti-courgette:before {
+  content: "\e909";
+}
+.pti-fenouil:before {
+  content: "\e90a";
+}
+.pti-navet:before {
+  content: "\e90b";
+}
+.pti-oignon:before {
+  content: "\e90c";
+}
+.pti-panais:before {
+  content: "\e90d";
+}
+.pti-piment:before {
+  content: "\e90e";
+}
+.pti-poireau:before {
+  content: "\e90f";
+}
+.pti-poivron:before {
+  content: "\e910";
+}
+.pti-radis:before {
+  content: "\e911";
+}
+.pti-tomate:before {
+  content: "\e912";
 }
