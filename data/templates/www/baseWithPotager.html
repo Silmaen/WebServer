@@ -5,16 +5,33 @@
 {%endblock%}
 {% block InnerContent %}
 
-<div class="article">
-<table class="potager">
-    {% for line in map %}
-    <tr>
-        {% for cel in line %}
-        <td class="{{cel.css_class}}">{% if cel.content_icon %}<span class="pti pti-{{cel.content_icon}}"></span>{% endif %}</td>
-        {% endfor %}
-    </tr>
-    {% endfor %}
-</table>
+<div class="Potager_container">
+    <div class="Potager_map">
+        <table class="potager">
+            {% for line in map %}
+            <tr>
+                {% for cel in line %}
+                <td class="{{cel.css_class}}">{% if cel.content_icon %}<a class="pti pti-{{cel.content_icon}}"
+                                                                          href="{% url 'potager_detail' row=cel.Y col=cel.X %}"></a>{% endif %}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% if detail %}
+    <div class="Potager_Detail">
+        <div class="Potager_Detail_Title">
+            <span class="pti pti-{{detail.Icon}}"></span><h3>{{detail.Name}}</h3>
+        </div>
+        <div class="Potager_Detail_Description">
+            <p>placé en X={{detail.X}} et Y={{detail.Y}}</p>
+            <p>Semé en godet: {{detail.Semis}}</p>
+            <p>Semé en terre: {{detail.SemisTerre}}</p>
+            <p>Semé en récolté: {{detail.Harvested}}</p>
+            <div class="Plantation_Commentaire">{{detail.commentaire_md}}</div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% endblock %}

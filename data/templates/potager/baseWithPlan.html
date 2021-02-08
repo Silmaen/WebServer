@@ -1,0 +1,117 @@
+{% extends "potager/base.html" %}
+{% load static %}
+
+
+{%block topsection %}
+<div class="topcontent">
+    <h1>Plan</h1>
+</div>
+{%endblock%}
+
+{% block mainsection %}
+
+<div class="Potager_container">
+    <div class="Article potager_map_container">
+        <table class="potager_map">
+            {% for line in map %}
+            <tr>
+                {% for cel in line %}
+                <td class="{{cel.css_class}}">{% if cel.content_icon %}<a class="pti pti-{{cel.content_icon}}"
+                                                                          href="{% url 'potager_detail' row=cel.Y col=cel.X %}"></a>{% endif %}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+    {% if plantation %}
+    <div class="Article potager_detail_container">
+        <div class="ArticleHeader">
+            <h3><i class="pti pti-{{plantation.graine.icon}}"></i>{{plantation.graine}}</h3>
+        </div>
+        <div class="ArticleContent">
+            {% if plantation.Semis %}<p>Semé en godet: {{plantation.Semis}}</p>{% endif %}
+            {% if plantation.SemisTerre %}<p>Semé en terre: {{plantation.SemisTerre}}</p>{% endif %}
+            {% if plantation.Harvested %}<p>À récolter: {{plantation.Harvested}}</p>{% endif %}
+            <div class="Plantation_Commentaire">
+                {{plantation.commentaire_all_md | safe}}
+            </div>
+            <div class="Article inplan_seed">
+                <div class="ArticleContent">
+                    {{plantation.graine.description_all_md | safe}}
+                    {{plantation.graine.render_dates | safe}}
+                </div>
+                <div class="ArticleFooter">
+                    <div class="ArticleComments mdi mdi-comment-outline">{{ plantation.graine.nb_comments }}</div>
+                </div>
+                {% if plantation.graine.nb_comments > 0 %}
+                <div class="Comments">
+                    {% for cc in plantation.graine.get_all_comments %}
+                        <div class="comment">
+                            <div class="c_head">
+                                <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                                <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                            </div>
+                            <div class="c_body">{{cc.contenu_all_md| safe}}</div>
+                        </div>
+                    {% endfor%}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="ArticleFooter">
+                <div class="ArticleComments mdi mdi-comment-outline">{{ plantation.nb_comments }}</div>
+            </div>
+            {% if plantation.nb_comments > 0 %}
+            <div class="Comments">
+                {% for cc in plantation.get_all_comments %}
+                    <div class="comment">
+                        <div class="c_head">
+                            <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                            <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                        </div>
+                        <div class="c_body">{{cc.contenu_all_md| safe}}</div>
+                    </div>
+                {% endfor%}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+
+{%block additionnalsection %}
+{% if plantation %}
+<section class="bottom-section">
+    <div class="comment-subbing">
+    {% if new_comment %}
+        {% if new_comment.type_plant != plant %}
+            <div class="alert alert-fail mdi mdi-alert-outline" role="alert">
+                Le commentaire soumis a des problèmes et ne peut être sauvé.
+            </div>
+        {% else %}
+            {% if new_comment.active %}
+                <div class="alert alert-success mdi mdi-send-check-outline" role="alert">
+                  Le commentaire soumis a bien été enregistré et est directement visible car vous êtes modérateur.
+                </div>
+            {% else %}
+                <div class="alert alert-success mdi mdi-send-clock-outline" role="alert">
+                  Le commentaire soumis a bien été enregistré et est en attente de modération avant de pouvoir être visible.
+                </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <h5 class="mdi mdi-card-bulleted-outline">Ajouter un commentaire:</h5>
+        <form method="post">
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit" class="comment-btn mdi mdi-send-outline">Soumettre</button>
+        </form>
+        {{ comment_form.media }}
+    {% endif %}
+    </div>
+</section>
+{% endif %}
+{%endblock%}

@@ -1,0 +1,65 @@
+{% extends "potager/base.html" %}
+{%block topsection %}
+<div class="topcontent">
+    <a href ="{% url 'index' %}"><h1>Semence</h1></a>
+</div>
+{%endblock%}
+
+{%block mainsection %}
+<div class="Article Article_detail">
+    <div class="ArticleHeader">
+        <a href ="{% url 'potager_plant' %}"><h1><i class="pti pti-{{ plant.icon }}"></i>{{ plant.name }}</h1></a>
+    </div>
+    <div class="ArticleContent">
+        {{ plant.description_all_md|safe }}
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleComments mdi mdi-comment-outline">{{ plant.nb_comments }}</div>
+    </div>
+    {% if plant.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in plant.get_all_comments %}
+            <div class="comment">
+                <div class="c_head">
+                    <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                    <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                </div>
+                <div class="c_body">{{cc.contenu_all_md| safe}}</div>
+            </div>
+        {% endfor%}
+    </div>
+    {% endif %}
+</div>
+{%endblock%}
+
+{%block additionnalsection %}
+<section class="bottom-section">
+    <div class="comment-subbing">
+    {% if new_comment %}
+        {% if new_comment.type_plant != plant %}
+            <div class="alert alert-fail mdi mdi-alert-outline" role="alert">
+                Le commentaire soumis a des problèmes et ne peut être sauvé.
+            </div>
+        {% else %}
+            {% if new_comment.active %}
+                <div class="alert alert-success mdi mdi-send-check-outline" role="alert">
+                  Le commentaire soumis a bien été enregistré et est directement visible car vous êtes modérateur.
+                </div>
+            {% else %}
+                <div class="alert alert-success mdi mdi-send-clock-outline" role="alert">
+                  Le commentaire soumis a bien été enregistré et est en attente de modération avant de pouvoir être visible.
+                </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <h5 class="mdi mdi-card-bulleted-outline">Ajouter un commentaire:</h5>
+        <form method="post">
+            {% csrf_token %}
+            {{ comment_form }}
+            <button type="submit" class="comment-btn mdi mdi-send-outline">Soumettre</button>
+        </form>
+        {{ comment_form.media }}
+    {% endif %}
+    </div>
+</section>
+{%endblock%}

@@ -18,7 +18,7 @@ SECRET_KEY = '(qu$15^l4oqf9d+^-lb-ih#^i3xoh+vn=#sp)u)&k_fli*sd64'
 DEBUG = True
 
 MyDomain = ".argawaen.net"
-subdomains = ["www", "testsubject", "drone", "ayoaron"]
+subdomains = ["www", "testsubject", "drone", "ayoaron", "potager"]
 
 ALLOWED_HOSTS = ['127.0.0.1'] + [a + MyDomain for a in subdomains]
 
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'drone.apps.DroneConfig',
     'ayoaron.apps.AyoaronConfig',
     'tsjt.apps.TsjtConfig',
+    'potager.apps.PotagerConfig',
     'www_meteo.apps.WwwmeteoConfig',
     'www_netadmin.apps.WwwnetadminConfig',
 ]
@@ -147,7 +148,6 @@ STATICFILES_DIRS = [SITE_DIR / 'data' / 'static']
 # Les medias
 MEDIA_URL = "/media/"
 MEDIA_ROOT = SITE_DIR / 'data' / 'media'
-print(MEDIA_ROOT)
 
 # Login redirection
 LOGIN_REDIRECT_URL = '/'
