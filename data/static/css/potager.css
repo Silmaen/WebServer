@@ -1,9 +1,9 @@
 @font-face {
   font-family: 'potager';
   src:
-    url('/static/font/potager.ttf?30839m') format('truetype'),
-    url('/static/font/potager.woff?30839m') format('woff'),
-    url('/static/font/potager.svg?30839m#potager') format('svg');
+    url('/static/font/potager.ttf?70i5q4') format('truetype'),
+    url('/static/font/potager.woff?70i5q4') format('woff'),
+    url('/static/font/potager.svg?70i5q4#potager') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -24,28 +24,28 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.pti-chou:before {
+.pti-ail:before {
   content: "\e900";
 }
-.pti-ail:before {
+.pti-aromatiques:before {
   content: "\e901";
 }
-.pti-aromatiques:before {
+.pti-artichaut:before {
   content: "\e902";
 }
-.pti-artichaut:before {
+.pti-aubergine:before {
   content: "\e903";
 }
-.pti-aubergine:before {
+.pti-brocoli:before {
   content: "\e904";
 }
-.pti-brocoli:before {
+.pti-butternut:before {
   content: "\e905";
 }
-.pti-butternut:before {
+.pti-carotte:before {
   content: "\e906";
 }
-.pti-carotte:before {
+.pti-chou:before {
   content: "\e907";
 }
 .pti-chou-fleur:before {
@@ -57,27 +57,36 @@
 .pti-fenouil:before {
   content: "\e90a";
 }
-.pti-navet:before {
+.pti-haricot:before {
   content: "\e90b";
 }
-.pti-oignon:before {
+.pti-melon:before {
   content: "\e90c";
 }
-.pti-panais:before {
+.pti-navet:before {
   content: "\e90d";
 }
-.pti-piment:before {
+.pti-oignon:before {
   content: "\e90e";
 }
-.pti-poireau:before {
+.pti-panais:before {
   content: "\e90f";
 }
-.pti-poivron:before {
+.pti-patate:before {
   content: "\e910";
 }
-.pti-radis:before {
+.pti-piment:before {
   content: "\e911";
 }
-.pti-tomate:before {
+.pti-poireau:before {
   content: "\e912";
+}
+.pti-poivron:before {
+  content: "\e913";
+}
+.pti-radis:before {
+  content: "\e914";
+}
+.pti-tomate:before {
+  content: "\e915";
 }
