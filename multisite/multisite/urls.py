@@ -20,4 +20,5 @@ urlpatterns = [
     path('', include('drone.urls')),
     path('', include('ayoaron.urls')),
     path('', include('tsjt.urls')),
+    path('', include('potager.urls')),
 ]
