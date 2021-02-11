@@ -14,7 +14,7 @@ les pages html !
  * [X] ![](svg/ail.svg) Ail 
  * [X] ![](svg/artichaut.svg) Artichaut 
  * [X] ![](svg/aubergine.svg) Aubergine
- * [ ] Betterave
+ * [X] ![](svg/bettrave.svg) Betterave
  * [ ] Blette
  * [X] ![](svg/brocoli.svg) Brocoli
  * [X] ![](svg/butternut.svg) Butternut
@@ -23,7 +23,7 @@ les pages html !
  * [ ] Céleri
  * [X] ![](svg/chou.svg) chou
  * [X] ![](svg/chou-fleur.svg) Chou-fleur
- * [ ] Concombre
+ * [X] ![](svg/concombre.svg) Concombre
  * [ ] Cornichon
  * [ ] Courge
  * [X] ![](svg/courgette.svg) Courgette
@@ -37,6 +37,7 @@ les pages html !
  * [ ] Oseille
  * [X] ![](svg/panais.svg) Panais
  * [ ] Pastèque
+ * [X] ![](svg/petits-pois.svg) Petits pois
  * [X] ![](svg/piment.svg) Piment
  * [X] ![](svg/poireau.svg) Poireau
  * [X] ![](svg/poivron.svg) Poivron
@@ -44,6 +45,7 @@ les pages html !
  * [ ] Potimarron
  * [ ] Potiron
  * [X] ![](svg/radis.svg) Radis
+ * [X] ![](svg/salade.svg) Salade
  * [X] ![](svg/tomate.svg) Tomate
    
 ### Aromatiques

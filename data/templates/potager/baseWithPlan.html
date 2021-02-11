@@ -16,8 +16,13 @@
             {% for line in map %}
             <tr>
                 {% for cel in line %}
-                <td class="{{cel.css_class}}">{% if cel.content_icon %}<a class="pti pti-{{cel.content_icon}}"
-                                                                          href="{% url 'potager_detail' row=cel.Y col=cel.X %}"></a>{% endif %}</td>
+                <td class="{{cel.css_class}}">
+                    {% if cel.content_icon %}
+                    <a class="pti pti-{{cel.content_icon}}" href="{% url 'potager_detail' row=cel.Y col=cel.X %}"></a>
+                    {% else %}
+                    <span class="pti pti-vide"></span>
+                    {% endif %}
+                </td>
                 {% endfor %}
             </tr>
             {% endfor %}
