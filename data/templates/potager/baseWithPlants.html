@@ -5,6 +5,12 @@
 <div class="topcontent">
     {% if user.is_authenticated %}
     <h1>Semences</h1>
+    <form method="post" action=".">
+        {% csrf_token %}
+        <h3>Filtrage:</h3>
+        {{ search_form }}
+        <button type="submit" class="comment-btn mdi mdi-filter-outline">Filtrer</button>
+    </form>
     {% else %}
     <h1>Il faut s'identifier</h1>
     {% endif %}
@@ -12,10 +18,15 @@
 {%endblock%}
 
 {% block mainsection %}
+{% if user.is_authenticated %}
 {% for plant in plants %}
 <div class="Article">
     <div class="ArticleHeader">
-        <a href="{% url 'potager_plants_details' plant.id %}"><h1><i class="pti pti-{{ plant.icon }}"></i>{{ plant.name }}</h1></a>
+        <a href="{% url 'potager_plants_details' plant.id %}"><h1>
+            <i class="pti pti-{{ plant.icon }}"></i>
+            {{ plant.name }}
+            <i class="stock_stat mdi {{ plant.get_status_class }}"></i>
+        </h1></a>
     </div>
     <div class="ArticleContent">
         {{ plant.description_md|safe }}
@@ -41,8 +52,13 @@
 </div>
 {% empty %}
 <div class="Article">
-<p>Login required...</p>
-<a class="comment-btn mdi mdi-login" href="{% url 'login' %}">Login</a>
+<p>Rien trouvé</p>
 </div>
 {% endfor %}
+{% else %}
+<div class="Article">
+<p>Connexion requise.</p>
+<a class="comment-btn mdi mdi-login" href="{% url 'login' %}">Login</a>
+</div>
+{% endif %}
 {% endblock %}
