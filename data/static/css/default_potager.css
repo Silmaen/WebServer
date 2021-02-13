@@ -482,6 +482,10 @@ justify-content: space-between;
     }
 }
 
+.stock_stat {
+    padding-left: 0.2em;
+}
+
 .potager_map {
   position: absolute;
   top: 0.5rem;

@@ -37,11 +37,49 @@ class PlantType(models.Model):
             default="",
             verbose_name="Description de la variété au format Markdown"
     )
+    # Statuts dans notre stock
+    _EN_STOCK = 'ES'
+    _VIDE = 'VI'
+    _EN_LIVRAISON = 'EA'
+    _A_COMMANDER = 'AC'
+    _BIENTOT_VIDE = 'BV'
+    STATUS_STOCK = [
+        (_EN_STOCK, "En Stock"),
+        (_VIDE, "Épuisé"),
+        (_EN_LIVRAISON, "En cours d'approvision"),
+        (_A_COMMANDER, "A commander"),
+        (_BIENTOT_VIDE, "Bientôt épuisé"),
+    ]
+    STATUS_CLASS = {
+        _EN_STOCK: "mdi-basket-outline",
+        _VIDE: "mdi-basket-off-outline",
+        _EN_LIVRAISON: "mdi-basket-off-outline",
+        _A_COMMANDER: "mdi-basket-plus-outline",
+        _BIENTOT_VIDE: "mdi-basket-minus-outline",
+    }
+    stock_status = models.CharField(
+            max_length=2,
+            choices=STATUS_STOCK,
+            default=_EN_STOCK
+    )
+    # la note que l'on attribue à ce plant de 1 à 5
 
     def __str__(self):
-        return self.name + " (" + self.vendeur + ")"
+        return str(self.name) + " (" + str(self.vendeur) + ")"
+
+    def get_status_class(self):
+        """
+
+        :return:
+        """
+        return self.STATUS_CLASS[str(self.stock_status)]
 
     def render_dates(self, classes: str = "plant_date"):
+        """
+
+        :param classes:
+        :return:
+        """
         if ("semis" not in self.specifications) and \
                 ("enterre" not in self.specifications) and \
                 ("recolte" not in self.specifications and "recolte"):
@@ -50,7 +88,8 @@ class PlantType(models.Model):
         if classes not in ["", None]:
             result += ' class="' + classes + '"'
         result += ">\n"
-        result += "<tr><td></td><td> J </td><td> F </td><td> M </td><td> A </td><td> M </td><td> J </td><td> J </td><td> A </td><td> S </td><td> O </td><td> N </td><td> D </td></tr>\n"
+        result += "<tr><td></td><td> J </td><td> F </td><td> M </td><td> A </td><td> M </td><td> J </td><td> J " \
+                  "</td><td> A </td><td> S </td><td> O </td><td> N </td><td> D </td></tr>\n "
         if "semis" in self.specifications:
             result += "<tr><td>Semi sous abris</td>"
             for m in self.specifications["semis"]:
@@ -78,14 +117,20 @@ class PlantType(models.Model):
         result += "</table>\n"
         return result
 
-    def semis_abris_months(self):
-        return []
-
-    def semis_terre_months(self):
-        return []
-
-    def harvest_months(self):
-        return []
+    def is_code_in_list(self, code: int, s_list: str):
+        """
+        check if the code is in list
+        :param code: month code 0: all, 1 Janvier - 12 décembre
+        :param s_list: la liste dans laquelle regardé
+        :return: False si la liste n'existe pas, True si le code == 0, sinon la valeur cité dans la liste
+        """
+        if s_list not in self.specifications:
+            return False
+        if code == 0:
+            return True
+        if code >= len(self.specifications[s_list]):
+            return False
+        return self.specifications[s_list][code] > 0
 
     def description_md(self):
         """
