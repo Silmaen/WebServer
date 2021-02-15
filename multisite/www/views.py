@@ -3,8 +3,25 @@ from django.shortcuts import render, redirect
 
 from common.user_utils import user_is_moderator
 from . import settings
-from .render_utils import get_page_data, get_articles, get_article
+from .render_utils import get_page_data, get_articles, get_article, get_news_articles
 from .forms import ArticleCommentForm
+
+
+def news_page(request, n_page):
+    """
+    Définition de la page principale.
+     :param request : La requête du client.
+     :param n_page : Le numéro de la page.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "news")
+    articles, n_pages = get_news_articles(request.user, n_page)
+    return render(request, "www/baseWithArticles.html", {
+        **settings.base_info, **data,
+        'derniers_articles': articles,
+        'news_page': n_page,
+        'news_pages': n_pages,
+    })
 
 
 def index(request):
@@ -13,12 +30,7 @@ def index(request):
      :param request : La requête du client.
      :return : La page rendue.
     """
-    data = get_page_data(request.user, "news")
-    articles = get_articles(request.user, 1)
-    return render(request, "www/baseWithArticles.html", {
-        **settings.base_info, **data,
-        'derniers_articles': articles
-    })
+    return news_page(request, 1)
 
 
 def detailed_news(request, article_id):
