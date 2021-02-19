@@ -1,9 +1,9 @@
 @font-face {
   font-family: 'potager';
   src:
-    url('/static/font/potager.ttf?70i5q4') format('truetype'),
-    url('/static/font/potager.woff?70i5q4') format('woff'),
-    url('/static/font/potager.svg?70i5q4#potager') format('svg');
+    url('/static/font/potager.ttf?o7ivhe') format('truetype'),
+    url('/static/font/potager.woff?o7ivhe') format('woff'),
+    url('/static/font/potager.svg?o7ivhe#potager') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -36,57 +36,72 @@
 .pti-aubergine:before {
   content: "\e903";
 }
-.pti-brocoli:before {
+.pti-bettrave:before {
   content: "\e904";
 }
-.pti-butternut:before {
+.pti-brocoli:before {
   content: "\e905";
 }
-.pti-carotte:before {
+.pti-butternut:before {
   content: "\e906";
 }
-.pti-chou:before {
+.pti-carotte:before {
   content: "\e907";
 }
-.pti-chou-fleur:before {
+.pti-chou:before {
   content: "\e908";
 }
-.pti-courgette:before {
+.pti-chou-fleur:before {
   content: "\e909";
 }
-.pti-fenouil:before {
+.pti-concombre:before {
   content: "\e90a";
 }
-.pti-haricot:before {
+.pti-courgette:before {
   content: "\e90b";
 }
-.pti-melon:before {
+.pti-fenouil:before {
   content: "\e90c";
 }
-.pti-navet:before {
+.pti-haricot:before {
   content: "\e90d";
 }
-.pti-oignon:before {
+.pti-melon:before {
   content: "\e90e";
 }
-.pti-panais:before {
+.pti-navet:before {
   content: "\e90f";
 }
-.pti-patate:before {
+.pti-oignon:before {
   content: "\e910";
 }
-.pti-piment:before {
+.pti-panais:before {
   content: "\e911";
 }
-.pti-poireau:before {
+.pti-patate:before {
   content: "\e912";
 }
-.pti-poivron:before {
+.pti-petits-pois:before {
   content: "\e913";
 }
-.pti-radis:before {
+.pti-piment:before {
   content: "\e914";
 }
-.pti-tomate:before {
+.pti-poireau:before {
   content: "\e915";
+}
+.pti-poivron:before {
+  content: "\e916";
+}
+.pti-radis:before {
+  content: "\e917";
+}
+.pti-salade:before {
+  content: "\e918";
+}
+.pti-tomate:before {
+  content: "\e919";
+}
+.pti-vide:before {
+  content: "\e91a";
 }
