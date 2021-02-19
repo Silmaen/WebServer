@@ -64,6 +64,15 @@
         {% block content %}
             <div class="PageTitle">
                 {{ page_subtitle }}
+                {% if page == "news" %}
+                <ul class="sub-inner-nav-menu">
+                    {% for page_id in news_pages %}
+                    <li class="sub-inner-nav-item {% if page_id == news_page %}current-page{% endif %}">
+                        <a href="{% url 'news_page' page_id %}">{{ page_id }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
                 <ul class="sub-inner-nav-menu">
                     {% for sp in subpages %}
                     <li class="sub-inner-nav-item {% if subpage == sp.name %}current-page{% endif %}">
@@ -71,6 +80,7 @@
                     </li>
                     {% endfor %}
                 </ul>
+                {% endif %}
             </div>
             {% block InnerContent %}
             <p>Empty</p>

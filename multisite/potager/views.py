@@ -1,11 +1,12 @@
+from django.db.models import Q, QuerySet
 from django.shortcuts import render, redirect, get_object_or_404
 
 # Create your views here.
 from common.user_utils import user_is_moderator
 from potager.potager import get_potager_map, get_potager_detail
 from . import settings
-from .forms import PlantTypeCommentForm, PlantationCommentForm
-from .models import PlantType
+from .forms import PlantTypeCommentForm, PlantationCommentForm, PlantsFilterForm
+from .models import PlantType, Plantation
 from django.utils import timezone
 
 
@@ -70,14 +71,61 @@ def potager_detail(request, row: int, col: int):
     })
 
 
+def semis(request):
+    if not request.user.is_authenticated:
+        return redirect("/")
+    semis = Plantation.objects.exclude(
+            semis_status=Plantation.READY
+    ).exclude(
+            semis_status=Plantation.RECOLTE
+    )
+    return render(request, "potager/baseWithSemis.html", {
+        **settings.base_info,
+        "page": "semis",
+        "semis": semis
+    })
+
+
+def semis_detail(request, id):
+    if not request.user.is_authenticated:
+        return redirect("/")
+    semi = get_object_or_404(Plantation, pk=id)
+    return render(request, "potager/detailedWithSemis.html", {
+        **settings.base_info,
+        "page": "semis",
+        "semi": semi
+    })
+
+
 def potager_plants(request):
+    """
+    Vue de la liste des semences
+    :param request:
+    :return:
+    """
     if not request.user.is_authenticated:
         return redirect("/")
     plants = PlantType.objects.order_by('name')
+    if request.method == "POST":
+        search_form = PlantsFilterForm(data=request.POST)
+        if search_form.is_valid():
+            nom = search_form.cleaned_data['nom']
+            if nom != "":
+                plants = plants.filter(name__icontains=nom)
+            mois_semi = search_form.cleaned_data['mois_semi']
+            if mois_semi != 0:
+                plant_list = []
+                for plant in plants:
+                    if plant.is_code_in_list(int(mois_semi), "semis"):
+                        plant_list.append(plant)
+                plants = plant_list
+    else:
+        search_form = PlantsFilterForm()
     return render(request, "potager/baseWithPlants.html", {
         **settings.base_info,
         "page": "semence",
-        "plants": plants
+        "plants": plants,
+        "search_form": search_form,
     })
 
 

@@ -37,11 +37,60 @@ class PlantType(models.Model):
             default="",
             verbose_name="Description de la variété au format Markdown"
     )
+    # Statuts dans notre stock
+    EN_STOCK = 'ES'
+    VIDE = 'VI'
+    EN_LIVRAISON = 'EA'
+    A_COMMANDER = 'AC'
+    BIENTOT_VIDE = 'BV'
+    STATUS_STOCK = [
+        (EN_STOCK, "En Stock"),
+        (VIDE, "Épuisé"),
+        (EN_LIVRAISON, "En cours d'approvision"),
+        (A_COMMANDER, "A commander"),
+        (BIENTOT_VIDE, "Bientôt épuisé"),
+    ]
+    STATUS_CLASS = {
+        EN_STOCK: "mdi-basket-outline",
+        VIDE: "mdi-basket-off-outline",
+        EN_LIVRAISON: "mdi-basket-off-outline",
+        A_COMMANDER: "mdi-basket-plus-outline",
+        BIENTOT_VIDE: "mdi-basket-minus-outline",
+    }
+    stock_status = models.CharField(
+            max_length=2,
+            choices=STATUS_STOCK,
+            default=EN_STOCK,
+            verbose_name="Le statut de cette semence."
+    )
+    # la note que l'on attribue à ce plant de 1 à 5
 
     def __str__(self):
-        return self.name + " (" + self.vendeur + ")"
+        return str(self.name) + " (" + str(self.vendeur) + ")"
+
+    def get_status_class(self):
+        """
+
+        :return:
+        """
+        return self.STATUS_CLASS[str(self.stock_status)]
+
+    def get_status_name(self):
+        """
+
+        :return:
+        """
+        for s in self.STATUS_STOCK:
+            if s[0] == self.stock_status:
+                return s[1]
+        return ""
 
     def render_dates(self, classes: str = "plant_date"):
+        """
+
+        :param classes:
+        :return:
+        """
         if ("semis" not in self.specifications) and \
                 ("enterre" not in self.specifications) and \
                 ("recolte" not in self.specifications and "recolte"):
@@ -50,7 +99,8 @@ class PlantType(models.Model):
         if classes not in ["", None]:
             result += ' class="' + classes + '"'
         result += ">\n"
-        result += "<tr><td></td><td> J </td><td> F </td><td> M </td><td> A </td><td> M </td><td> J </td><td> J </td><td> A </td><td> S </td><td> O </td><td> N </td><td> D </td></tr>\n"
+        result += "<tr><td></td><td> J </td><td> F </td><td> M </td><td> A </td><td> M </td><td> J </td><td> J " \
+                  "</td><td> A </td><td> S </td><td> O </td><td> N </td><td> D </td></tr>\n "
         if "semis" in self.specifications:
             result += "<tr><td>Semi sous abris</td>"
             for m in self.specifications["semis"]:
@@ -78,14 +128,20 @@ class PlantType(models.Model):
         result += "</table>\n"
         return result
 
-    def semis_abris_months(self):
-        return []
-
-    def semis_terre_months(self):
-        return []
-
-    def harvest_months(self):
-        return []
+    def is_code_in_list(self, code: int, s_list: str):
+        """
+        check if the code is in list
+        :param code: month code 0: all, 1 Janvier - 12 décembre
+        :param s_list: la liste dans laquelle regardé
+        :return: False si la liste n'existe pas, True si le code == 0, sinon la valeur cité dans la liste
+        """
+        if s_list not in self.specifications:
+            return False
+        if code == 0:
+            return True
+        if code > len(self.specifications[s_list]):
+            return False
+        return self.specifications[s_list][code-1] > 0
 
     def description_md(self):
         """
@@ -191,10 +247,56 @@ class Plantation(models.Model):
             'PlantType',
             on_delete=models.CASCADE,
             verbose_name="Ce qui est planté")
+    # Statuts dans notre stock
+    READY = 'RY'
+    PLANNED = 'PL'
+    EN_GODET = 'EG'
+    EN_TERRE = 'ET'
+    RECOLTE = 'RE'
+    STATUS_SEMI = [
+        (READY, "Prêt à être planté"),
+        (PLANNED, "Prévu d'être planté"),
+        (EN_GODET, "Semé en Godet"),
+        (EN_TERRE, "Semé en terre"),
+        (RECOLTE, "Récolté"),
+    ]
+    STATUS_CLASS = {
+        READY: "mdi-progress-check",
+        PLANNED: "mdi-progress-clock",
+        EN_GODET: "mdi-progress-wrench",
+        EN_TERRE: "mdi-progress-download",
+        RECOLTE: "mdi-progress-close",
+    }
+    semis_status = models.CharField(
+            max_length=2,
+            choices=STATUS_SEMI,
+            default=EN_TERRE,
+            verbose_name="Le statut de ce semis",
+    )
     Commentaires = MarkdownxField(
             blank=True,
             default="",
             verbose_name="Commentaires de cette plantation au format Markdown")
+
+    def __str__(self):
+        return str(self.graine)
+
+    def get_status_class(self):
+        """
+
+        :return:
+        """
+        return self.STATUS_CLASS[str(self.semis_status)]
+
+    def get_status_name(self):
+        """
+
+        :return:
+        """
+        for s in self.STATUS_SEMI:
+            if s[0] == self.semis_status:
+                return s[1]
+        return ""
 
     def commentaire_md(self):
         """

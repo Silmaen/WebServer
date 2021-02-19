@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 from .models import Article
 from common.user_utils import user_is_developper, user_is_validated
 
+articles_per_page = 10
+
 ExternPages = [
     {
         "name": "Site Principal",
@@ -181,6 +183,19 @@ def get_articles(user, category):
         return Article.objects.filter(categorie=category, staff=False)
     else:
         return Article.objects.filter(categorie=category)
+
+
+def get_news_articles(user, page):
+    """
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    :param user:
+    :param page:
+    :return:
+    """
+    articles = get_articles(user, 1)
+    nb_page = int(len(articles) / articles_per_page + .5)
+    pages = list(range(1, nb_page + 1))
+    return articles[(page - 1) * articles_per_page: page * articles_per_page], pages
 
 
 def get_article(user, article_id):
