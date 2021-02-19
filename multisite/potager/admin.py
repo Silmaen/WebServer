@@ -18,7 +18,7 @@ class PlantTypeAdmin(admin.ModelAdmin):
     fieldsets = (
         # Fieldset 1 : meta-info (titre, auteur…)
         ('General', {
-            'fields': ('name', 'vendeur', 'icon'),
+            'fields': ('name', 'vendeur', 'icon', 'stock_status'),
         }),
         # Fieldset 3 : contenu de l'article
         ('Description', {
@@ -58,7 +58,7 @@ class PlantationAdmin(admin.ModelAdmin):
         }),
         # Fieldset 2 : meta-info (titre, auteur…)
         ('General', {
-            'fields': ('graine', 'Coordinates',),
+            'fields': ('graine', 'semis_status', 'Coordinates',),
         }),
         # Fieldset 3 : contenu de l'article
         ('Description', {
