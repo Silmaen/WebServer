@@ -10,8 +10,8 @@ class PlantTypeAdmin(admin.ModelAdmin):
     """
     Admin page for plant type
     """
-    list_display = ('name', 'vendeur',)
-    list_filter = ('name', 'vendeur',)
+    list_display = ('name', 'stock_status', 'vendeur',)
+    list_filter = ('name', 'stock_status', 'vendeur',)
     ordering = ('name',)
     search_fields = ('name', 'vendeur',)
     # Configuration du formulaire d’édition
@@ -46,10 +46,10 @@ class PlantationAdmin(admin.ModelAdmin):
     """
     Admin page for plant type
     """
-    list_display = ('graine', 'Semis', 'SemisTerre', 'Harvested')
-    list_filter = ('graine', 'Semis', 'SemisTerre', 'Harvested')
-    ordering = ('graine', 'Semis',)
-    search_fields = ('graine', 'Semis', 'SemisTerre', 'Harvested')
+    list_display = ('graine', 'semis_status', 'Semis', 'SemisTerre', 'Harvested')
+    list_filter = ('graine', 'semis_status', 'Semis', 'SemisTerre', 'Harvested')
+    ordering = ('graine', 'semis_status', 'Semis',)
+    search_fields = ('graine', 'semis_status', 'Semis', 'SemisTerre', 'Harvested')
     # Configuration du formulaire d’édition
     fieldsets = (
         # Fieldset 1 : meta-info (titre, auteur…)
