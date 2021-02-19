@@ -6,7 +6,7 @@ from common.user_utils import user_is_moderator
 from potager.potager import get_potager_map, get_potager_detail
 from . import settings
 from .forms import PlantTypeCommentForm, PlantationCommentForm, PlantsFilterForm
-from .models import PlantType
+from .models import PlantType, Plantation
 from django.utils import timezone
 
 
@@ -68,6 +68,32 @@ def potager_detail(request, row: int, col: int):
         "plantation": plantation,
         "new_comment": new_comment,
         "comment_form": comment_form
+    })
+
+
+def semis(request):
+    if not request.user.is_authenticated:
+        return redirect("/")
+    semis = Plantation.objects.exclude(
+            semis_status=Plantation.READY
+    ).exclude(
+            semis_status=Plantation.RECOLTE
+    )
+    return render(request, "potager/baseWithSemis.html", {
+        **settings.base_info,
+        "page": "semis",
+        "semis": semis
+    })
+
+
+def semis_detail(request, id):
+    if not request.user.is_authenticated:
+        return redirect("/")
+    semi = get_object_or_404(Plantation, pk=id)
+    return render(request, "potager/detailedWithSemis.html", {
+        **settings.base_info,
+        "page": "semis",
+        "semi": semi
     })
 
 

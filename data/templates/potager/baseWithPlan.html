@@ -31,7 +31,8 @@
     {% if plantation %}
     <div class="Article potager_detail_container">
         <div class="ArticleHeader">
-            <h3><i class="pti pti-{{plantation.graine.icon}}"></i>{{plantation.graine}}</h3>
+            <h3><i class="pti pti-{{plantation.graine.icon}}"></i>{{ plantation }}
+                <i class="stock_stat mdi {{ semi.get_status_class }}"></i></h3>
         </div>
         <div class="ArticleContent">
             {% if plantation.Semis %}<p>Semé en godet: {{plantation.Semis}}</p>{% endif %}

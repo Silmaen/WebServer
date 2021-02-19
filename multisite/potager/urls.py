@@ -10,6 +10,8 @@ urlpatterns = [
     path("", potager, name='index'),
     path('potager/', potager, name='potager'),
     path('potager/<int:row>/<int:col>', potager_detail, name='potager_detail'),
+    path('semis/', semis, name='semis'),
+    path('semis/<int:id>', semis_detail, name='semis_detail'),
     path('plants/', potager_plants, name='potager_plant'),
     path('plants/<int:id>', potager_plants_details, name='potager_plants_details'),
     path('netadmin/', include('www_netadmin.urls')),

@@ -1,0 +1,65 @@
+{% extends "potager/base.html" %}
+{% load static %}
+
+{%block topsection %}
+<div class="topcontent">
+    <a href="{% url 'semis' %}"><h1>Semis</h1></a>
+</div>
+{%endblock%}
+
+{% block mainsection %}
+<div class="Article">
+    <div class="ArticleHeader">
+        <a href="{% url 'semis' %}"><h1>
+            <i class="pti pti-{{ semi.graine.icon }}"></i>{{ semi }}
+            <i class="stock_stat mdi {{ semi.get_status_class }}"></i>
+        </h1></a>
+    </div>
+    <div class="ArticleContent">
+        {% if semi.Semis %}<p>Semé en godet: {{semi.Semis}}</p>{% endif %}
+        {% if semi.SemisTerre %}<p>Semé en terre: {{semi.SemisTerre}}</p>{% endif %}
+        {% if semi.Harvested %}<p>À récolter: {{semi.Harvested}}</p>{% endif %}
+        <div class="Plantation_Commentaire">
+            {{semi.commentaire_md | safe}}
+        </div>
+        <div class="Article inplan_seed">
+            <div class="ArticleContent">
+                {{semi.graine.description_all_md | safe}}
+                {{semi.graine.render_dates | safe}}
+            </div>
+            <div class="ArticleFooter">
+                <div class="ArticleComments mdi mdi-comment-outline">{{ semi.graine.nb_comments }}</div>
+            </div>
+            {% if semi.graine.nb_comments > 0 %}
+            <div class="Comments">
+                {% for cc in semi.graine.get_all_comments %}
+                    <div class="comment">
+                        <div class="c_head">
+                            <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                            <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                        </div>
+                        <div class="c_body">{{cc.contenu_all_md| safe}}</div>
+                    </div>
+                {% endfor%}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="ArticleFooter">
+        <div class="ArticleComments mdi mdi-comment-outline">{{ semi.nb_comments }}</div>
+    </div>
+    {% if semi.nb_comments > 0 %}
+    <div class="Comments">
+        {% for cc in semi.get_all_comments %}
+            <div class="comment">
+                <div class="c_head">
+                    <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
+                    <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
+                </div>
+                <div class="c_body">{{cc.contenu_all_md| safe}}</div>
+            </div>
+        {% endfor%}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
