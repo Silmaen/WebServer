@@ -90,9 +90,31 @@ def semis_detail(request, id):
     if not request.user.is_authenticated:
         return redirect("/")
     semi = get_object_or_404(Plantation, pk=id)
+
+    new_comment = None
+    # comment posted
+    if request.method == "POST":
+        comment_form = PlantationCommentForm(data=request.POST)
+        if comment_form.is_valid():
+            # create an object but don't save to database yet
+            new_comment = comment_form.save(commit=False)
+            # assign the comment to the current Article
+            new_comment.plantation = semi
+            # assign the current user to the comment
+            new_comment.auteur = request.user
+            # mark it as active if the user is in Moderateurs group
+            if user_is_moderator(request.user):
+                new_comment.active = True
+            # save it to database
+            new_comment.save()
+    else:
+        comment_form = PlantationCommentForm()
+
     return render(request, "potager/detailedWithSemis.html", {
         **settings.base_info,
         "page": "semis",
+        "new_comment": new_comment,
+        "comment_form": comment_form,
         "semi": semi
     })
 
