@@ -13,7 +13,7 @@ def request_admin(request: str):
     import platform
     if platform.system() == "Windows":
         MySQLParams = {
-            'host'  : "192.168.23.1",
+            'host'  : "192.168.5.1",
             'user'  : "robot",
             'passwd': "Robot123",
             'db'    : "administration"

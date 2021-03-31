@@ -89,7 +89,7 @@ if platform.system() == "Windows":
             'NAME': 'Site_Base',
             'USER': 'BASE_site',
             'PASSWORD': '1234',
-            'HOST': '192.168.23.1',
+            'HOST': '192.168.5.1',
             'PORT': '3306',
             'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
         }

@@ -36,7 +36,7 @@ def request_meteodata(request: str):
     import platform
     if platform.system() == "Windows":
         MySQLParams = {
-            'host'  : "192.168.23.1",
+            'host'  : "192.168.5.1",
             'user'  : "MeteoRobot",
             'passwd': "robot",
             'db'    : "MeteoData"

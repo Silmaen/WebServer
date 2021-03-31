@@ -79,7 +79,7 @@ WSGI_APPLICATION = 'drone.wsgi.application'
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 if platform.system() == "Windows":
-    EMAIL_HOST = "192.168.23.1"
+    EMAIL_HOST = "192.168.5.1"
 else:
     EMAIL_HOST = "127.0.0.1"
 EMAIL_PORT = "587"
@@ -105,7 +105,7 @@ if platform.system() == "Windows":
             'NAME': 'Site_Drone',
             'USER': 'DRONE_site',
             'PASSWORD': '1234',
-            'HOST': '192.168.23.1',
+            'HOST': '192.168.5.1',
             'PORT': '3306',
             'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"}
         }
