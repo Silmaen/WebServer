@@ -18,21 +18,3 @@ class MainTest(TestCase):
         view = reverse("index", urlconf=url_vhost)
         response = client.get(view)
         self.assertEqual(response.status_code, 404)
-
-    def test_should_not_respond_for_testsubject(self):
-        client = Client(HTTP_HOST="testsubject.argawaen.net")
-        view = reverse("index", urlconf=url_vhost)
-        response = client.get(view)
-        self.assertEqual(response.status_code, 404)
-
-    def test_should_not_respond_for_ayoaron(self):
-        client = Client(HTTP_HOST="ayoaron.argawaen.net")
-        view = reverse("index", urlconf=url_vhost)
-        response = client.get(view)
-        self.assertEqual(response.status_code, 404)
-
-    def test_should_not_respond_for_potager(self):
-        client = Client(HTTP_HOST="potager.argawaen.net")
-        view = reverse("index1", urlconf=url_vhost)
-        response = client.get(view)
-        self.assertEqual(response.status_code, 404)

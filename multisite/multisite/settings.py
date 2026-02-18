@@ -18,7 +18,7 @@ SECRET_KEY = '(qu$15^l4oqf9d+^-lb-ih#^i3xoh+vn=#sp)u)&k_fli*sd64'
 DEBUG = True
 
 MyDomain = ".argawaen.net"
-subdomains = ["www", "testsubject", "drone", "ayoaron", "potager"]
+subdomains = ["www", "drone"]
 
 ALLOWED_HOSTS = ['127.0.0.1'] + [a + MyDomain for a in subdomains]
 
@@ -37,9 +37,6 @@ INSTALLED_APPS = [
     'www.apps.WwwConfig',
     'connector.apps.ConnectorConfig',
     'drone.apps.DroneConfig',
-    'ayoaron.apps.AyoaronConfig',
-    'tsjt.apps.TsjtConfig',
-    'potager.apps.PotagerConfig',
     'www_meteo.apps.WwwmeteoConfig',
     'www_netadmin.apps.WwwnetadminConfig',
 ]

@@ -20,16 +20,6 @@ ExternPages = [
         "NeedValidatedUser": False,
      },
     {
-        "name": "Ayoaron",
-        "url": "https://ayoaron.argawaen.net",
-        "icon": "",
-        "Active": False,  # TODO: reactivate this site
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
-     },
-    {
         "name": "Drone",
         "url": "https://drone.argawaen.net",
         "icon": "",
@@ -38,16 +28,6 @@ ExternPages = [
         "NeedStaff": False,
         "NeedDev": False,
         "NeedValidatedUser": True,
-     },
-    {
-        "name": "TestSubject",
-        "url": "https://testsubject.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
      },
     {
         "name": "Mantis",
@@ -90,9 +70,6 @@ page_info = {
     "meteo": {
         "Title": "Relevés Météo",
     },
-    "Potager": {
-        "Title": "Plan du potager",
-    }
 }
 
 

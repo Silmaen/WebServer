@@ -5,7 +5,7 @@ from . import settings
 from .forms import DroneFlightCommentForm, DroneArticleCommentForm, DroneComponentCommentForm, \
     DroneConfigurationCommentForm
 from .models import DroneArticle, DroneFlight, DroneConfiguration, DroneComponent
-from common.user_utils import user_is_moderator
+from .user_utils import user_is_moderator
 
 
 def index(request):

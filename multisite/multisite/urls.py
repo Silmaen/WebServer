@@ -18,7 +18,4 @@ from django.urls import path, include
 urlpatterns = [
     path('', include('www.urls')),
     path('', include('drone.urls')),
-    path('', include('ayoaron.urls')),
-    path('', include('tsjt.urls')),
-    path('', include('potager.urls')),
 ]

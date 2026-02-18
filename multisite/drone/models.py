@@ -1,6 +1,6 @@
 """Les modèles pour le site drone"""
 from django.db import models
-from common.models import SiteArticle, SiteArticleComment
+from .base_models import SiteArticle, SiteArticleComment
 
 
 class DroneArticle(SiteArticle):

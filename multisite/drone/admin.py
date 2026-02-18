@@ -1,6 +1,6 @@
 """Configuration de l'administration"""
 from django.contrib import admin
-from common.admin import SiteArticleAdmin, SiteArticleCommentAdmin
+from .base_admin import SiteArticleAdmin, SiteArticleCommentAdmin
 from .models import *
 
 

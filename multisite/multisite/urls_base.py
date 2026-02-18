@@ -19,9 +19,6 @@ from django.urls import path, include
 urlpatterns = [
     path('www', include('www.urls')),
     path('drone', include('drone.urls')),
-    path('ayoaron', include('ayoaron.urls')),
-    path('tsjt', include('tsjt.urls')),
-    path('potager', include('potager.urls')),
     # Include for the system
     path('profile/', include('connector.urls')),
     path('admin/', admin.site.urls),
