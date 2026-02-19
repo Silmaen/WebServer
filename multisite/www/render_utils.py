@@ -20,16 +20,6 @@ ExternPages = [
         "NeedValidatedUser": False,
      },
     {
-        "name": "Drone",
-        "url": "https://drone.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": True,
-     },
-    {
         "name": "Mantis",
         "url": "https://mantis.argawaen.net",
         "icon": "",

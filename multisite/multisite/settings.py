@@ -1,7 +1,7 @@
 """
 Django's settings for multisite project.
 """
-import platform
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -12,16 +12,17 @@ SITE_DIR = BASE_DIR.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '(qu$15^l4oqf9d+^-lb-ih#^i3xoh+vn=#sp)u)&k_fli*sd64'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '(qu$15^l4oqf9d+^-lb-ih#^i3xoh+vn=#sp)u)&k_fli*sd64')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
 
-MyDomain = ".argawaen.net"
-subdomains = ["www", "drone"]
+ALLOWED_HOSTS = os.environ.get(
+    'DJANGO_ALLOWED_HOSTS',
+    '127.0.0.1,localhost,www.argawaen.net'
+).split(',')
 
-ALLOWED_HOSTS = ['127.0.0.1'] + [a + MyDomain for a in subdomains]
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Application definition
 
@@ -36,13 +37,9 @@ INSTALLED_APPS = [
     'common.apps.CommonConfig',
     'www.apps.WwwConfig',
     'connector.apps.ConnectorConfig',
-    'drone.apps.DroneConfig',
-    'www_meteo.apps.WwwmeteoConfig',
-    'www_netadmin.apps.WwwnetadminConfig',
 ]
 
 MIDDLEWARE = [
-    'multisite.vhosts.VHostMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -75,31 +72,19 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'multisite.wsgi.application'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-if platform.system() == "Windows":
-    EMAIL_HOST = "192.168.5.1"
-else:
-    EMAIL_HOST = "127.0.0.1"
-EMAIL_PORT = "587"
-EMAIL_HOST_USER = "site@argawaen.net"
-EMAIL_HOST_PASSWORD = "site"
-EMAIL_USE_TLS = True
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '127.0.0.1')
+EMAIL_PORT = os.environ.get('EMAIL_PORT', '587')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'site@argawaen.net')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'site')
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 DATABASES = {
     'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': 'Site_Common',
-            'USER': 'www_common',
-            'PASSWORD': 'Melissa1',
-            'HOST': '192.168.5.1',
-            'PORT': '3306',
-            'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
-            'TEST': {
-                'NAME': 'Site_Common_test',
-            }
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': SITE_DIR / 'data' / 'db' / 'db.sqlite3',
+    },
 }
 
 # Password validation
@@ -126,7 +111,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'fr'
 
-TIME_ZONE = 'CET'
+TIME_ZONE = 'Europe/Paris'
 
 USE_I18N = True
 
@@ -141,6 +126,7 @@ USE_TZ = True
 # Les static
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [SITE_DIR / 'data' / 'static']
+STATIC_ROOT = SITE_DIR / 'staticfiles'
 
 # Les medias
 MEDIA_URL = "/media/"
