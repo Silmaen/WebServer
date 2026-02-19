@@ -3,6 +3,7 @@ services:
   web:
     build: .
     restart: unless-stopped
+    dns: ${SERVER_DNS:-8.8.8.8}
     ports:
       - "${SERVER_PORT:-8000}:8000"
     env_file:
