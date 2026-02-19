@@ -54,12 +54,6 @@ page_info = {
     "links": {
         "Title": "La page des liens",
     },
-    "netadmin": {
-        "Title": "Administration machines",
-    },
-    "meteo": {
-        "Title": "Relevés Météo",
-    },
 }
 
 
@@ -102,26 +96,6 @@ internal_pages = [
         "NeedUser": True,
         "NeedStaff": False,
         "NeedDev": False,
-        "NeedValidatedUser": True,
-    },
-    {
-        "name": "Meteo",
-        "url": "meteo",
-        "icon": "mdi-weather-windy-variant",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": True,
-    },
-    {
-        "name": "Network admin",
-        "url": "netadmin",
-        "icon": "mdi-cctv",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": True,
-        "NeedDev": True,
         "NeedValidatedUser": True,
     },
     {
