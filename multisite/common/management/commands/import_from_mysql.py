@@ -41,27 +41,28 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-            import MySQLdb
+            import pymysql
+            pymysql.install_as_MySQLdb()
         except ImportError:
             raise CommandError(
-                "Le paquet 'mysqlclient' est requis pour l'import. "
-                "Installez-le avec : pip install mysqlclient"
+                "Le paquet 'pymysql' est requis pour l'import. "
+                "Installez-le avec : pip install pymysql"
             )
 
         self.stdout.write("Connexion à MySQL...")
         try:
-            conn = MySQLdb.connect(
+            conn = pymysql.connect(
                 host=options['host'],
                 port=options['port'],
                 user=options['user'],
-                passwd=options['password'],
-                db=options['database'],
+                password=options['password'],
+                database=options['database'],
                 charset='utf8mb4',
             )
-        except MySQLdb.Error as e:
+        except pymysql.Error as e:
             raise CommandError(f"Impossible de se connecter à MySQL : {e}")
 
-        cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+        cursor = conn.cursor(pymysql.cursors.DictCursor)
         self.stdout.write(self.style.SUCCESS("Connecté à MySQL."))
 
         try:
