@@ -17,9 +17,7 @@ Ce dépôt a pour vocation a devenir le principal gestionnaire des sites du doma
 Tous les sites ont pour domaine `argawaen.net`, on ne notera ici que leur préfixe :
 
 * [www](https://www.argawaen.net) le site principal.
-* [ayoaron](https://ayoaron.argawaen.net) le site dédié à l’univers d’Ayoaron.
-* [testsubject](https://testsubject.argawaen.net) le site dédié au projet de jeu Test Subject.
-* [drone](https://drone.argawaen.net) le site dédié à la pratique du drone.
+
 
 ## L’implémentation
 
@@ -136,9 +134,6 @@ Nous utiliserons celui-ci :
 """Creation d’un middleware pour la gestion des hôtes virtuels"""
 virtual_hosts = {
     "www.argawaen.net": "www.urls",
-    "drone.argawaen.net": "drone.urls",
-    "testsubject.argawaen.net": "tsjt.urls",
-    "ayoaron.argawaen.net": "ayoaron.urls",
     "127.0.0.1": "multisite.urls"
 }
 

@@ -1,0 +1,13 @@
+.git
+.idea
+.env
+__pycache__
+**/__pycache__
+*.pyc
+docker_data/db/
+staticfiles/
+*.sqlite3
+.gitignore
+CLAUDE.md
+README.md
+.env.example

@@ -4,9 +4,10 @@ mantis
 phpMyAdmin
 phpLDAPadmin
 webmail
-ayoaron/docprojet*
-ayoaron/*wiki*
-ayoaron/.*
+
 www2
 *.pyc
+__pycache__/
 .idea
+.env
+docker_data/

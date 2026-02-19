@@ -14,6 +14,4 @@ urlpatterns = [
     path('research', research, name='research'),
     path('projects', projects, name='projects'),
     path('links', links, name='links'),
-    path('meteo/', include('www_meteo.urls')),
-    path('netadmin/', include('www_netadmin.urls')),
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)

@@ -1,4 +1,4 @@
-"""Formulaire pour le drone"""
+"""Formulaire pour le site www"""
 from .models import *
 from markdownx.forms import forms
 

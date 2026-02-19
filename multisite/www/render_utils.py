@@ -20,36 +20,6 @@ ExternPages = [
         "NeedValidatedUser": False,
      },
     {
-        "name": "Ayoaron",
-        "url": "https://ayoaron.argawaen.net",
-        "icon": "",
-        "Active": False,  # TODO: reactivate this site
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
-     },
-    {
-        "name": "Drone",
-        "url": "https://drone.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": True,
-     },
-    {
-        "name": "TestSubject",
-        "url": "https://testsubject.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
-     },
-    {
         "name": "Mantis",
         "url": "https://mantis.argawaen.net",
         "icon": "",
@@ -84,15 +54,6 @@ page_info = {
     "links": {
         "Title": "La page des liens",
     },
-    "netadmin": {
-        "Title": "Administration machines",
-    },
-    "meteo": {
-        "Title": "Relevés Météo",
-    },
-    "Potager": {
-        "Title": "Plan du potager",
-    }
 }
 
 
@@ -135,26 +96,6 @@ internal_pages = [
         "NeedUser": True,
         "NeedStaff": False,
         "NeedDev": False,
-        "NeedValidatedUser": True,
-    },
-    {
-        "name": "Meteo",
-        "url": "meteo",
-        "icon": "mdi-weather-windy-variant",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": True,
-    },
-    {
-        "name": "Network admin",
-        "url": "netadmin",
-        "icon": "mdi-cctv",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": True,
-        "NeedDev": True,
         "NeedValidatedUser": True,
     },
     {
