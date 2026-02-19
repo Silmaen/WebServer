@@ -72,6 +72,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'multisite.wsgi.application'
 
+# Proxy — Django est derrière nginx
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 EMAIL_HOST = os.environ.get('EMAIL_HOST', '127.0.0.1')
 EMAIL_PORT = os.environ.get('EMAIL_PORT', '587')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'site@argawaen.net')
