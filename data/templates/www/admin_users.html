@@ -1,0 +1,46 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>Gestion des utilisateurs</h2>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nom d'utilisateur</th>
+                    <th>Prénom</th>
+                    <th>Nom</th>
+                    <th>Courriel</th>
+                    <th>Niveau</th>
+                    <th>Dernière connexion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.first_name }}</td>
+                    <td>{{ u.last_name }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>
+                        {% if u.is_superuser %}
+                            <span class="admin-badge">Superuser</span>
+                        {% else %}
+                            <form method="post" class="level-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="user_id" value="{{ u.pk }}">
+                                <select name="user_level" onchange="this.form.submit()">
+                                    {% for val, label in level_choices %}
+                                    <option value="{{ val }}" {% if val == u.userprofile.user_level %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        {% endif %}
+                    </td>
+                    <td>{{ u.last_login|default:"-" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
