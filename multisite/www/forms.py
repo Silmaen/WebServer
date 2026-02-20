@@ -1,5 +1,5 @@
 """Formulaire pour le site www"""
-from .models import *
+from .models import ArticleComment
 from markdownx.forms import forms
 
 

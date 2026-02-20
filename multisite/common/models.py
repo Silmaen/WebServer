@@ -63,7 +63,7 @@ class SiteArticle(models.Model):
         Obtient le nombre de commentaires associés à l’article.
          :return : Nombre de commentaires.
         """
-        return len(self.get_all_comments())
+        return self.comments.filter(active=True).count()
 
     def get_comments(self):
         """
@@ -88,7 +88,7 @@ class SiteArticle(models.Model):
             self.superprivate = True
         elif self.superprivate:
             self.private = True
-        super(SiteArticle, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     class Meta:
         """

@@ -10,6 +10,10 @@ class Category(models.Model):
     nom = models.CharField(max_length=30)
     mdi_icon_name = models.CharField(max_length=30, blank=True)
 
+    class Meta:
+        verbose_name = "Catégorie"
+        verbose_name_plural = "Catégories"
+
     def __str__(self):
         return self.nom
 
@@ -20,7 +24,10 @@ class SubCategory(models.Model):
     """
     nom = models.CharField(max_length=30)
     mdi_icon_name = models.CharField(max_length=30, blank=True)
-    # image = models.ImageField(upload_to="SousCateIcons/",blank=True)
+
+    class Meta:
+        verbose_name = "Sous-catégorie"
+        verbose_name_plural = "Sous-catégories"
 
     def __str__(self):
         return self.nom

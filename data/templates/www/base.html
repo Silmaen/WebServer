@@ -13,8 +13,8 @@
     <!-- feuille de style -->
     <link rel="stylesheet" href="{% static 'css/default_www.css' %}">
     <script src="{% static 'js/chartutils.js' %}"></script>
-    {%block additionnalhead %}
-    {%endblock%}
+    {% block additionnalhead %}
+    {% endblock %}
 </head>
 <body>
 <header class="site-header">
@@ -47,7 +47,7 @@
         </div>
     <div class="lower-header">
         <nav class="inner-nav">
-            {%block innernav %}
+            {% block innernav %}
             <ul class="inner-nav-menu">
                 {% for sp in pages %}
                 <li class="inner-nav-item {% if page == sp.name %}current-page{% endif %}">

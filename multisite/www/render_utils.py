@@ -1,6 +1,8 @@
 """
 gathering functions to render pages
 """
+import math
+
 from django.shortcuts import get_object_or_404
 
 from .models import Article
@@ -134,7 +136,8 @@ def get_news_articles(user, page):
     :return:
     """
     articles = get_articles(user, 1)
-    nb_page = int(len(articles) / articles_per_page + .5)
+    total = articles.count()
+    nb_page = max(1, math.ceil(total / articles_per_page))
     pages = list(range(1, nb_page + 1))
     return articles[(page - 1) * articles_per_page: page * articles_per_page], pages
 

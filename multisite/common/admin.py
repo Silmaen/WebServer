@@ -33,7 +33,7 @@ class SiteArticleAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         obj.auteur = request.user
-        super(SiteArticleAdmin, self).save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)
 
 
     def content_overview(self, article):
@@ -57,4 +57,4 @@ class SiteArticleCommentAdmin(MarkdownxModelAdmin):
 
     def save_model(self, request, obj, form, change):
         obj.auteur = request.user
-        super(SiteArticleCommentAdmin, self).save_model(request, obj, form, change)
+        super().save_model(request, obj, form, change)

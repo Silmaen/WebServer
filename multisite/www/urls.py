@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.conf.urls.static import static
 from django.conf import settings as main_settings
 from django.urls import path, include
-from .views import *
+from .views import index, news_page, detailed_news, research, projects, links
 
 
 urlpatterns = [

@@ -1,8 +1,7 @@
 """Fichier main.users.users_view.py les vues users."""
 from django.contrib.auth import login
 from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.forms import AuthenticationForm
-from django.shortcuts import render, redirect, reverse
+from django.shortcuts import render, redirect
 from .forms import CustomUserCreationForm, CustomUserChangeForm, ProfileForm
 from . import settings
 
@@ -23,11 +22,10 @@ def register(request):
         form = CustomUserCreationForm(request.POST)
         profile_form = ProfileForm(request.POST)
         if form.is_valid() and profile_form.is_valid():
-            print("le formulaire est valide")
             user = form.save()
             profile_form.save()
             login(request, user)
-            return redirect(reverse("index"))
+            return redirect("index")
         return render(request, "registration/register.html", {
             **settings.base_info,
             "form": form,
@@ -51,7 +49,7 @@ def profile_edit(request):
         if form.is_valid() and profile_form.is_valid():
             form.save()
             profile_form.save()
-            return redirect(reverse("profile"))
+            return redirect("profile")
     else:
         form = CustomUserChangeForm(instance=request.user)
         profile_form = ProfileForm(instance=request.user.userprofile)
@@ -66,5 +64,4 @@ class CustomPasswordResetView(PasswordResetView):
     """
     Custom class for password reset.
     """
-    from_email = "webmaster@argawaen.net"
     html_email_template_name = 'registration/password_reset_email.html'
