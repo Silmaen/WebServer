@@ -47,4 +47,4 @@ class CustomUserChangeForm(UserChangeForm):
         """
         Meta informations
         """
-        fields = ('email', 'first_name', 'last_name', 'password')
+        fields = ('first_name', 'last_name', 'email')

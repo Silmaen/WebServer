@@ -12,6 +12,8 @@
 	--blue-light: #7ab8eb;
 	--blue-lighter: #9ac8fb;
 	--blue-hover: #6aaad8;
+	--bg-button: #303030;
+	--bg-button-hover: #3a3a3a;
 }
 
 *,
@@ -261,7 +263,7 @@ article, aside, dialog, figcaption, figure, footer, header, hgroup, main, nav, s
 
 /* Buttons */
 .comment-btn {
-    background-color: var(--bg-surface);
+    background-color: var(--bg-button);
     border-radius: 1em;
     padding: 0.5em 1.5em;
     color: var(--text);
@@ -275,7 +277,7 @@ article, aside, dialog, figcaption, figure, footer, header, hgroup, main, nav, s
     width: max-content;
 }
 .comment-btn:hover {
-    background-color: var(--bg-elevated);
+    background-color: var(--bg-button-hover);
     color: var(--blue-hover);
     transition: color .2s, background-color .2s;
 }

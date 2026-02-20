@@ -15,6 +15,8 @@
 	--blue-light: #7ab8eb;
 	--blue-lighter: #9ac8fb;
 	--blue-hover: #6aaad8;
+	--bg-button: #303030;
+	--bg-button-hover: #3a3a3a;
 }
 
 /* Global reset */
@@ -128,7 +130,7 @@ a:active,a:focus,a:hover {
 	color: var(--text-secondary);
 	border-radius: 20px;
 	border: none;
-	background: transparent;
+	background: var(--bg-button);
 	text-align:center;
 	white-space: nowrap;
 	transition: background .2s, color .2s;
@@ -143,7 +145,7 @@ a:active,a:focus,a:hover {
 .userbtn:hover {
 	text-decoration:none;
 	color: var(--blue);
-	background: var(--bg-elevated);
+	background: var(--bg-button-hover);
 }
 
 /*--- Navigation (base partagée) ---*/
@@ -538,7 +540,7 @@ a:active,a:focus,a:hover {
 
 /* Buttons */
 .comment-btn {
-    background-color: var(--bg-surface);
+    background-color: var(--bg-button);
     border-radius: 1em;
     padding: 0.5em 1.5em;
     color: var(--text);
@@ -556,7 +558,7 @@ a:active,a:focus,a:hover {
     width: max-content;
 }
 .comment-btn:hover {
-    background-color: var(--bg-elevated);
+    background-color: var(--bg-button-hover);
     color: var(--blue-hover);
     transition: color .2s, background-color .2s;
 }
@@ -627,11 +629,99 @@ input[type="password"],
 input[type="number"],
 input[type="search"],
 input[type="url"],
+input[type="date"],
 textarea,
 select {
-    background-color: var(--bg-surface);
+    background-color: var(--bg-elevated);
     color: var(--text);
     border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.5em 0.8em;
+    font: inherit;
+    width: 100%;
+    transition: border-color .2s;
+}
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="number"]:focus,
+input[type="date"]:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--blue);
+}
+
+/* Form sections & groups */
+.form-section {
+    width: 100%;
+    margin-bottom: 1.2em;
+}
+.form-section-title {
+    color: var(--blue-light);
+    font-size: 1em;
+    font-weight: 600;
+    padding-bottom: 0.4em;
+    margin-bottom: 0.8em;
+    border-bottom: 1px solid var(--border);
+}
+.form-group {
+    margin-bottom: 0.9em;
+    text-align: left;
+    width: 100%;
+}
+.form-group label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    margin-bottom: 0.3em;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.form-group input[type="file"] {
+    display: none;
+}
+.file-input-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    background: var(--bg-button);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.5em 1em;
+    font: inherit;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+}
+.file-input-label:hover {
+    background: var(--bg-button-hover);
+    color: var(--text);
+}
+.file-input-name {
+    color: var(--text-secondary);
+    font-size: 0.9em;
+    margin-top: 0.3em;
+}
+.form-errors {
+    width: 100%;
+    margin-bottom: 1em;
+}
+.avatar-preview {
+    margin-bottom: 0.5em;
+}
+.avatar-preview img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+}
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    justify-content: center;
+    margin-top: 0.5em;
 }
 
 /* Static pages */
