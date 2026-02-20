@@ -1,9 +1,10 @@
-"""Fichier main.urls.py d\u00e9finissant les urls."""
+"""Fichier main.urls.py définissant les urls."""
 from django.conf.urls.static import static
 from django.conf import settings as main_settings
 from django.urls import path
 from .views import (
-    accueil, a_propos, mes_projets, archives, news, news_page,
+    accueil, a_propos, a_propos_cv, a_propos_publications,
+    mes_projets, archives, news, news_page,
     detailed_news, research, bricolage, administration, admin_users,
 )
 
@@ -11,6 +12,8 @@ from .views import (
 urlpatterns = [
     path("", accueil, name='accueil'),
     path('a-propos/', a_propos, name='a_propos'),
+    path('a-propos/cv/', a_propos_cv, name='a_propos_cv'),
+    path('a-propos/publications/', a_propos_publications, name='a_propos_publications'),
     path('mes-projets/', mes_projets, name='mes_projets'),
     path('archives/', archives, name='archives'),
     path('archives/news/', news, name='archives_news'),

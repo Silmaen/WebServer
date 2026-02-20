@@ -739,6 +739,170 @@ select:focus {
     font-size: 110%;
 }
 
+/* CV page */
+.cv-section {
+	margin-bottom: 2em;
+}
+.cv-section h3 {
+	color: var(--blue-light);
+	font-size: 1.2em;
+	font-weight: 600;
+	padding-bottom: 0.4em;
+	margin-bottom: 0.8em;
+	border-bottom: 1px solid var(--border);
+}
+.cv-entry {
+	display: flex;
+	align-items: flex-start;
+	gap: 1.2em;
+	margin-bottom: 1em;
+	padding: 0.8em 1em;
+	background: var(--bg-surface);
+	border-radius: 8px;
+	border-left: 3px solid var(--blue);
+}
+.cv-logo {
+	flex-shrink: 0;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+.cv-logo-icon {
+	font-size: 1.8em;
+	color: var(--blue);
+}
+.cv-date {
+	min-width: 140px;
+	color: var(--blue);
+	font-weight: 600;
+	white-space: nowrap;
+	padding-top: 0.1em;
+}
+.cv-detail strong {
+	display: block;
+	margin-bottom: 0.3em;
+}
+.cv-detail a {
+	font-weight: 600;
+}
+.cv-detail p {
+	font-size: 0.95em;
+	color: var(--text-secondary);
+	margin: 0;
+}
+.cv-skills {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5em;
+}
+.cv-skill {
+	display: inline-block;
+	padding: 0.3em 0.8em;
+	background: var(--bg-surface);
+	border: 1px solid var(--border);
+	border-radius: 16px;
+	font-size: 0.9em;
+	transition: border-color .2s;
+}
+.cv-skill:hover {
+	border-color: var(--blue);
+}
+
+/* Publications page */
+.pub-entry {
+	display: flex;
+	align-items: flex-start;
+	gap: 1em;
+	padding: 0.8em 1em;
+	margin-bottom: 0.6em;
+	background: var(--bg-surface);
+	border-radius: 8px;
+	border-left: 3px solid var(--border);
+}
+.pub-thesis { border-left-color: var(--blue); }
+.pub-journal { border-left-color: var(--blue-light); }
+.pub-conf { border-left-color: var(--blue-lighter); }
+.pub-icon {
+	flex-shrink: 0;
+	font-size: 1.6em;
+	color: var(--blue);
+	padding-top: 0.1em;
+}
+.pub-body {
+	flex: 1;
+	min-width: 0;
+}
+.pub-ref {
+	margin: 0 0 0.4em 0;
+	font-size: 0.95em;
+	line-height: 1.6;
+}
+.pub-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4em;
+}
+.pub-link {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.3em;
+	padding: 0.2em 0.8em;
+	background: var(--bg-button);
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: 600;
+}
+.pub-link:hover {
+	background: var(--bg-button-hover);
+	text-decoration: none;
+}
+.pub-profiles {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em;
+}
+.pub-profile-card {
+	display: flex;
+	align-items: center;
+	gap: 0.6em;
+	padding: 0.6em 1.2em;
+	background: var(--bg-surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	transition: border-color .2s, background .2s;
+}
+.pub-profile-card:hover {
+	border-color: var(--blue);
+	background: var(--bg-elevated);
+	text-decoration: none;
+}
+.pub-profile-card img {
+	width: 24px;
+	height: 24px;
+}
+.pub-profile-card span {
+	font-weight: 600;
+}
+
+@media (max-width: 768px) {
+	.cv-entry {
+		flex-wrap: wrap;
+		gap: 0.5em;
+	}
+	.cv-date {
+		min-width: auto;
+	}
+	.cv-logo {
+		width: 28px;
+		height: 28px;
+	}
+	.cv-logo-icon {
+		font-size: 1.4em;
+	}
+}
+
 /* Admin table */
 .admin-table-container {
 	overflow-x: auto;

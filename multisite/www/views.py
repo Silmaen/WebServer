@@ -51,13 +51,39 @@ def accueil(request):
 
 def a_propos(request):
     """
-    Page \u00e0 propos.
-     :param request : La requ\u00eate du client.
+    Page à propos.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "a_propos")
     return render(request, "www/a_propos.html", {
         **settings.base_info, **data,
+    })
+
+
+def a_propos_cv(request):
+    """
+    Sous-page CV.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "a_propos")
+    return render(request, "www/a_propos_cv.html", {
+        **settings.base_info, **data,
+        "subpage": "CV",
+    })
+
+
+def a_propos_publications(request):
+    """
+    Sous-page Publications.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "a_propos")
+    return render(request, "www/a_propos_publications.html", {
+        **settings.base_info, **data,
+        "subpage": "Publications",
     })
 
 

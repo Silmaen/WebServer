@@ -41,6 +41,11 @@ archives_subpages = [
     {"name": "Recherche", "url": "archives_research", "icon": "mdi-electron-framework"},
 ]
 
+a_propos_subpages = [
+    {"name": "CV", "url": "a_propos_cv", "icon": "mdi-file-account"},
+    {"name": "Publications", "url": "a_propos_publications", "icon": "mdi-book-open-variant"},
+]
+
 admin_subpages = [
     {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
 ]
@@ -174,7 +179,9 @@ def get_page_data(user, page_name):
             "page_subtitle": page_info[page_name]["Title"],
             "page": page_name,
             "subpage": ""}
-    if page_name == "archives":
+    if page_name == "a_propos":
+        data["subpages"] = a_propos_subpages
+    elif page_name == "archives":
         data["subpages"] = archives_subpages
     elif page_name == "administration":
         data["subpages"] = admin_subpages

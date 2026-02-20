@@ -3,10 +3,5 @@
 <div class="static-page">
     <h2>Archives</h2>
     <p>Retrouvez ici les articles archivés, classés par catégorie.</p>
-    <ul>
-        {% for sp in subpages %}
-        <li><a href="{% url sp.url %}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a></li>
-        {% endfor %}
-    </ul>
 </div>
 {% endblock %}
