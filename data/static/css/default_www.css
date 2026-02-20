@@ -739,6 +739,52 @@ select:focus {
     font-size: 110%;
 }
 
+/* Admin table */
+.admin-table-container {
+	overflow-x: auto;
+	margin-top: 1em;
+}
+.admin-table {
+	width: 100%;
+	border-collapse: collapse;
+	background: var(--bg-surface);
+	border-radius: 8px;
+	overflow: hidden;
+}
+.admin-table th,
+.admin-table td {
+	padding: 0.6em 1em;
+	text-align: left;
+	border-bottom: 1px solid var(--border);
+}
+.admin-table th {
+	background: var(--bg-elevated);
+	color: var(--blue-light);
+	font-weight: 600;
+	font-size: 0.85em;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+.admin-table tbody tr:hover {
+	background: var(--bg-elevated);
+}
+.admin-badge {
+	display: inline-block;
+	padding: 0.2em 0.8em;
+	background: var(--blue);
+	color: #fff;
+	border-radius: 12px;
+	font-size: 0.85em;
+	font-weight: 600;
+}
+.level-form {
+	margin: 0;
+	padding: 0;
+}
+.level-form select {
+	width: auto;
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
 	/* Conteneurs : wrapping + padding renforcé */

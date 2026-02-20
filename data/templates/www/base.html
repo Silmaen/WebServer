@@ -99,7 +99,7 @@
     <div class="FooterContent">
         <p class="footer-copy">&copy; Design by Argawaen, all rights reserved. The site design, the logo are
             trademarks and/or registered trademarks of Argawaen.</p>
-        {% if user.is_staff %}
+        {% if is_admin %}
         <a class="userbtn mdi mdi-shield-crown" href="{% url 'admin:index' %}">Admin Django</a>
         {% endif %}
     </div>

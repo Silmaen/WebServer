@@ -6,19 +6,19 @@ from .models import UserProfile
 
 
 class UserProfileInline(admin.StackedInline):
-    """Definition d’un descripteur inline pour le model profil."""
+    """Definition d'un descripteur inline pour le model profil."""
     model = UserProfile
     can_delete = False
     verbose_name = 'Utilisateur'
     verbose_name_plural = 'Utilisateurs'
+    fields = ('avatar', 'birthDate', 'user_level')
 
 
 class UserAdmin(BaseUserAdmin):
-    """Définition d’un nouveau User Admin."""
+    """D\u00e9finition d'un nouveau User Admin."""
     inlines = (UserProfileInline,)
 
 
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
-

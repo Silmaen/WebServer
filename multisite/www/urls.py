@@ -1,8 +1,11 @@
-"""Fichier main.urls.py définissant les urls."""
+"""Fichier main.urls.py d\u00e9finissant les urls."""
 from django.conf.urls.static import static
 from django.conf import settings as main_settings
 from django.urls import path
-from .views import accueil, a_propos, mes_projets, archives, news, news_page, detailed_news, research, bricolage, administration
+from .views import (
+    accueil, a_propos, mes_projets, archives, news, news_page,
+    detailed_news, research, bricolage, administration, admin_users,
+)
 
 
 urlpatterns = [
@@ -16,4 +19,5 @@ urlpatterns = [
     path('archives/research/', research, name='archives_research'),
     path('bricolage/', bricolage, name='bricolage'),
     path('administration/', administration, name='administration'),
+    path('administration/utilisateurs/', admin_users, name='admin_users'),
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)

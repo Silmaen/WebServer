@@ -6,7 +6,10 @@ import math
 from django.shortcuts import get_object_or_404
 
 from .models import Article
-from common.user_utils import user_is_developper, user_is_validated
+from common.user_utils import (
+    get_user_level, user_is_autorise, user_is_avance, user_is_administrateur,
+    ENREGISTRE, AUTORISE, AVANCE, ADMINISTRATEUR,
+)
 
 articles_per_page = 10
 
@@ -17,7 +20,7 @@ page_info = {
         "Title": "Bienvenue",
     },
     "a_propos": {
-        "Title": "À propos",
+        "Title": "\u00c0 propos",
     },
     "mes_projets": {
         "Title": "Mes projets",
@@ -38,6 +41,10 @@ archives_subpages = [
     {"name": "Recherche", "url": "archives_research", "icon": "mdi-electron-framework"},
 ]
 
+admin_subpages = [
+    {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
+]
+
 
 internal_pages = [
     {
@@ -46,21 +53,15 @@ internal_pages = [
         "icon": "mdi-home",
         "group": "left",
         "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": -1,
     },
     {
-        "name": "À propos",
+        "name": "\u00c0 propos",
         "url": "a_propos",
         "icon": "mdi-account",
         "group": "left",
         "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": -1,
     },
     {
         "name": "Mes projets",
@@ -68,10 +69,7 @@ internal_pages = [
         "icon": "mdi-pickaxe",
         "group": "left",
         "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": -1,
     },
     {
         "name": "Archives",
@@ -79,10 +77,7 @@ internal_pages = [
         "icon": "mdi-archive",
         "group": "right",
         "Active": True,
-        "NeedUser": True,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": AVANCE,
     },
     {
         "name": "Bricolage",
@@ -90,10 +85,7 @@ internal_pages = [
         "icon": "mdi-hammer-wrench",
         "group": "left",
         "Active": True,
-        "NeedUser": True,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": AVANCE,
     },
     {
         "name": "Administration",
@@ -101,35 +93,36 @@ internal_pages = [
         "icon": "mdi-cog",
         "group": "right",
         "Active": True,
-        "NeedUser": True,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
+        "MinLevel": ADMINISTRATEUR,
     },
 ]
 
 
+def _filter_pages(pages, user_level):
+    """Filtre une liste de pages selon le niveau utilisateur."""
+    return [p for p in pages if p["Active"] and p["MinLevel"] <= user_level]
+
+
 def get_articles(user, category):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
-    :param user:
-    :param category:
-    :return:
+    Permet de r\u00e9cup\u00e9rer les articles de la cat\u00e9gorie en fonction des privil\u00e8ges de l'utilisateur.
     """
-    if not user.is_authenticated:
-        return Article.objects.filter(categorie=category, private=False)
-    elif not user.is_staff:
-        return Article.objects.filter(categorie=category, staff=False)
-    else:
-        return Article.objects.filter(categorie=category)
+    level = get_user_level(user)
+    qs = Article.objects.filter(categorie=category)
+    if level >= ADMINISTRATEUR:
+        return qs
+    if level < AVANCE:
+        qs = qs.filter(developper=False)
+    if level < AUTORISE:
+        qs = qs.filter(superprivate=False)
+    if level < ENREGISTRE:
+        qs = qs.filter(private=False)
+    return qs
 
 
 def get_news_articles(user, page):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
-    :param user:
-    :param page:
-    :return:
+    Permet de r\u00e9cup\u00e9rer les articles de la cat\u00e9gorie en fonction des privil\u00e8ges de l'utilisateur.
     """
     articles = get_articles(user, 1)
     total = articles.count()
@@ -140,15 +133,17 @@ def get_news_articles(user, page):
 
 def get_article(user, article_id):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
-    :param user:
-    :param article_id:
-    :return:
+    Permet de r\u00e9cup\u00e9rer un article en fonction des privil\u00e8ges de l'utilisateur.
     """
     article = get_object_or_404(Article, pk=article_id)
-    if not user.is_authenticated and article.private:
+    level = get_user_level(user)
+    if article.staff and level < ADMINISTRATEUR:
         return None
-    elif not user.is_staff and article.staff:
+    if article.developper and level < AVANCE:
+        return None
+    if article.superprivate and level < AUTORISE:
+        return None
+    if article.private and level < ENREGISTRE:
         return None
     return article
 
@@ -156,65 +151,22 @@ def get_article(user, article_id):
 def get_ext_pages(user):
     """
     Renvoie la liste de pages externe que l'user a le droit de voir.
-    :param user:
-    :return:
     """
-    ext_pages = []
-    if user.is_staff:
-        for e in ExternPages:
-            if not e["Active"]:
-                continue
-            ext_pages.append(e)
-        return ext_pages
-
-    for e in ExternPages:
-        if e["NeedStaff"] or not e["Active"]:
-            continue
-        if not user.is_authenticated and e["NeedUser"]:
-            continue
-        if not user_is_developper(user) and e["NeedDev"]:
-            continue
-        if not user_is_validated(user) and e["NeedValidatedUser"]:
-            continue
-        ext_pages.append(e)
-    return ext_pages
+    return _filter_pages(ExternPages, get_user_level(user))
 
 
 def get_int_pages(user):
     """
-    Renvoie la liste de pages externe que l'user a le droit de voir.
-    :param user:
-    :return:
+    Renvoie la liste de pages interne que l'user a le droit de voir.
     """
-    int_pages = []
-    if user.is_staff:
-        for e in internal_pages:
-            if not e["Active"]:
-                continue
-            int_pages.append(e)
-        return int_pages
-
-    for e in internal_pages:
-        if e["NeedStaff"] or not e["Active"]:
-            continue
-        if not user.is_authenticated and e["NeedUser"]:
-            continue
-        if not user_is_developper(user) and e["NeedDev"]:
-            continue
-        if not user_is_validated(user) and e["NeedValidatedUser"]:
-            continue
-        int_pages.append(e)
-    return int_pages
+    return _filter_pages(internal_pages, get_user_level(user))
 
 
 def get_page_data(user, page_name):
     """
-    Permet de récupérer les infos liées à la page courante pour l'user.
-    Les données de navigation (pages_left, pages_right, extpages) sont
+    Permet de r\u00e9cup\u00e9rer les infos li\u00e9es \u00e0 la page courante pour l'user.
+    Les donn\u00e9es de navigation (pages_left, pages_right, extpages) sont
     fournies par le context processor www.context_processors.navigation.
-    :param user:
-    :param page_name:
-    :return:
     """
     if page_name not in page_info:
         return {}
@@ -224,4 +176,6 @@ def get_page_data(user, page_name):
             "subpage": ""}
     if page_name == "archives":
         data["subpages"] = archives_subpages
+    elif page_name == "administration":
+        data["subpages"] = admin_subpages
     return data

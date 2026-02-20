@@ -2,7 +2,16 @@
 {% block content %}
 <div class="static-page">
     <h2>Bienvenue sur La crypte de Lachouette</h2>
+    {% if user.is_authenticated %}
+    <p>Bienvenue <strong>{{ user.username }}</strong> ! Votre statut actuel : <strong>{{ user_level_display }}</strong>.</p>
+    {% if not user_is_avance %}
+    <p>Votre niveau d'accès actuel ne vous permet pas de consulter l'ensemble du contenu du site.
+    Un statut supérieur vous donnera accès à davantage de sections et d'articles.</p>
+    {% endif %}
+    {% else %}
     <p>Bienvenue sur le site personnel de Damien Lachouette.</p>
+    <p><a class="userbtn mdi mdi-login" href="{% url 'login' %}">Se connecter</a></p>
+    {% endif %}
     <p>Vous trouverez ici des informations sur mes projets, mes recherches et mes publications.</p>
     <p>N'hésitez pas à explorer les différentes sections du site pour en savoir plus.</p>
 </div>
