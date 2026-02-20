@@ -1,11 +1,11 @@
 {% extends 'registration/base_registration.html' %}
 
 {% block mainsection %}
-<div class="Article user_form">
-    <div class="ArticleHeader">
+<div class="reg-card">
+    <div class="reg-card-title">
         <h4 class="mdi mdi-account-circle">{{ user }}</h4>
     </div>
-    <div class="ArticleContent user_form">
+    <div class="reg-card-body">
         {% if form.errors %}
             {% for field in form %}
                 {% for error in field.errors %}
@@ -38,11 +38,11 @@
             {% csrf_token %}
             {{ form.as_p }}
             {{ profile_form.as_p }}
-            <button id="submit" class="comment-btn mdi mdi-account-plus-outline">Sauver</button>
+            <button id="submit" class="userbtn mdi mdi-account-plus-outline">Sauver</button>
         </form>
     </div>
-    <div class="ArticleFooter">
-        <a class="comment-btn mdi mdi-arrow-left-circle-outline"  href="{% url 'profile' %}">Retour</a>
+    <div class="reg-card-footer">
+        <a class="userbtn mdi mdi-arrow-left-circle-outline" href="{% url 'profile' %}">Retour</a>
     </div>
 </div>
 {% endblock %}

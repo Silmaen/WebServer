@@ -3,7 +3,7 @@
 <section class="Article">
     <div class="ArticleHeader">
         <div class="ArticleTitle">
-            <a href="{% url 'index' %}" {% if article.sous_categorie.mdi_icon_name != "" %}class="mdi {{ article.sous_categorie.mdi_icon_name }}" {% endif %}>
+            <a href="{% url 'archives_news' %}" {% if article.sous_categorie.mdi_icon_name != "" %}class="mdi {{ article.sous_categorie.mdi_icon_name }}" {% endif %}>
                 {{ article.titre}}</a>
         </div>
     </div>

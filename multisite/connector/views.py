@@ -25,7 +25,7 @@ def register(request):
             user = form.save()
             profile_form.save()
             login(request, user)
-            return redirect("index")
+            return redirect("accueil")
         return render(request, "registration/register.html", {
             **settings.base_info,
             "form": form,

@@ -3,13 +3,11 @@
 <head>
     <title>{% block title %}Site de Lachouette{% endblock %}</title>
     <meta charset="UTF-8">
-    <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
     <meta name="robots" content="index,follow">
     <meta name="author" content="Argawaen">
     <meta name="description" content="le contenu">
     <link rel="shortcut icon" href="{% static 'img/favicon_www.ico' %}"/>
-    <meta name="keywords" content="FUCK!!">
-    <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- feuille de style -->
     <link rel="stylesheet" href="{% static 'css/default_www.css' %}">
     <script src="{% static 'js/chartutils.js' %}"></script>
@@ -26,31 +24,37 @@
         <div class="site-topright">
             <div class="site-user">
                 {% if user.is_authenticated %}
-                <div class="site-user">
-                    <p>{% if user.userprofile.avatar.url != "" %}<img alt="" src="{{ user.userprofile.avatar.url }}" width="30" height="30"> {% endif %}</p>
-                    <p> {{ user.username }}</p>
-                </div>
-                <p>
-                    <a class="userbtn mdi mdi-account-circle" href="{% url 'profile' %}">Profil</a>
-                    <a class="userbtn mdi mdi-logout" href="{% url 'logout' %}">Sign out</a>
-                </p>
+                {% if user.userprofile.avatar.url != "" %}<img alt="" src="{{ user.userprofile.avatar.url }}" width="30" height="30">{% endif %}
+                <span>{{ user.username }}</span>
+                <a class="userbtn mdi mdi-account-circle" href="{% url 'profile' %}">Profil</a>
+                <form method="post" action="{% url 'logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="userbtn mdi mdi-logout">Sign out</button>
+                </form>
                 {% else %}
-                <p><a class="userbtn mdi mdi-login" href="{% url 'login' %}">Sign in</a></p>
+                <a class="userbtn mdi mdi-login" href="{% url 'login' %}">Sign in</a>
                 {% endif %}
             </div>
             <ul class="site-nav-menu">
                 {% for sp in extpages %}
-                    <li class="site-nav-item mdi {{ sp.icon }}"><a href="{{ sp.url }}">{{ sp.name }}</a></li>
+                <li class="site-nav-item mdi {{ sp.icon }}"><a href="{{ sp.url }}">{{ sp.name }}</a></li>
                 {% endfor %}
             </ul>
-            </div>
         </div>
+    </div>
     <div class="lower-header">
         <nav class="inner-nav">
             {% block innernav %}
             <ul class="inner-nav-menu">
-                {% for sp in pages %}
-                <li class="inner-nav-item {% if page == sp.name %}current-page{% endif %}">
+                {% for sp in pages_left %}
+                <li class="inner-nav-item {% if page == sp.url %}current-page{% endif %}">
+                    <a href="{% url sp.url %}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
+                </li>
+                {% endfor %}
+            </ul>
+            <ul class="inner-nav-menu inner-nav-right">
+                {% for sp in pages_right %}
+                <li class="inner-nav-item {% if page == sp.url %}current-page{% endif %}">
                     <a href="{% url sp.url %}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
                 </li>
                 {% endfor %}
@@ -58,25 +62,28 @@
             {% endblock %}
         </nav>
     </div>
+    {% if subpages %}
+    <div class="archives-subnav">
+        <ul class="archives-subnav-menu">
+            {% for sp in subpages %}
+            <li class="archives-subnav-item {% if subpage == sp.name %}current-page{% endif %}">
+                <a href="{% url sp.url %}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
 </header>
 <div class="PageCenter">
     <div class="PageContent">
         {% block content %}
             <div class="PageTitle">
                 {{ page_subtitle }}
-                {% if page == "news" %}
+                {% if news_pages %}
                 <ul class="sub-inner-nav-menu">
                     {% for page_id in news_pages %}
                     <li class="sub-inner-nav-item {% if page_id == news_page %}current-page{% endif %}">
-                        <a href="{% url 'news_page' page_id %}">{{ page_id }}</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <ul class="sub-inner-nav-menu">
-                    {% for sp in subpages %}
-                    <li class="sub-inner-nav-item {% if subpage == sp.name %}current-page{% endif %}">
-                        <a href="{{ sp.url }}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
+                        <a href="{% url 'archives_news_page' page_id %}">{{ page_id }}</a>
                     </li>
                     {% endfor %}
                 </ul>
@@ -90,8 +97,11 @@
 </div>
 <footer class="site-footer">
     <div class="FooterContent">
-        <p style="font-size:12px">&copy; Design by Argawaen, all rights reserved. The site design, the logo are
+        <p class="footer-copy">&copy; Design by Argawaen, all rights reserved. The site design, the logo are
             trademarks and/or registered trademarks of Argawaen.</p>
+        {% if user.is_staff %}
+        <a class="userbtn mdi mdi-shield-crown" href="{% url 'admin:index' %}">Admin Django</a>
+        {% endif %}
     </div>
 </footer>
 </body>

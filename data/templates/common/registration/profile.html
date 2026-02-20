@@ -1,10 +1,10 @@
 {% extends 'registration/base_registration.html' %}
 {% block mainsection %}
-<div class="Article user_form">
-    <div class="ArticleHeader">
+<div class="reg-card">
+    <div class="reg-card-title">
         <h4 class="mdi mdi-account-circle">{{ user }}</h4>
     </div>
-    <div class="ArticleContent user_form">
+    <div class="reg-card-body">
         <p>Voici les informations de profils vous concernant</p>
         <table>
             <tr><td class="mdi mdi-account-circle"> Username:</td><td>{{user.username}}</td></tr>
@@ -15,11 +15,11 @@
             <tr><td class="mdi mdi-cake"> anniversaire:</td><td>{{user.userprofile.birthDate}}</td></tr>
             <tr><td class="mdi mdi-account-box-outline"> avatar:</td><td>{% if user.userprofile.avatar %}<img src="{{user.userprofile.avatar.url}}" style="max-width: 100px;">{% endif %}</td></tr>
         </table>
-        <a class="comment-btn mdi mdi-account-key-outline" href="{% url 'password' %}">Changer passwd</a>
-        <a class="comment-btn mdi mdi-account-edit-outline" href="{% url 'profile_edit' %}">Éditer le profil</a>
+        <a class="userbtn mdi mdi-account-key-outline" href="{% url 'password' %}">Changer passwd</a>
+        <a class="userbtn mdi mdi-account-edit-outline" href="{% url 'profile_edit' %}">Éditer le profil</a>
     </div>
-    <div class="ArticleFooter">
-        <a class="comment-btn mdi mdi-arrow-left-circle-outline" href="{% url 'index' %}">Retour</a>
+    <div class="reg-card-footer">
+        <a class="userbtn mdi mdi-arrow-left-circle-outline" href="{% url 'accueil' %}">Retour</a>
     </div>
 </div>
 {% endblock %}

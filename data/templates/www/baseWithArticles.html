@@ -4,7 +4,7 @@
 <div class="Article">
     <div class="ArticleHeader">
         <div class="ArticleTitle">
-            {% if page == 'news' %}
+            {% if subpage == 'News' %}
             <a href="{% url 'detailed_news' article.id %}"
             {% if article.sous_categorie.mdi_icon_name != "" %}
             class="mdi {{ article.sous_categorie.mdi_icon_name }}"
@@ -22,7 +22,7 @@
     </div>
     <div class="ArticleFooter">
         <div class="ArticleAuthor mdi mdi-account-circle">{{ article.auteur }}</div>
-        {% if page == 'news' %}
+        {% if subpage == 'News' %}
         <div class="ArticleComments mdi mdi-comment-outline">{{ article.nb_comments }}</div>
         {% endif %}
         <div class="ArticleDate mdi mdi-clock-fast">{{ article.date }}</div>

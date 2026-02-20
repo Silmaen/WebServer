@@ -10,60 +10,41 @@ from common.user_utils import user_is_developper, user_is_validated
 
 articles_per_page = 10
 
-ExternPages = [
-    {
-        "name": "Site Principal",
-        "url": "https://www.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": False,
-        "NeedStaff": False,
-        "NeedDev": False,
-        "NeedValidatedUser": False,
-     },
-    {
-        "name": "Mantis",
-        "url": "https://mantis.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": True,
-        "NeedDev": True,
-        "NeedValidatedUser": True,
-     },
-    {
-        "name": "Builder",
-        "url": "https://builder.argawaen.net",
-        "icon": "",
-        "Active": True,
-        "NeedUser": True,
-        "NeedStaff": True,
-        "NeedDev": True,
-        "NeedValidatedUser": True,
-     }
-]
+ExternPages = []
 
 page_info = {
-    "news": {
-        "Title": "La page des news",
+    "accueil": {
+        "Title": "Bienvenue",
     },
-    "research": {
-        "Title": "La page des recherches",
+    "a_propos": {
+        "Title": "À propos",
     },
-    "projects": {
-        "Title": "La page des projets",
+    "mes_projets": {
+        "Title": "Mes projets",
     },
-    "links": {
-        "Title": "La page des liens",
+    "archives": {
+        "Title": "Archives",
+    },
+    "bricolage": {
+        "Title": "Bricolage",
+    },
+    "administration": {
+        "Title": "Administration",
     },
 }
+
+archives_subpages = [
+    {"name": "News", "url": "archives_news", "icon": "mdi-newspaper"},
+    {"name": "Recherche", "url": "archives_research", "icon": "mdi-electron-framework"},
+]
 
 
 internal_pages = [
     {
-        "name": "News",
-        "url": "index",
+        "name": "Accueil",
+        "url": "accueil",
         "icon": "mdi-home",
+        "group": "left",
         "Active": True,
         "NeedUser": False,
         "NeedStaff": False,
@@ -71,9 +52,10 @@ internal_pages = [
         "NeedValidatedUser": False,
     },
     {
-        "name": "Recherche",
-        "url": "research",
-        "icon": "mdi-electron-framework",
+        "name": "À propos",
+        "url": "a_propos",
+        "icon": "mdi-account",
+        "group": "left",
         "Active": True,
         "NeedUser": False,
         "NeedStaff": False,
@@ -81,9 +63,10 @@ internal_pages = [
         "NeedValidatedUser": False,
     },
     {
-        "name": "Projets",
-        "url": "projects",
+        "name": "Mes projets",
+        "url": "mes_projets",
         "icon": "mdi-pickaxe",
+        "group": "left",
         "Active": True,
         "NeedUser": False,
         "NeedStaff": False,
@@ -91,31 +74,44 @@ internal_pages = [
         "NeedValidatedUser": False,
     },
     {
-        "name": "Liens",
-        "url": "links",
-        "icon": "mdi-link",
+        "name": "Archives",
+        "url": "archives",
+        "icon": "mdi-archive",
+        "group": "right",
         "Active": True,
         "NeedUser": True,
         "NeedStaff": False,
         "NeedDev": False,
-        "NeedValidatedUser": True,
+        "NeedValidatedUser": False,
     },
     {
-        "name": "Server admin",
-        "url": "admin:index",
-        "icon": "mdi-account-tie",
+        "name": "Bricolage",
+        "url": "bricolage",
+        "icon": "mdi-hammer-wrench",
+        "group": "left",
         "Active": True,
         "NeedUser": True,
-        "NeedStaff": True,
-        "NeedDev": True,
-        "NeedValidatedUser": True,
+        "NeedStaff": False,
+        "NeedDev": False,
+        "NeedValidatedUser": False,
+    },
+    {
+        "name": "Administration",
+        "url": "administration",
+        "icon": "mdi-cog",
+        "group": "right",
+        "Active": True,
+        "NeedUser": True,
+        "NeedStaff": False,
+        "NeedDev": False,
+        "NeedValidatedUser": False,
     },
 ]
 
 
 def get_articles(user, category):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
     :param user:
     :param category:
     :return:
@@ -130,7 +126,7 @@ def get_articles(user, category):
 
 def get_news_articles(user, page):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
     :param user:
     :param page:
     :return:
@@ -144,7 +140,7 @@ def get_news_articles(user, page):
 
 def get_article(user, article_id):
     """
-    Permet de récupérer les articles de la catégorie en fonction des privilèges de l’utilisateur.
+    Permet de récupérer les articles de la catégorie en fonction des privilèges de l'utilisateur.
     :param user:
     :param article_id:
     :return:
@@ -213,16 +209,19 @@ def get_int_pages(user):
 
 def get_page_data(user, page_name):
     """
-    Permet de récupérer les infos liées à la page courante pour l’user.
+    Permet de récupérer les infos liées à la page courante pour l'user.
+    Les données de navigation (pages_left, pages_right, extpages) sont
+    fournies par le context processor www.context_processors.navigation.
     :param user:
     :param page_name:
     :return:
     """
     if page_name not in page_info:
         return {}
-    return {
-            'extpages': get_ext_pages(user),
-            "pages":  get_int_pages(user),
+    data = {
             "page_subtitle": page_info[page_name]["Title"],
             "page": page_name,
             "subpage": ""}
+    if page_name == "archives":
+        data["subpages"] = archives_subpages
+    return data
