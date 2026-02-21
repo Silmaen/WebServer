@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import models
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, StreamingHttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from common.user_utils import (
@@ -13,9 +13,12 @@ from common.user_utils import (
     USER_LEVEL_CHOICES, ADMINISTRATEUR,
 )
 from . import settings
-from .models import ProjetCategorie, Projet, BricolageArticle
+from .models import ProjetCategorie, Projet, BricolageArticle, ServiceCategorie, Machine, Serveur
 from .render_utils import get_page_data, get_articles, get_article, get_news_articles
-from .forms import ArticleCommentForm, ProjetCategorieForm, ProjetForm, BricolageArticleForm
+from .forms import (
+    ArticleCommentForm, ProjetCategorieForm, ProjetForm, BricolageArticleForm,
+    ServiceCategorieForm, MachineForm, ServeurForm,
+)
 
 
 def avance_required(view_func):
@@ -522,6 +525,319 @@ def admin_bricolage_supprimer(request, article_id):
         messages.success(request, f"Article « {article.titre} » supprimé.")
         article.delete()
     return redirect("admin_bricolages")
+
+
+@admin_required
+def monitoring(request):
+    """
+    Page de monitoring des machines et serveurs.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "monitoring")
+    categories = ServiceCategorie.objects.prefetch_related("machines", "serveurs")
+    return render(request, "www/monitoring.html", {
+        **settings.base_info, **data,
+        "categories": categories,
+    })
+
+
+@admin_required
+def monitoring_machine_detail(request, machine_id):
+    """
+    Page de détail d'une machine avec scan à la demande.
+     :param request : La requête du client.
+     :param machine_id : L'identifiant de la machine.
+     :return : La page rendue.
+    """
+    machine = get_object_or_404(Machine, pk=machine_id)
+    data = get_page_data(request.user, "monitoring")
+    return render(request, "www/machine_detail.html", {
+        **settings.base_info, **data,
+        "subpage": machine.nom,
+        "machine": machine,
+    })
+
+
+def _sse_response(generateur):
+    """Crée une StreamingHttpResponse SSE à partir d'un générateur."""
+    response = StreamingHttpResponse(
+        generateur, content_type="text/event-stream")
+    response["Cache-Control"] = "no-cache"
+    response["X-Accel-Buffering"] = "no"
+    return response
+
+
+@admin_required
+def machine_ping_sse(request, machine_id):
+    """
+    Endpoint SSE : vérifie la connectivité d'une machine.
+     :param request : La requête du client.
+     :param machine_id : L'identifiant de la machine.
+     :return : Réponse SSE streaming.
+    """
+    from .tasks import scanner_ping
+    get_object_or_404(Machine, pk=machine_id)
+    return _sse_response(scanner_ping(machine_id))
+
+
+@admin_required
+def machine_ports_sse(request, machine_id):
+    """
+    Endpoint SSE : scanne les ports ouverts d'une machine.
+     :param request : La requête du client.
+     :param machine_id : L'identifiant de la machine.
+     :return : Réponse SSE streaming.
+    """
+    from .tasks import scanner_ports
+    get_object_or_404(Machine, pk=machine_id)
+    return _sse_response(scanner_ports(machine_id))
+
+
+
+@admin_required
+def monitoring_serveur_detail(request, serveur_id):
+    """
+    Page de détail d'un serveur avec vérification à la demande.
+     :param request : La requête du client.
+     :param serveur_id : L'identifiant du serveur.
+     :return : La page rendue.
+    """
+    serveur = get_object_or_404(Serveur, pk=serveur_id)
+    data = get_page_data(request.user, "monitoring")
+    return render(request, "www/serveur_detail.html", {
+        **settings.base_info, **data,
+        "subpage": serveur.titre,
+        "serveur": serveur,
+    })
+
+
+@admin_required
+def serveur_check_sse(request, serveur_id):
+    """
+    Endpoint SSE : vérifie l'état d'un serveur.
+     :param request : La requête du client.
+     :param serveur_id : L'identifiant du serveur.
+     :return : Réponse SSE streaming.
+    """
+    from .tasks import scanner_serveur
+    get_object_or_404(Serveur, pk=serveur_id)
+    return _sse_response(scanner_serveur(serveur_id))
+
+
+@admin_required
+def admin_services(request):
+    """
+    Page d'administration des machines, serveurs et catégories.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "administration")
+    machines = Machine.objects.select_related("categorie")
+    serveurs = Serveur.objects.select_related("categorie")
+    categories = ServiceCategorie.objects.all()
+    return render(request, "www/admin_services.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "machines": machines,
+        "serveurs": serveurs,
+        "categories": categories,
+    })
+
+
+@admin_required
+def admin_machine_ajouter(request):
+    """
+    Formulaire d'ajout de machine.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = MachineForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Machine ajoutée avec succès.")
+            return redirect("admin_services")
+    else:
+        form = MachineForm()
+    return render(request, "www/admin_machine_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": "Ajouter une machine",
+    })
+
+
+@admin_required
+def admin_machine_modifier(request, machine_id):
+    """
+    Formulaire de modification de machine.
+     :param request : La requête du client.
+     :param machine_id : L'identifiant de la machine.
+     :return : La page rendue ou redirection.
+    """
+    machine = get_object_or_404(Machine, pk=machine_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = MachineForm(request.POST, instance=machine)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Machine « {machine.nom} » modifiée avec succès.")
+            return redirect("admin_services")
+    else:
+        form = MachineForm(instance=machine)
+    return render(request, "www/admin_machine_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": f"Modifier : {machine.nom}",
+    })
+
+
+@admin_required
+def admin_machine_supprimer(request, machine_id):
+    """
+    Suppression d'une machine (POST uniquement).
+     :param request : La requête du client.
+     :param machine_id : L'identifiant de la machine.
+     :return : Redirection vers la liste.
+    """
+    machine = get_object_or_404(Machine, pk=machine_id)
+    if request.method == "POST":
+        messages.success(request, f"Machine « {machine.nom} » supprimée.")
+        machine.delete()
+    return redirect("admin_services")
+
+
+@admin_required
+def admin_serveur_ajouter(request):
+    """
+    Formulaire d'ajout de serveur.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ServeurForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Serveur ajouté avec succès.")
+            return redirect("admin_services")
+    else:
+        form = ServeurForm()
+    return render(request, "www/admin_service_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": "Ajouter un serveur",
+    })
+
+
+@admin_required
+def admin_serveur_modifier(request, serveur_id):
+    """
+    Formulaire de modification de serveur.
+     :param request : La requête du client.
+     :param serveur_id : L'identifiant du serveur.
+     :return : La page rendue ou redirection.
+    """
+    serveur = get_object_or_404(Serveur, pk=serveur_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ServeurForm(request.POST, request.FILES, instance=serveur)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Serveur « {serveur.titre} » modifié avec succès.")
+            return redirect("admin_services")
+    else:
+        form = ServeurForm(instance=serveur)
+    return render(request, "www/admin_service_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": f"Modifier : {serveur.titre}",
+    })
+
+
+@admin_required
+def admin_serveur_supprimer(request, serveur_id):
+    """
+    Suppression d'un serveur (POST uniquement).
+     :param request : La requête du client.
+     :param serveur_id : L'identifiant du serveur.
+     :return : Redirection vers la liste.
+    """
+    serveur = get_object_or_404(Serveur, pk=serveur_id)
+    if request.method == "POST":
+        messages.success(request, f"Serveur « {serveur.titre} » supprimé.")
+        serveur.delete()
+    return redirect("admin_services")
+
+
+@admin_required
+def admin_service_categorie_ajouter(request):
+    """
+    Formulaire d'ajout de catégorie de service.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ServiceCategorieForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Catégorie ajoutée avec succès.")
+            return redirect("admin_services")
+    else:
+        form = ServiceCategorieForm()
+    return render(request, "www/admin_service_categorie_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": "Ajouter une catégorie",
+    })
+
+
+@admin_required
+def admin_service_categorie_modifier(request, categorie_id):
+    """
+    Formulaire de modification de catégorie de service.
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : La page rendue ou redirection.
+    """
+    categorie = get_object_or_404(ServiceCategorie, pk=categorie_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ServiceCategorieForm(request.POST, instance=categorie)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Catégorie « {categorie.nom} » modifiée avec succès.")
+            return redirect("admin_services")
+    else:
+        form = ServiceCategorieForm(instance=categorie)
+    return render(request, "www/admin_service_categorie_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "form": form,
+        "form_title": f"Modifier : {categorie.nom}",
+    })
+
+
+@admin_required
+def admin_service_categorie_supprimer(request, categorie_id):
+    """
+    Suppression d'une catégorie de service (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    categorie = get_object_or_404(ServiceCategorie, pk=categorie_id)
+    if request.method == "POST":
+        messages.success(request, f"Catégorie « {categorie.nom} » supprimée.")
+        categorie.delete()
+    return redirect("admin_services")
 
 
 @avance_required

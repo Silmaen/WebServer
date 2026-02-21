@@ -1,0 +1,113 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>
+        {% if serveur.has_icone %}{{ serveur.icone_html }} {% endif %}{{ serveur.titre }}
+    </h2>
+    <p class="monitoring-meta">
+        Catégorie : {{ serveur.categorie.nom }}
+        {% if serveur.description %} — {{ serveur.description }}{% endif %}
+    </p>
+
+    <!-- Section Check -->
+    <div class="machine-scan-section" id="section-check">
+        <h3>
+            <span class="mdi mdi-server-network"></span> État du service
+            <button id="btn-check" class="userbtn machine-scan-btn" onclick="lancerCheck()">
+                <span class="mdi mdi-radar"></span> Vérifier
+            </button>
+            <span id="status-check" class="machine-scan-status"></span>
+        </h3>
+        <div class="machine-scan-result" id="result-check">
+            <span class="scan-loading"><span class="mdi mdi-loading mdi-spin"></span> Vérification en cours...</span>
+        </div>
+        <div class="machine-scan-date" id="date-check">
+            {% if serveur.derniere_verification %}
+                <span class="monitoring-meta">Dernier check : {{ serveur.derniere_verification|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Informations de connexion -->
+    <div class="machine-scan-section">
+        <h3><span class="mdi mdi-information-outline"></span> Informations</h3>
+        <table class="serveur-info-table">
+            {% if serveur.url %}
+            <tr>
+                <td class="monitoring-meta">URL</td>
+                <td><a href="{{ serveur.url }}" target="_blank" rel="noopener">{{ serveur.url }}</a></td>
+            </tr>
+            {% endif %}
+            {% if serveur.hostname %}
+            <tr>
+                <td class="monitoring-meta">Hostname</td>
+                <td>{{ serveur.hostname }}</td>
+            </tr>
+            {% endif %}
+            {% if serveur.adresse %}
+            <tr>
+                <td class="monitoring-meta">Adresse IP</td>
+                <td>{{ serveur.adresse }}</td>
+            </tr>
+            {% endif %}
+            {% if serveur.port %}
+            <tr>
+                <td class="monitoring-meta">Port</td>
+                <td>{{ serveur.port }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <p><a class="userbtn" href="{% url 'monitoring' %}"><span class="mdi mdi-arrow-left"></span> Retour</a></p>
+</div>
+
+<script>
+function lancerCheck() {
+    var btn = document.getElementById("btn-check");
+    var status = document.getElementById("status-check");
+    btn.disabled = true;
+    status.textContent = "";
+    document.getElementById("result-check").innerHTML = '<span class="scan-loading"><span class="mdi mdi-loading mdi-spin"></span> Vérification en cours...</span>';
+
+    var source = new EventSource("{% url 'serveur_check_sse' serveur.id %}");
+
+    source.addEventListener("check", function(e) {
+        var data = JSON.parse(e.data);
+        var html = "";
+        if (data.en_ligne) {
+            html = '<span class="status-indicator status-online"></span> En ligne';
+        } else {
+            html = '<span class="status-indicator status-offline"></span> Hors ligne';
+        }
+        {% if serveur.url and serveur.adresse_effective and serveur.port %}
+        if (data.en_ligne) {
+            html += ' — Reverse proxy : ';
+            if (data.reverse_proxy_ok) {
+                html += '<span class="reverse-proxy-badge reverse-proxy-ok">OK</span>';
+            } else {
+                html += '<span class="reverse-proxy-badge reverse-proxy-ko">KO</span>';
+            }
+        }
+        {% endif %}
+        document.getElementById("result-check").innerHTML = html;
+        var now = new Date();
+        document.getElementById("date-check").innerHTML = '<span class="monitoring-meta">Dernier check : ' + now.toLocaleString("fr-FR") + '</span>';
+    });
+
+    source.addEventListener("done", function() {
+        source.close();
+        btn.disabled = false;
+        status.textContent = "Terminé";
+    });
+
+    source.onerror = function() {
+        source.close();
+        btn.disabled = false;
+        status.textContent = "Erreur";
+    };
+}
+
+lancerCheck();
+</script>
+{% endblock %}

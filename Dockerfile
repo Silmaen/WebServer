@@ -7,6 +7,8 @@ ENV TZ=Europe/Paris
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         nginx \
+        nmap \
+        iputils-ping \
         tzdata && \
     rm -rf /var/lib/apt/lists/*
 

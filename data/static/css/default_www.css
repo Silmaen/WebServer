@@ -1388,6 +1388,187 @@ select:focus {
 	margin-bottom: 0.5em;
 }
 
+/* ========== Monitoring ========== */
+.monitoring-section {
+	margin-bottom: 2em;
+}
+.monitoring-section-title {
+	font-size: 1.3em;
+	margin-bottom: 0.8em;
+	color: var(--text);
+}
+.monitoring-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+	gap: 1em;
+}
+.monitoring-card {
+	display: flex;
+	align-items: center;
+	gap: 0.8em;
+	padding: 1em 1.2em;
+	background: var(--bg-surface);
+	border-radius: 8px;
+	border-left: 3px solid var(--blue);
+	text-decoration: none;
+	color: var(--text);
+	transition: background .2s, border-color .2s;
+}
+.monitoring-card:hover {
+	background: var(--bg-elevated);
+	border-left-color: var(--blue-light);
+	text-decoration: none;
+}
+.monitoring-card-icon {
+	font-size: 1.6em;
+	color: var(--blue);
+	flex-shrink: 0;
+}
+.monitoring-card-content {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2em;
+	min-width: 0;
+}
+.monitoring-card-title {
+	font-weight: 600;
+	font-size: 1em;
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+.monitoring-card-status {
+	flex-shrink: 0;
+}
+.monitoring-meta {
+	color: var(--text-secondary);
+	font-size: 0.85em;
+}
+.monitoring-machines-table {
+	width: 100%;
+}
+.status-indicator {
+	display: inline-block;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	vertical-align: middle;
+	margin-right: 0.3em;
+}
+.status-online {
+	background: var(--green);
+}
+.status-offline {
+	background: var(--red);
+}
+.monitoring-port-badge {
+	display: inline-block;
+	padding: 0.1em 0.5em;
+	background: var(--bg-elevated);
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	font-size: 0.8em;
+	margin: 0.1em;
+	white-space: nowrap;
+}
+.reverse-proxy-badge {
+	display: inline-block;
+	padding: 0.1em 0.5em;
+	border-radius: 10px;
+	font-size: 0.8em;
+	font-weight: 600;
+}
+.reverse-proxy-ok {
+	background: var(--green);
+	color: #fff;
+}
+.reverse-proxy-ko {
+	background: var(--red);
+	color: #fff;
+}
+.service-icone-img {
+	width: 1.4em;
+	height: 1.4em;
+	object-fit: contain;
+	vertical-align: middle;
+}
+
+/* Machine detail */
+.machine-scan-section {
+	background: var(--bg-surface);
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	padding: 16px 20px;
+	margin: 12px 0;
+}
+.machine-scan-section h3 {
+	font-size: 17px;
+	margin-bottom: 10px;
+	color: var(--blue-light);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.machine-scan-result {
+	min-height: 24px;
+}
+.machine-scan-btn {
+	font-size: 12px;
+	padding: 2px 10px;
+}
+.machine-scan-status {
+	color: var(--text-secondary);
+	font-size: 12px;
+	font-weight: normal;
+}
+.machine-scan-error {
+	color: var(--red);
+}
+.machine-scan-date {
+	margin-top: 6px;
+	font-size: 0.85em;
+}
+.scan-loading {
+	color: var(--yellow);
+}
+.machine-alerte-ip-hidden {
+	display: none;
+}
+.machine-alerte-ip {
+	background: rgba(212, 168, 67, 0.1);
+	border: 1px solid var(--yellow);
+	border-radius: 6px;
+	padding: 8px 12px;
+	margin: 8px 0;
+	color: var(--yellow);
+	font-size: 0.9em;
+}
+.monitoring-alerte-badge {
+	color: var(--yellow);
+	font-size: 1.1em;
+	vertical-align: middle;
+	cursor: help;
+}
+
+/* Serveur detail */
+.serveur-info-table {
+	width: 100%;
+}
+.serveur-info-table td {
+	padding: 4px 10px;
+	vertical-align: top;
+}
+.serveur-info-table td:first-child {
+	white-space: nowrap;
+	width: 120px;
+}
+.serveur-info-table a {
+	color: var(--blue-light);
+}
+.serveur-info-table a:hover {
+	color: var(--blue-hover);
+}
+
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
 	/* Conteneurs : wrapping + padding renforcé */
@@ -1457,5 +1638,13 @@ select:focus {
 	/* Projets : une colonne */
 	.projet-grid {
 		grid-template-columns: 1fr;
+	}
+	/* Monitoring : une colonne */
+	.monitoring-grid {
+		grid-template-columns: 1fr;
+	}
+	/* Machines : scroll horizontal */
+	.monitoring-machines-table {
+		min-width: 700px;
 	}
 }

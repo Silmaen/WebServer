@@ -1,0 +1,99 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>Monitoring</h2>
+
+    <!-- Section Machines -->
+    {% for categorie in categories %}
+        {% if categorie.machines.all %}
+        <div class="monitoring-section">
+            <h3 class="monitoring-section-title">
+                {% if categorie.mdi_icon_name %}<span class="mdi mdi-{{ categorie.mdi_icon_name }}"></span> {% endif %}{{ categorie.nom }} — Machines
+            </h3>
+            <div class="admin-table-container">
+                <table class="admin-table monitoring-machines-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>IP</th>
+                            <th>Statut</th>
+                            <th>Dernière vérification</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for machine in categorie.machines.all %}
+                        <tr>
+                            <td><a href="{% url 'monitoring_machine_detail' machine.id %}">{{ machine.nom }}</a></td>
+                            <td>{{ machine.adresse_ip|default:"-" }}</td>
+                            <td>
+                                <span class="status-indicator {% if machine.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
+                                {% if machine.en_ligne %}En ligne{% else %}Hors ligne{% endif %}
+                                {% if machine.alerte_ip %}<span class="mdi mdi-alert monitoring-alerte-badge" title="{{ machine.alerte_ip }}"></span>{% endif %}
+                            </td>
+                            <td class="monitoring-meta">
+                                {% if machine.derniere_verification %}
+                                    {{ machine.derniere_verification|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    Jamais
+                                {% endif %}
+                                {% if not machine.en_ligne and machine.derniere_vue_en_ligne %}
+                                    <br><small>Dernière vue : {{ machine.derniere_vue_en_ligne|date:"d/m/Y H:i" }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <!-- Section Serveurs -->
+    {% for categorie in categories %}
+        {% if categorie.serveurs.all %}
+        <div class="monitoring-section">
+            <h3 class="monitoring-section-title">
+                {% if categorie.mdi_icon_name %}<span class="mdi mdi-{{ categorie.mdi_icon_name }}"></span> {% endif %}{{ categorie.nom }} — Serveurs
+            </h3>
+            <div class="monitoring-grid">
+                {% for serveur in categorie.serveurs.all %}
+                <a class="monitoring-card" href="{% url 'monitoring_serveur_detail' serveur.id %}">
+                    <span class="monitoring-card-icon">
+                        {% if serveur.has_icone %}{{ serveur.icone_html }}{% else %}<span class="mdi mdi-server"></span>{% endif %}
+                    </span>
+                    <span class="monitoring-card-content">
+                        <span class="monitoring-card-title">
+                            {{ serveur.titre }}
+                            <span class="status-indicator monitoring-card-status {% if serveur.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
+                        </span>
+                        {% if serveur.description %}
+                        <span class="monitoring-meta">{{ serveur.description }}</span>
+                        {% endif %}
+                        {% if serveur.url and serveur.adresse_effective and serveur.port %}
+                        <span class="monitoring-meta">
+                            Reverse proxy :
+                            <span class="reverse-proxy-badge {% if serveur.reverse_proxy_ok %}reverse-proxy-ok{% else %}reverse-proxy-ko{% endif %}">
+                                {% if serveur.reverse_proxy_ok %}OK{% else %}KO{% endif %}
+                            </span>
+                        </span>
+                        {% endif %}
+                        {% if serveur.derniere_verification %}
+                        <span class="monitoring-meta">{{ serveur.derniere_verification|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                        {% if not serveur.en_ligne and serveur.derniere_vue_en_ligne %}
+                        <span class="monitoring-meta">Hors ligne depuis {{ serveur.derniere_vue_en_ligne|date:"d/m/Y H:i" }}</span>
+                        {% endif %}
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    {% if not categories %}
+        <p>Aucun service configuré pour le moment.</p>
+    {% endif %}
+</div>
+{% endblock %}

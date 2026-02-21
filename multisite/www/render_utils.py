@@ -32,6 +32,9 @@ page_info = {
     "bricolage": {
         "Title": "Bricolage",
     },
+    "monitoring": {
+        "Title": "Monitoring",
+    },
     "administration": {
         "Title": "Administration",
     },
@@ -51,6 +54,7 @@ admin_subpages = [
     {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
     {"name": "Projets", "url": "admin_projets", "icon": "mdi-pickaxe"},
     {"name": "Bricolages", "url": "admin_bricolages", "icon": "mdi-hammer-wrench"},
+    {"name": "Services", "url": "admin_services", "icon": "mdi-monitor-dashboard"},
 ]
 
 
@@ -94,6 +98,14 @@ internal_pages = [
         "group": "left",
         "Active": True,
         "MinLevel": AVANCE,
+    },
+    {
+        "name": "Monitoring",
+        "url": "monitoring",
+        "icon": "mdi-monitor-dashboard",
+        "group": "right",
+        "Active": True,
+        "MinLevel": ADMINISTRATEUR,
     },
     {
         "name": "Administration",
@@ -201,6 +213,8 @@ def get_page_data(user, page_name):
         data["subpages"] = _get_projet_subpages()
     elif page_name == "archives":
         data["subpages"] = archives_subpages
+    elif page_name == "monitoring":
+        data["subpages"] = []
     elif page_name == "administration":
         data["subpages"] = admin_subpages
     return data

@@ -1,0 +1,154 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>{{ machine.nom }}</h2>
+    <p class="monitoring-meta">
+        {{ machine.hostname_complet }}
+        {% if machine.adresse_ip %} — IP : {{ machine.adresse_ip }}{% endif %}
+        {% if machine.ip_statique %} — IP statique attendue : {{ machine.ip_statique }}{% endif %}
+        — Catégorie : {{ machine.categorie.nom }}
+    </p>
+
+    <div id="alerte-ip" class="machine-alerte-ip{% if not machine.alerte_ip %} machine-alerte-ip-hidden{% endif %}">
+        <span class="mdi mdi-alert"></span> <span id="alerte-ip-text">{{ machine.alerte_ip }}</span>
+    </div>
+
+    <!-- Section Ping -->
+    <div class="machine-scan-section" id="section-ping">
+        <h3><span class="mdi mdi-lan-connect"></span> Connectivité</h3>
+        <div class="machine-scan-result" id="result-ping">
+            <span class="scan-loading"><span class="mdi mdi-loading mdi-spin"></span> Ping en cours...</span>
+        </div>
+        <div class="machine-scan-date" id="date-ping">
+            {% if machine.derniere_verification %}
+                <span class="monitoring-meta">Dernier check : {{ machine.derniere_verification|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section Ports -->
+    <div class="machine-scan-section" id="section-ports">
+        <h3>
+            <span class="mdi mdi-ethernet"></span> Ports ouverts
+            <button id="btn-ports" class="userbtn machine-scan-btn" onclick="lancerScanPorts()" disabled>
+                <span class="mdi mdi-radar"></span> Scanner
+            </button>
+            <span id="status-ports" class="machine-scan-status"></span>
+        </h3>
+        <div class="machine-scan-result" id="result-ports">
+            {% if machine.ports_ouverts %}
+                {% for p in machine.ports_ouverts %}
+                    <span class="monitoring-port-badge">{{ p.port }}/{{ p.protocole }}{% if p.service %} ({{ p.service }}{% if p.version %} {{ p.version }}{% endif %}){% endif %}</span>
+                {% endfor %}
+            {% else %}
+                <span class="monitoring-meta">Aucune donnée</span>
+            {% endif %}
+        </div>
+        <div class="machine-scan-date" id="date-ports">
+            {% if machine.dernier_scan_ports %}
+                <span class="monitoring-meta">Dernier scan : {{ machine.dernier_scan_ports|date:"d/m/Y H:i" }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <p><a class="userbtn" href="{% url 'monitoring' %}"><span class="mdi mdi-arrow-left"></span> Retour</a></p>
+</div>
+
+<script>
+var machineEnLigne = false;
+
+function lancerPing() {
+    document.getElementById("result-ping").innerHTML = '<span class="scan-loading"><span class="mdi mdi-loading mdi-spin"></span> Ping en cours...</span>';
+
+    var source = new EventSource("{% url 'machine_ping_sse' machine.id %}");
+
+    source.addEventListener("ping", function(e) {
+        var data = JSON.parse(e.data);
+        machineEnLigne = data.en_ligne;
+        var html;
+        if (data.en_ligne) {
+            html = '<span class="status-indicator status-online"></span> En ligne';
+        } else {
+            html = '<span class="status-indicator status-offline"></span> Hors ligne';
+        }
+        document.getElementById("result-ping").innerHTML = html;
+        var now = new Date();
+        document.getElementById("date-ping").innerHTML = '<span class="monitoring-meta">Dernier check : ' + now.toLocaleString("fr-FR") + '</span>';
+
+        // Mise à jour de l'alerte IP
+        var alerteDiv = document.getElementById("alerte-ip");
+        var alerteText = document.getElementById("alerte-ip-text");
+        if (data.alerte_ip) {
+            alerteText.textContent = data.alerte_ip;
+            alerteDiv.classList.remove("machine-alerte-ip-hidden");
+        } else {
+            alerteDiv.classList.add("machine-alerte-ip-hidden");
+        }
+    });
+
+    source.addEventListener("done", function() {
+        source.close();
+        if (machineEnLigne) {
+            document.getElementById("btn-ports").disabled = false;
+        }
+    });
+
+    source.onerror = function() {
+        source.close();
+        document.getElementById("result-ping").innerHTML = '<span class="machine-scan-error">Erreur de connexion</span>';
+    };
+}
+
+function lancerScanPorts() {
+    var btn = document.getElementById("btn-ports");
+    var status = document.getElementById("status-ports");
+    btn.disabled = true;
+    status.innerHTML = '<span class="mdi mdi-loading mdi-spin"></span> Scan en cours...';
+    document.getElementById("result-ports").innerHTML = "";
+
+    var derniersPorts = [];
+    var source = new EventSource("{% url 'machine_ports_sse' machine.id %}");
+
+    source.addEventListener("ports", function(e) {
+        var data = JSON.parse(e.data);
+        derniersPorts = data.ports_ouverts;
+        var html = "";
+        for (var i = 0; i < data.ports_ouverts.length; i++) {
+            var p = data.ports_ouverts[i];
+            var label = p.port + "/" + p.protocole;
+            if (p.service) {
+                label += " (" + p.service;
+                if (p.version) label += " " + p.version;
+                label += ")";
+            }
+            html += '<span class="monitoring-port-badge">' + label + '</span> ';
+        }
+        document.getElementById("result-ports").innerHTML = html;
+        var now = new Date();
+        document.getElementById("date-ports").innerHTML = '<span class="monitoring-meta">Dernier scan : ' + now.toLocaleString("fr-FR") + '</span>';
+    });
+
+    source.addEventListener("done", function(e) {
+        source.close();
+        btn.disabled = false;
+        var data = JSON.parse(e.data);
+        if (data.message.indexOf("erreur") !== -1) {
+            status.innerHTML = '<span class="machine-scan-error">' + data.message + '</span>';
+        } else {
+            status.textContent = data.message;
+        }
+        if (derniersPorts.length === 0) {
+            document.getElementById("result-ports").innerHTML = '<span class="monitoring-meta">Aucun port ouvert détecté</span>';
+        }
+    });
+
+    source.onerror = function() {
+        source.close();
+        btn.disabled = false;
+        status.innerHTML = '<span class="machine-scan-error">Erreur de connexion</span>';
+    };
+}
+
+lancerPing();
+</script>
+{% endblock %}

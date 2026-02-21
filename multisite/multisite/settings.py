@@ -155,3 +155,20 @@ MARKDOWNX_MARKDOWN_EXTENSIONS = [
     'markdown.extensions.extra',
     'markdown.extensions.codehilite',
 ]
+
+# Celery
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BEAT_SCHEDULE = {
+    "verifier-machines": {
+        "task": "www.tasks.verifier_machines",
+        "schedule": 300.0,
+    },
+    "verifier-serveurs": {
+        "task": "www.tasks.verifier_serveurs",
+        "schedule": 300.0,
+    },
+}
+
+# Monitoring
+MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")

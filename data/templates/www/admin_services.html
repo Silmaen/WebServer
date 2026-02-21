@@ -1,0 +1,127 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>Gestion des services</h2>
+
+    <!-- Machines -->
+    <h3>Machines</h3>
+    <p><a class="userbtn" href="{% url 'admin_machine_ajouter' %}"><span class="mdi mdi-plus"></span> Ajouter une machine</a></p>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Catégorie</th>
+                    <th>IP</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for machine in machines %}
+                <tr>
+                    <td>{{ machine.nom }}</td>
+                    <td>{{ machine.categorie.nom }}</td>
+                    <td>{{ machine.adresse_ip|default:"-" }}</td>
+                    <td>
+                        <span class="status-indicator {% if machine.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
+                        {% if machine.en_ligne %}En ligne{% else %}Hors ligne{% endif %}
+                    </td>
+                    <td class="admin-actions">
+                        <a class="userbtn" href="{% url 'admin_machine_modifier' machine.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
+                        <form method="post" action="{% url 'admin_machine_supprimer' machine.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="userbtn-danger" onclick="return confirm('Supprimer cette machine ?')"><span class="mdi mdi-delete"></span> Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">Aucune machine.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Serveurs -->
+    <h3>Serveurs</h3>
+    <p><a class="userbtn" href="{% url 'admin_serveur_ajouter' %}"><span class="mdi mdi-plus"></span> Ajouter un serveur</a></p>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Catégorie</th>
+                    <th>URL / Adresse</th>
+                    <th>Statut</th>
+                    <th>Icône</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for serveur in serveurs %}
+                <tr>
+                    <td>{{ serveur.titre }}</td>
+                    <td>{{ serveur.categorie.nom }}</td>
+                    <td>
+                        {% if serveur.url %}<a href="{{ serveur.url }}" target="_blank" rel="noopener">{{ serveur.url }}</a>{% endif %}
+                        {% if serveur.adresse and serveur.port %}
+                            {% if serveur.url %}<br>{% endif %}{{ serveur.adresse }}:{{ serveur.port }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="status-indicator {% if serveur.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
+                        {% if serveur.en_ligne %}En ligne{% else %}Hors ligne{% endif %}
+                    </td>
+                    <td>{% if serveur.has_icone %}{{ serveur.icone_html }}{% else %}-{% endif %}</td>
+                    <td class="admin-actions">
+                        <a class="userbtn" href="{% url 'admin_serveur_modifier' serveur.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
+                        <form method="post" action="{% url 'admin_serveur_supprimer' serveur.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="userbtn-danger" onclick="return confirm('Supprimer ce serveur ?')"><span class="mdi mdi-delete"></span> Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6">Aucun serveur.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Catégories -->
+    <h3>Catégories</h3>
+    <p><a class="userbtn" href="{% url 'admin_service_categorie_ajouter' %}"><span class="mdi mdi-plus"></span> Ajouter une catégorie</a></p>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Slug</th>
+                    <th>Icône</th>
+                    <th>Ordre</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in categories %}
+                <tr>
+                    <td>{{ cat.nom }}</td>
+                    <td>{{ cat.slug }}</td>
+                    <td>{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
+                    <td>{{ cat.ordre }}</td>
+                    <td class="admin-actions">
+                        <a class="userbtn" href="{% url 'admin_service_categorie_modifier' cat.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
+                        <form method="post" action="{% url 'admin_service_categorie_supprimer' cat.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="userbtn-danger" onclick="return confirm('Supprimer cette catégorie ?')"><span class="mdi mdi-delete"></span> Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5">Aucune catégorie.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,8 @@
 ---
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
   web:
     build: .
     restart: unless-stopped
@@ -11,3 +14,5 @@ services:
     volumes:
       - ${SERVER_PATH_MEDIA:-./docker_data/media}:/app/data/media
       - ${SERVER_PATH_DB:-./docker_data/db}:/app/data/db
+    depends_on:
+      - redis
