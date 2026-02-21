@@ -6,7 +6,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 from common.user_utils import ENREGISTRE, AUTORISE, AVANCE, ADMINISTRATEUR, get_user_level
-from .models import ProjetCategorie, Projet
+from .models import ProjetCategorie, Projet, BricolageArticle
 
 
 class PagesAccessTest(TestCase):
@@ -540,3 +540,123 @@ class ProjetVisibiliteTest(TestCase):
         self.assertIn("public", slugs)
         self.assertIn("enregistre", slugs)
         self.assertIn("avance", slugs)
+
+
+class BricolageAccessTest(TestCase):
+    """Tests d'accès aux pages bricolage."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.avance = User.objects.create_user(username="avanceuser", password="testpass")
+        self.avance.userprofile.user_level = AVANCE
+        self.avance.userprofile.save()
+        self.article = BricolageArticle.objects.create(
+            titre="Test Bricolage", slug="test-bricolage",
+            contenu="Du contenu", date=datetime.date(2025, 6, 1))
+        self.client = Client()
+
+    def test_bricolage_liste_anonymous_redirects(self):
+        """Un anonyme est redirigé vers le login."""
+        response = self.client.get(reverse("bricolage"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_bricolage_liste_regular_user_forbidden(self):
+        """Un utilisateur normal reçoit un 403."""
+        self.client.login(username="testuser", password="testpass")
+        response = self.client.get(reverse("bricolage"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_bricolage_liste_avance_returns_200(self):
+        """Un utilisateur avancé accède à la liste."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("bricolage"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_bricolage_liste_uses_correct_template(self):
+        """Vérifie le template de la liste bricolage."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("bricolage"))
+        self.assertTemplateUsed(response, "www/bricolage.html")
+
+    def test_bricolage_detail_avance_returns_200(self):
+        """Un utilisateur avancé accède au détail."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("bricolage_detail", args=["test-bricolage"]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_bricolage_detail_uses_correct_template(self):
+        """Vérifie le template du détail bricolage."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("bricolage_detail", args=["test-bricolage"]))
+        self.assertTemplateUsed(response, "www/bricolage_detail.html")
+
+    def test_bricolage_detail_inexistant_returns_404(self):
+        """Un slug inexistant retourne 404."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("bricolage_detail", args=["inexistant"]))
+        self.assertEqual(response.status_code, 404)
+
+
+class AdminBricolagesAccessTest(TestCase):
+    """Tests d'accès à la gestion des articles de bricolage."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.admin = User.objects.create_user(username="adminuser", password="adminpass")
+        self.admin.userprofile.user_level = ADMINISTRATEUR
+        self.admin.userprofile.save()
+        self.client = Client()
+
+    def test_admin_bricolages_anonymous_redirects(self):
+        """Un anonyme est redirigé vers le login."""
+        response = self.client.get(reverse("admin_bricolages"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_admin_bricolages_regular_user_forbidden(self):
+        """Un utilisateur normal reçoit un 403."""
+        self.client.login(username="testuser", password="testpass")
+        response = self.client.get(reverse("admin_bricolages"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_admin_bricolages_admin_returns_200(self):
+        """Un administrateur accède à la page."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.get(reverse("admin_bricolages"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_admin_bricolage_ajouter_post(self):
+        """POST crée un article avec auto-slug."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.post(reverse("admin_bricolage_ajouter"), {
+            "titre": "Mon Bricolage",
+            "contenu": "Du contenu markdown",
+            "date": "2025-06-01",
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(BricolageArticle.objects.filter(slug="mon-bricolage").exists())
+
+    def test_admin_bricolage_modifier_post(self):
+        """POST modifie le titre d'un article."""
+        article = BricolageArticle.objects.create(
+            titre="Original", slug="original",
+            date=datetime.date(2025, 1, 1))
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.post(
+            reverse("admin_bricolage_modifier", args=[article.pk]), {
+                "titre": "Modifié",
+                "contenu": "",
+                "date": "2025-01-01",
+            })
+        self.assertEqual(response.status_code, 302)
+        article.refresh_from_db()
+        self.assertEqual(article.titre, "Modifié")
+
+    def test_admin_bricolage_supprimer_post(self):
+        """POST supprime un article."""
+        article = BricolageArticle.objects.create(
+            titre="Temp", slug="temp",
+            date=datetime.date(2025, 1, 1))
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.post(reverse("admin_bricolage_supprimer", args=[article.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(BricolageArticle.objects.filter(pk=article.pk).exists())

@@ -2,7 +2,7 @@
 from django.contrib import admin
 
 from common.admin import SiteArticleAdmin, SiteArticleCommentAdmin
-from .models import Category, SubCategory, Article, ArticleComment, ProjetCategorie, Projet
+from .models import Category, SubCategory, Article, ArticleComment, ProjetCategorie, Projet, BricolageArticle
 
 
 class ArticleAdmin(SiteArticleAdmin):
@@ -54,3 +54,12 @@ class ProjetAdmin(admin.ModelAdmin):
 
 admin.site.register(ProjetCategorie, ProjetCategorieAdmin)
 admin.site.register(Projet, ProjetAdmin)
+
+
+class BricolageArticleAdmin(admin.ModelAdmin):
+    """Admin pour les articles de bricolage."""
+    list_display = ("titre", "date")
+    prepopulated_fields = {"slug": ("titre",)}
+
+
+admin.site.register(BricolageArticle, BricolageArticleAdmin)

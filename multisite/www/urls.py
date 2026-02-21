@@ -6,11 +6,13 @@ from .views import (
     accueil, a_propos, a_propos_cv, a_propos_publications,
     mes_projets, mes_projets_categorie, mes_projets_detail,
     archives, news, news_page,
-    detailed_news, research, bricolage,
+    detailed_news, research, bricolage, bricolage_detail,
     administration, admin_users,
     admin_projets, admin_projet_ajouter, admin_projet_modifier, admin_projet_supprimer,
     admin_projet_categorie_ajouter, admin_projet_categorie_modifier,
     admin_projet_categorie_supprimer,
+    admin_bricolages, admin_bricolage_ajouter, admin_bricolage_modifier,
+    admin_bricolage_supprimer,
 )
 
 
@@ -28,6 +30,7 @@ urlpatterns = [
     path('archives/article/<int:article_id>', detailed_news, name='detailed_news'),
     path('archives/research/', research, name='archives_research'),
     path('bricolage/', bricolage, name='bricolage'),
+    path('bricolage/<slug:slug>/', bricolage_detail, name='bricolage_detail'),
     path('administration/', administration, name='administration'),
     path('administration/utilisateurs/', admin_users, name='admin_users'),
     path('administration/projets/', admin_projets, name='admin_projets'),
@@ -37,4 +40,8 @@ urlpatterns = [
     path('administration/projets/categories/ajouter/', admin_projet_categorie_ajouter, name='admin_projet_categorie_ajouter'),
     path('administration/projets/categories/modifier/<int:categorie_id>/', admin_projet_categorie_modifier, name='admin_projet_categorie_modifier'),
     path('administration/projets/categories/supprimer/<int:categorie_id>/', admin_projet_categorie_supprimer, name='admin_projet_categorie_supprimer'),
+    path('administration/bricolages/', admin_bricolages, name='admin_bricolages'),
+    path('administration/bricolages/ajouter/', admin_bricolage_ajouter, name='admin_bricolage_ajouter'),
+    path('administration/bricolages/modifier/<int:article_id>/', admin_bricolage_modifier, name='admin_bricolage_modifier'),
+    path('administration/bricolages/supprimer/<int:article_id>/', admin_bricolage_supprimer, name='admin_bricolage_supprimer'),
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)

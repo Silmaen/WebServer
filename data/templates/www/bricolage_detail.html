@@ -1,0 +1,17 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <div class="bricolage-detail">
+        <h2>{{ article.titre }}</h2>
+        <div class="bricolage-detail-meta">
+            <span class="mdi mdi-calendar"></span> {{ article.date }}
+        </div>
+        <div class="bricolage-detail-content">
+            {{ article.contenu_md|safe }}
+        </div>
+        <div class="bricolage-detail-back">
+            <a class="userbtn" href="{% url 'bricolage' %}"><span class="mdi mdi-arrow-left"></span> Retour</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

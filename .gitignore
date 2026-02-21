@@ -1,13 +1,6 @@
-BackupPC
-builder
-mantis
-phpMyAdmin
-phpLDAPadmin
-webmail
-
-www2
 *.pyc
 __pycache__/
 .idea
 .env
 docker_data/
+data/db

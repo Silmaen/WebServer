@@ -5,7 +5,7 @@ from django.utils.text import slugify
 
 from markdownx.forms import forms
 
-from .models import ArticleComment, ProjetCategorie, Projet
+from .models import ArticleComment, ProjetCategorie, Projet, BricolageArticle
 from .widgets import MdiIconPickerWidget, ColorPickerWidget
 
 
@@ -101,6 +101,26 @@ class ProjetForm(forms.ModelForm):
         elif instance.icone_url:
             instance.mdi_icon_name = ""
             instance.icone_image = ""
+        if commit:
+            instance.save()
+        return instance
+
+
+class BricolageArticleForm(forms.ModelForm):
+    """Formulaire pour les articles de bricolage."""
+    class Meta:
+        """Meta informations"""
+        model = BricolageArticle
+        exclude = ("slug",)
+        widgets = {
+            "date": django_forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def save(self, commit=True):
+        """Auto-génère le slug à la création."""
+        instance = super().save(commit=False)
+        if not instance.slug:
+            instance.slug = slugify(instance.titre)
         if commit:
             instance.save()
         return instance

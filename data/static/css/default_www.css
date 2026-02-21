@@ -1253,6 +1253,69 @@ select:focus {
 	height: 2em;
 }
 
+/* ========== Bricolage ========== */
+.bricolage-card {
+	background: var(--bg-surface);
+	border-radius: 8px;
+	border-left: 4px solid var(--blue);
+	margin-bottom: 1.2em;
+	transition: background .2s;
+}
+.bricolage-card:hover {
+	background: var(--bg-elevated);
+}
+.bricolage-card-header {
+	padding: 1em 1.2em 0.4em;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 0.5em;
+}
+.bricolage-card-title {
+	font-size: 1.15em;
+	font-weight: 600;
+	color: var(--blue-light);
+	text-decoration: none;
+	transition: color .2s;
+}
+.bricolage-card-title:hover {
+	color: var(--blue-lighter);
+	text-decoration: none;
+}
+.bricolage-card-date {
+	color: var(--text-secondary);
+	font-size: 0.85em;
+	white-space: nowrap;
+}
+.bricolage-card-body {
+	padding: 0 1.2em;
+	color: var(--text-secondary);
+	font-size: 0.95em;
+	line-height: 1.6;
+}
+.bricolage-card-footer {
+	padding: 0.8em 1.2em;
+}
+.bricolage-detail {
+	max-width: 900px;
+	margin: 0 auto;
+}
+.bricolage-detail h2 {
+	margin-bottom: 0.3em;
+}
+.bricolage-detail-meta {
+	color: var(--text-secondary);
+	font-size: 0.9em;
+	margin-bottom: 1.5em;
+}
+.bricolage-detail-content {
+	line-height: 1.7;
+}
+.bricolage-detail-back {
+	margin-top: 2em;
+}
+
 /* ========== Color picker ========== */
 .color-picker {
 	display: flex;

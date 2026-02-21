@@ -1,0 +1,35 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>Gestion des articles de bricolage</h2>
+    <p><a class="userbtn" href="{% url 'admin_bricolage_ajouter' %}"><span class="mdi mdi-plus"></span> Ajouter un article</a></p>
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Titre</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for article in articles %}
+                <tr>
+                    <td>{{ article.titre }}</td>
+                    <td>{{ article.date }}</td>
+                    <td class="admin-actions">
+                        <a class="userbtn" href="{% url 'admin_bricolage_modifier' article.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
+                        <form method="post" action="{% url 'admin_bricolage_supprimer' article.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="userbtn-danger" onclick="return confirm('Supprimer cet article ?')"><span class="mdi mdi-delete"></span> Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="3">Aucun article de bricolage.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

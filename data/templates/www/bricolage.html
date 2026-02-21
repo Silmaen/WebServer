@@ -2,6 +2,21 @@
 {% block content %}
 <div class="static-page">
     <h2>Bricolage</h2>
-    <p>Cette page est en construction.</p>
+    {% for article in articles %}
+    <div class="bricolage-card">
+        <div class="bricolage-card-header">
+            <a class="bricolage-card-title" href="{% url 'bricolage_detail' article.slug %}">{{ article.titre }}</a>
+            <span class="bricolage-card-date"><span class="mdi mdi-calendar"></span> {{ article.date }}</span>
+        </div>
+        <div class="bricolage-card-body">
+            {{ article.resume_md|safe }}
+        </div>
+        <div class="bricolage-card-footer">
+            <a class="userbtn" href="{% url 'bricolage_detail' article.slug %}"><span class="mdi mdi-arrow-right"></span> Lire la suite</a>
+        </div>
+    </div>
+    {% empty %}
+    <p>Aucun article de bricolage pour le moment.</p>
+    {% endfor %}
 </div>
 {% endblock %}

@@ -1,6 +1,7 @@
 """model.py exemple de profile user"""
 from django.db import models
 from django.utils.html import escape, mark_safe
+from django.utils.text import Truncator
 
 from markdownx.models import MarkdownxField
 from markdownx.utils import markdownify
@@ -142,3 +143,28 @@ class Projet(models.Model):
     def contenu_md(self):
         """Retourne le contenu converti en HTML."""
         return markdownify(self.contenu)
+
+
+class BricolageArticle(models.Model):
+    """Article de bricolage."""
+    titre = models.CharField(max_length=150, verbose_name="Titre")
+    slug = models.SlugField(max_length=150, unique=True)
+    contenu = MarkdownxField(blank=True, default="", verbose_name="Contenu")
+    date = models.DateField(verbose_name="Date")
+
+    class Meta:
+        """Meta data"""
+        ordering = ["-date"]
+        verbose_name = "article de bricolage"
+        verbose_name_plural = "articles de bricolage"
+
+    def __str__(self):
+        return self.titre
+
+    def contenu_md(self):
+        """Retourne le contenu complet converti en HTML."""
+        return markdownify(self.contenu)
+
+    def resume_md(self):
+        """Retourne un résumé tronqué du contenu HTML (200 caractères)."""
+        return Truncator(markdownify(self.contenu)).chars(200, truncate="…", html=True)

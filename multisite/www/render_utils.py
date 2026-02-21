@@ -50,6 +50,7 @@ a_propos_subpages = [
 admin_subpages = [
     {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
     {"name": "Projets", "url": "admin_projets", "icon": "mdi-pickaxe"},
+    {"name": "Bricolages", "url": "admin_bricolages", "icon": "mdi-hammer-wrench"},
 ]
 
 

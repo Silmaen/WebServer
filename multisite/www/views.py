@@ -13,9 +13,9 @@ from common.user_utils import (
     USER_LEVEL_CHOICES, ADMINISTRATEUR,
 )
 from . import settings
-from .models import ProjetCategorie, Projet
+from .models import ProjetCategorie, Projet, BricolageArticle
 from .render_utils import get_page_data, get_articles, get_article, get_news_articles
-from .forms import ArticleCommentForm, ProjetCategorieForm, ProjetForm
+from .forms import ArticleCommentForm, ProjetCategorieForm, ProjetForm, BricolageArticleForm
 
 
 def avance_required(view_func):
@@ -375,13 +375,31 @@ def detailed_news(request, article_id):
 @avance_required
 def bricolage(request):
     """
-    Page bricolage (en construction).
-     :param request : La requ\u00eate du client.
+    Page bricolage : liste des articles actifs.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "bricolage")
+    articles = BricolageArticle.objects.all()
     return render(request, "www/bricolage.html", {
         **settings.base_info, **data,
+        "articles": articles,
+    })
+
+
+@avance_required
+def bricolage_detail(request, slug):
+    """
+    Page détaillée d'un article de bricolage.
+     :param request : La requête du client.
+     :param slug : Le slug de l'article.
+     :return : La page rendue.
+    """
+    article = get_object_or_404(BricolageArticle, slug=slug)
+    data = get_page_data(request.user, "bricolage")
+    return render(request, "www/bricolage_detail.html", {
+        **settings.base_info, **data,
+        "article": article,
     })
 
 
@@ -423,6 +441,87 @@ def admin_users(request):
         "users": users,
         "level_choices": USER_LEVEL_CHOICES,
     })
+
+
+@admin_required
+def admin_bricolages(request):
+    """
+    Page d'administration des articles de bricolage.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "administration")
+    articles = BricolageArticle.objects.all()
+    return render(request, "www/admin_bricolages.html", {
+        **settings.base_info, **data,
+        "subpage": "Bricolages",
+        "articles": articles,
+    })
+
+
+@admin_required
+def admin_bricolage_ajouter(request):
+    """
+    Formulaire d'ajout d'article de bricolage.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = BricolageArticleForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Article de bricolage ajouté avec succès.")
+            return redirect("admin_bricolages")
+    else:
+        form = BricolageArticleForm()
+    return render(request, "www/admin_bricolage_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Bricolages",
+        "form": form,
+        "form_title": "Ajouter un article de bricolage",
+    })
+
+
+@admin_required
+def admin_bricolage_modifier(request, article_id):
+    """
+    Formulaire de modification d'article de bricolage.
+     :param request : La requête du client.
+     :param article_id : L'identifiant de l'article.
+     :return : La page rendue ou redirection.
+    """
+    article = get_object_or_404(BricolageArticle, pk=article_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = BricolageArticleForm(request.POST, instance=article)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Article « {article.titre} » modifié avec succès.")
+            return redirect("admin_bricolages")
+    else:
+        form = BricolageArticleForm(instance=article)
+    return render(request, "www/admin_bricolage_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Bricolages",
+        "form": form,
+        "form_title": f"Modifier : {article.titre}",
+    })
+
+
+@admin_required
+def admin_bricolage_supprimer(request, article_id):
+    """
+    Suppression d'un article de bricolage (POST uniquement).
+     :param request : La requête du client.
+     :param article_id : L'identifiant de l'article.
+     :return : Redirection vers la liste.
+    """
+    article = get_object_or_404(BricolageArticle, pk=article_id)
+    if request.method == "POST":
+        messages.success(request, f"Article « {article.titre} » supprimé.")
+        article.delete()
+    return redirect("admin_bricolages")
 
 
 @avance_required
