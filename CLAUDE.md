@@ -35,13 +35,24 @@ docker compose logs -f web                # Suivre les logs
 
 ### Import de données depuis MySQL
 
-Nécessite `mysqlclient` (installé uniquement dans Docker) :
+Nécessite `pymysql` :
 
 ```bash
 python manage.py import_from_mysql --host=192.168.5.1 --user=www_common --password=xxx --database=Site_Common
 ```
 
-Database: PostgreSQL (service `db` dans Docker, volume `pgdata` pour la persistance). Variables d'environnement : `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`.
+### Migration de données
+
+```bash
+# Export des données (depuis la base actuelle)
+python manage.py migrate_to_postgres -o dump.json
+
+# Import dans PostgreSQL (après configuration)
+python manage.py migrate
+python manage.py loaddata dump.json
+```
+
+Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour la persistance). Variables d'environnement : `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`.
 
 ### Dépendances
 
@@ -87,13 +98,13 @@ Database: PostgreSQL (service `db` dans Docker, volume `pgdata` pour la persista
   - **`data/templates/www/`** — WWW app templates (including `widgets/` for custom form widgets)
   - **`data/static/`** — CSS, JS, images, fonts
   - **`data/media/`** — User uploads (avatars, article images, project icons, service icons)
-- **`docker_data/`** — Docker runtime data (media, markdownx — not versioned)
+- **`docker_data/`** — Docker runtime data (db, media — not versioned)
 
 ### Docker
 
-- **`Dockerfile`** — Image Python 3.12 avec nginx, gunicorn, nmap, iputils-ping et libpq-dev
-- **`docker-compose.yml`** — Services `db` (PostgreSQL 16), `redis` (broker Celery) et `web` avec volumes pour media et pgdata
-- **`entrypoint.sh`** — Attend PostgreSQL, lance migrate, collectstatic, nginx, celery worker, celery beat, puis gunicorn
+- **`Dockerfile`** — Image Python 3.12 avec nginx, gunicorn, nmap, iputils-ping, libpq-dev et curl
+- **`docker-compose.yml`** — Services `db` (PostgreSQL 16), `redis` (broker Celery) et `web` avec volumes pour media et données PostgreSQL. Healthchecks sur les 3 services (`pg_isready`, `redis-cli ping`, `curl`). Le service `web` attend `db` et `redis` via `condition: service_healthy`
+- **`entrypoint.sh`** — Lance migrate, collectstatic, nginx, celery worker, celery beat, puis gunicorn
 - **`nginx.conf`** — Reverse proxy (static/media servis directement, le reste vers gunicorn sur 127.0.0.1:8001)
 - **`.env`** — Secrets et configuration (non versionné, copier `.env.example`)
 

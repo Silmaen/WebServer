@@ -11,7 +11,7 @@ services:
     volumes:
       - ${SERVER_PATH_PGDB:-./docker_data/db}:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-argawaen}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-argawaen} -d ${POSTGRES_DB:-argawaen}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -37,7 +37,6 @@ services:
       - .env
     volumes:
       - ${SERVER_PATH_MEDIA:-./docker_data/media}:/app/data/media
-      - ${SERVER_PATH_DB:-./docker_data/db}:/app/data/db
     depends_on:
       db:
         condition: service_healthy

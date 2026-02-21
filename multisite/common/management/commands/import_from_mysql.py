@@ -1,6 +1,6 @@
 """
 Commande Django pour importer les données depuis une base MySQL existante
-vers la base SQLite locale.
+vers la base locale.
 
 Usage:
     python manage.py import_from_mysql --host=192.168.5.1 --user=www_common \
@@ -15,7 +15,7 @@ from www.models import Category, SubCategory, Article, ArticleComment
 
 
 class Command(BaseCommand):
-    help = "Importe les données depuis une base MySQL vers la base SQLite locale."
+    help = "Importe les données depuis une base MySQL vers la base locale."
 
     def add_arguments(self, parser):
         parser.add_argument(
