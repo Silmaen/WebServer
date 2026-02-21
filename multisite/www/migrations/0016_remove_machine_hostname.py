@@ -8,9 +8,13 @@ def supprimer_hostname_orphelin(apps, schema_editor):
     Cette colonne a été ajoutée par une version antérieure de la migration 0014,
     puis retirée du modèle sans migration correspondante.
     """
-    with schema_editor.connection.cursor() as cursor:
-        cursor.execute("PRAGMA table_info(www_machine)")
-        colonnes = [row[1] for row in cursor.fetchall()]
+    connection = schema_editor.connection
+    colonnes = [
+        info.name
+        for info in connection.introspection.get_table_description(
+            connection.cursor(), "www_machine"
+        )
+    ]
     if "hostname" in colonnes:
         schema_editor.execute("ALTER TABLE www_machine DROP COLUMN hostname")
 

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Django 5.2 web application for **argawaen.net**. Single-site architecture serving articles with categories, personal projects, user authentication and Markdown content. The project language (UI, comments, templates) is **French**. Timezone: Europe/Paris.
+Django 5.2 web application for **argawaen.net**. Single-site architecture serving articles with categories, personal projects, DIY (bricolage) articles, network monitoring, user authentication and Markdown content. The project language (UI, comments, templates) is **French**. Timezone: Europe/Paris.
 
 ## Common Commands
 
@@ -41,7 +41,7 @@ Nécessite `mysqlclient` (installé uniquement dans Docker) :
 python manage.py import_from_mysql --host=192.168.5.1 --user=www_common --password=xxx --database=Site_Common
 ```
 
-Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la persistance).
+Database: PostgreSQL (service `db` dans Docker, volume `pgdata` pour la persistance). Variables d'environnement : `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `DB_PORT`.
 
 ### Dépendances
 
@@ -50,6 +50,9 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 - django-markdownx>=4.0
 - html5lib-truncation>=0.1
 - gunicorn>=23.0
+- celery[redis]>=5.4
+- python-nmap>=0.7
+- psycopg[binary]>=3.1
 
 ## Architecture
 
@@ -61,8 +64,13 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
   - `/a-propos/` — about page (public), with sub-pages `cv/` and `publications/`
   - `/mes-projets/` — projects (public, filtered by visibility level), with sub-routes `categorie/<slug>/` and `projet/<slug>/`
   - `/archives/` — archives main, `news/`, `research/` (requires `avance` level)
-  - `/bricolage/` — DIY section (requires `avance` level)
-  - `/administration/` — admin panel (requires `administrateur` level), sub-routes: `utilisateurs/`, `projets/` (CRUD for projects and categories)
+  - `/bricolage/` — DIY section (requires `avance` level), with detail `<slug>/`
+  - `/monitoring/` — network monitoring (requires `administrateur` level), with sub-routes `machine/<id>/`, `machine/<id>/ping/` (SSE), `machine/<id>/ports/` (SSE), `serveur/<id>/`, `serveur/<id>/check/` (SSE)
+  - `/administration/` — admin panel (requires `administrateur` level), sub-routes:
+    - `utilisateurs/` — user management
+    - `projets/` — CRUD for projects and categories
+    - `bricolages/` — CRUD for DIY articles
+    - `services/` — CRUD for machines, servers and service categories
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
 - `admin/` — Django admin
 - `markdownx/` — Markdown editor support
@@ -70,23 +78,22 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 ### Directory Structure
 
 - **`multisite/`** — Django project root (contains `manage.py`)
-  - **`multisite/`** — Project settings, URL config, WSGI/ASGI
+  - **`multisite/`** — Project settings, URL config, WSGI/ASGI, Celery config (`celery.py`)
   - **`connector/`** — User auth & profiles (login, register, password reset)
   - **`common/`** — Base models (`SiteArticle`, `SiteArticleComment`), utilities, management commands
-  - **`www/`** — Main website (articles, projects, custom widgets, template tags, context processors)
+  - **`www/`** — Main website (articles, projects, bricolage, monitoring, custom widgets, template tags, context processors, Celery tasks)
 - **`data/`** — Static files, media uploads, and templates
   - **`data/templates/common/`** — Shared base templates and registration templates
   - **`data/templates/www/`** — WWW app templates (including `widgets/` for custom form widgets)
   - **`data/static/`** — CSS, JS, images, fonts
-  - **`data/media/`** — User uploads (avatars, article images, project icons)
-  - **`data/db/`** — SQLite database file
-- **`docker_data/`** — Docker runtime data (db, media, markdownx — not versioned)
+  - **`data/media/`** — User uploads (avatars, article images, project icons, service icons)
+- **`docker_data/`** — Docker runtime data (media, markdownx — not versioned)
 
 ### Docker
 
-- **`Dockerfile`** — Image Python 3.12 avec nginx et gunicorn
-- **`docker-compose.yml`** — Service `web` avec volumes pour media et base SQLite
-- **`entrypoint.sh`** — Crée le répertoire db, lance migrate, collectstatic, nginx, puis gunicorn
+- **`Dockerfile`** — Image Python 3.12 avec nginx, gunicorn, nmap, iputils-ping et libpq-dev
+- **`docker-compose.yml`** — Services `db` (PostgreSQL 16), `redis` (broker Celery) et `web` avec volumes pour media et pgdata
+- **`entrypoint.sh`** — Attend PostgreSQL, lance migrate, collectstatic, nginx, celery worker, celery beat, puis gunicorn
 - **`nginx.conf`** — Reverse proxy (static/media servis directement, le reste vers gunicorn sur 127.0.0.1:8001)
 - **`.env`** — Secrets et configuration (non versionné, copier `.env.example`)
 
@@ -101,6 +108,10 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 - `ArticleComment` (extends `SiteArticleComment`)
 - `ProjetCategorie` — project category (`nom`, `slug`, `mdi_icon_name`, `ordre`)
 - `Projet` — personal project (`titre`, `slug`, `categorie` FK, `resume`, `contenu` MarkdownxField, `lien_externe`, `couleur`, `date_creation`, `actif`, `visibilite`, `ordre`) with multi-mode icon system (`mdi_icon_name`, `icone_image`, `icone_url` — only one active at a time)
+- `BricolageArticle` — DIY article (`titre`, `slug`, `contenu` MarkdownxField, `date`), with `resume_md()` truncated to 200 chars
+- `ServiceCategorie` — service/monitoring category (`nom`, `slug`, `mdi_icon_name`, `ordre`)
+- `Machine` — network machine to monitor (`nom`/hostname, `categorie` FK, `adresse_ip`, `ip_statique`, `alerte_ip`, `ports_supplementaires`, `en_ligne`, `derniere_verification`, `derniere_vue_en_ligne`, `ports_ouverts` JSON, `dernier_scan_ports`). Validates IP in `RESEAU_LOCAL` (10.10.0.0/16). Methods: `hostname_complet()`, `resoudre_ip()`, `clean()`
+- `Serveur` — web service to monitor (`titre`, `categorie` FK, `description`, `url`, `hostname`, `adresse`, `port`, `en_ligne`, `reverse_proxy_ok`, `derniere_verification`, `derniere_vue_en_ligne`). Multi-mode icon system like `Projet`. Methods: `has_icone()`, `icone_html()`, `lien()`, `adresse_effective()`, `clean()`. Requires at least `url` or `(adresse|hostname)+port`
 
 `connector/models.py` defines `UserProfile` (OneToOne with `User`, auto-created via `post_save` signal) with `avatar`, `birthDate`, and `user_level`.
 
@@ -143,14 +154,44 @@ Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering i
 - `ArticleCommentForm` — comment creation (field: `contenu`)
 - `ProjetCategorieForm` — project category (auto-slug, auto-ordre)
 - `ProjetForm` — project (auto-slug, auto-ordre, validates single icon mode, cleans unused icon fields)
+- `BricolageArticleForm` — DIY article (auto-slug)
+- `ServiceCategorieForm` — service category (auto-slug, auto-ordre)
+- `MachineForm` — network machine (fields: `nom`, `categorie`, `ip_statique`, `ports_supplementaires`)
+- `ServeurForm` — web service (validates single icon mode, validates url or address+port requirement, cleans unused icon fields)
 
 `www/widgets.py`:
 - `ColorPickerWidget` — HTML5 color picker with hex input (template: `www/widgets/color_picker.html`)
 - `MdiIconPickerWidget` — icon selection grid with search from curated list of ~95 MDI icons (template: `www/widgets/mdi_icon_picker.html`)
 
+### Celery & Background Tasks
+
+`multisite/celery.py` — Celery app configuration with Django settings integration and auto-discovery of tasks.
+
+`www/tasks.py` — Background monitoring tasks:
+- `verifier_machines()` — shared task (runs every 300s): checks all machines via DNS resolution + ping, updates state
+- `verifier_serveurs()` — shared task (runs every 300s): checks all servers via HTTP + TCP, updates state
+- `scanner_ping(machine_id)` — SSE generator: resolves IP, pings machine, yields events
+- `scanner_ports(machine_id)` — SSE generator: scans ports using nmap in chunks of 50, yields progress events
+- `scanner_serveur(serveur_id)` — SSE generator: checks HTTP and TCP connectivity, yields status
+
+Helper functions: `_ping()`, `_resoudre_et_mettre_a_jour()`, `_expand_ports()`, `_sse_event()`, `_verifier_url()`, `_verifier_tcp()`, `_check_serveur()`.
+
+Default ports scanned: 27 common ports (21, 22, 23, 25, 53, 80, ...) + machine-specific `ports_supplementaires` field. Nmap timeout: 60s per chunk, 90s subprocess timeout.
+
+Settings in `multisite/settings.py`:
+```python
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL
+CELERY_BEAT_SCHEDULE = {
+    "verifier-machines": {"task": "www.tasks.verifier_machines", "schedule": 300.0},
+    "verifier-serveurs": {"task": "www.tasks.verifier_serveurs", "schedule": 300.0},
+}
+MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")
+```
+
 ### Key Utilities
 
-- **`www/render_utils.py`** — Page metadata, navigation structure, article filtering and pagination (10 articles/page)
+- **`www/render_utils.py`** — Page metadata, navigation structure, article filtering and pagination (10 articles/page). Navigation includes pages for accueil, à propos, mes projets, archives, bricolage (AVANCE), monitoring (ADMINISTRATEUR), administration (ADMINISTRATEUR). Admin subpages: utilisateurs, projets, bricolages, services
 - **`www/context_processors.py`** — `navigation()` context processor adds `pages_left`, `pages_right`, `extpages`, `is_admin`, `user_level`, `user_level_display`, `user_is_avance` to all templates
 - **`www/templatetags/template_extra.py`** — `pageSpecificBtn` filter for active navigation highlighting
 
@@ -159,7 +200,7 @@ Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering i
 `www/tests.py` covers:
 - `PagesAccessTest` — public pages return 200
 - `ArchivesAccessTest` — archives/bricolage require avance level (anonymous→302, regular→403, avance→200)
-- `TemplatesTest` — correct templates used
+- `TemplatesTest` — correct templates used (including bricolage and administration)
 - `AdminUsersAccessTest` — user management access control and superuser protection
 - `RemovedPagesTest` — old URLs return 404
 - `ProjetsAccessTest` — project pages access, inactive project returns 404
@@ -167,3 +208,18 @@ Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering i
 - `AdminProjetsAccessTest` — admin project CRUD access control and operations
 - `ProjetIconeTest` — multi-mode icon system (MDI, URL, image, validation)
 - `ProjetVisibiliteTest` — visibility filtering by user level (anonymous, registered, advanced, admin)
+- `BricolageAccessTest` — bricolage pages access control (anonymous→302, regular→403, avance→200), detail and templates
+- `AdminBricolagesAccessTest` — bricolage admin CRUD access control and operations (add, modify, delete)
+- `MonitoringAccessTest` — monitoring page requires administrateur level (anonymous→302, regular→403, avance→403, admin→200)
+- `AdminServicesAccessTest` — services admin CRUD for machines, servers and categories
+- `MachineModelTest` — Machine model: __str__, IP validation in 10.10.0.0/16
+- `ServeurModelTest` — Serveur model: icons, lien(), clean(), reverse_proxy, icon validation
+- `MachineDetailAccessTest` — machine detail page and SSE endpoint access control
+- `ScannerPingTest` — SSE ping generator: online/offline states
+- `ScannerPortsTest` — SSE port scanner: chunked scanning, no-IP handling
+- `ServeurDetailAccessTest` — server detail page and SSE endpoint access control
+- `ServeurHostnameTest` — hostname support: creation, adresse_effective(), lien(), validation
+- `ScannerServeurTest` — SSE server check: online/offline, hostname resolution
+- `MachineHostnameTest` — hostname_complet(), DNS resolution, alerts for divergence and out-of-network IPs
+- `MachineResolutionDnsTest` — DNS resolution in scanner_ping tasks
+- `CeleryTasksTest` — verifier_machines and verifier_serveurs shared tasks (with mocked dependencies)

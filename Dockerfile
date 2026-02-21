@@ -9,6 +9,8 @@ RUN apt-get update && \
         nginx \
         nmap \
         iputils-ping \
+        libpq-dev \
+        curl \
         tzdata && \
     rm -rf /var/lib/apt/lists/*
 
@@ -19,8 +21,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN rm -f /etc/nginx/sites-enabled/default
-
-RUN mkdir -p /app/data/db
 
 COPY multisite/ /app/multisite/
 COPY data/ /app/data/

@@ -5,3 +5,4 @@ html5lib-truncation>=0.1
 gunicorn>=23.0
 celery[redis]>=5.4
 python-nmap>=0.7
+psycopg[binary]>=3.1

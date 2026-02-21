@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# Créer le répertoire de la base SQLite si nécessaire
-mkdir -p /app/data/db
-
 # Appliquer les migrations
 echo "Application des migrations..."
 python /app/multisite/manage.py migrate --noinput
