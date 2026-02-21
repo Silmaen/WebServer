@@ -23,6 +23,10 @@
     --blue-hover: #6aaad8;
     --bg-button: #303030;
     --bg-button-hover: #3a3a3a;
+    --red: #c0392b;
+    --red-hover: #e74c3c;
+    --green: #27ae60;
+    --yellow: #f39c12;
 }
 ```
 
@@ -34,6 +38,8 @@ Toujours utiliser `var(--nom-variable)` au lieu de valeurs de couleur en dur.
 - Composants article : `.Article`, `.ArticleHeader`, `.ArticleContent`, `.ArticleFooter` (PascalCase pour les composants principaux).
 - Formulaires : `.form-group`, `.form-section`, `.form-section-title`, `.form-errors`.
 - Enregistrement : `.reg-card`, `.reg-card-title`, `.reg-card-body`.
+- Boutons : `.userbtn` (standard), `.userbtn-danger` (rouge, pour les suppressions).
+- Messages : `.msg`, `.msg-success`, `.msg-error`, `.msg-warning`, `.msg-info`.
 - Badges : `.admin-badge`.
 - Impression : `.noprint`.
 
@@ -55,6 +61,12 @@ Toujours utiliser `var(--nom-variable)` au lieu de valeurs de couleur en dur.
 - Breakpoint mobile : `max-width: 768px`.
 - Utilisation de `vw` pour le dimensionnement responsive.
 - Layout en **flexbox**.
+
+## Pas de styles inline
+
+- **Jamais de `style="..."` dans les templates HTML** pour du style statique.
+- Tout le style doit être dans les fichiers CSS.
+- Seule exception tolérée : les **CSS custom properties dynamiques** passant des données serveur (`style="--projet-accent: {{ valeur }}"`).
 
 ## Transitions
 

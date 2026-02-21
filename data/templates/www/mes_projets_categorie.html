@@ -1,0 +1,29 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <h2>
+        {% if categorie.mdi_icon_name %}<span class="mdi mdi-{{ categorie.mdi_icon_name }}"></span> {% endif %}{{ categorie.nom }}
+    </h2>
+    <div class="projet-grid">
+        {% for projet in projets %}
+        <div class="projet-card" style="--projet-accent: {{ projet.couleur }}">
+            <div class="projet-card-header">
+                {% if projet.has_icone %}<span class="projet-card-icon">{{ projet.icone_html }}</span>{% endif %}
+                <a class="projet-card-title" href="{% url 'mes_projets_detail' projet.slug %}">{{ projet.titre }}</a>
+            </div>
+            <div class="projet-card-body">
+                <p>{{ projet.resume }}</p>
+            </div>
+            <div class="projet-card-footer">
+                {% if projet.lien_externe %}
+                <a class="projet-link" href="{{ projet.lien_externe }}" target="_blank" rel="noopener"><span class="mdi mdi-open-in-new"></span> Lien</a>
+                {% endif %}
+                <a class="projet-link" href="{% url 'mes_projets_detail' projet.slug %}"><span class="mdi mdi-arrow-right"></span> Détails</a>
+            </div>
+        </div>
+        {% empty %}
+        <p>Aucun projet dans cette catégorie.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

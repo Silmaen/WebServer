@@ -1,5 +1,9 @@
 # Conventions Django — Admin
 
+## Philosophie
+
+L'admin Django (`/admin/`) existe principalement pour le **debug** et l'accès direct à la base de données. Toute l'administration courante (gestion des utilisateurs, projets, catégories, etc.) doit se faire via des **pages d'administration personnalisées** sous `/administration/`, construites avec nos propres vues, templates et formulaires. Ne jamais renvoyer l'utilisateur vers l'admin Django pour une opération de gestion classique.
+
 ## Classes Admin
 
 - Suffixe `Admin` : `SiteArticleAdmin`, `ArticleAdmin`.

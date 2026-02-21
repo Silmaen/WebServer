@@ -1,0 +1,35 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="admin-form-card">
+    <h2 class="reg-card-title">{{ form_title }}</h2>
+    <div class="admin-form-body">
+        {% if form.errors %}
+        <div class="alert-danger">
+            <ul>
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ field }} : {{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                <small>{{ field.help_text }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="userbtn"><span class="mdi mdi-content-save"></span> Enregistrer</button>
+                <a class="userbtn" href="{% url 'admin_projets' %}"><span class="mdi mdi-arrow-left"></span> Retour</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

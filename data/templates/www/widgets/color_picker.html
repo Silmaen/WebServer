@@ -1,0 +1,28 @@
+<div class="color-picker">
+    <input type="color"
+           name="{{ widget.name }}"
+           value="{{ widget.value|default:'#5090C1' }}"
+           class="color-picker-swatch"
+           id="{{ widget.attrs.id }}"
+           {% for key, val in widget.attrs.items %}{% if key != "id" %} {{ key }}="{{ val }}"{% endif %}{% endfor %}>
+    <input type="text"
+           value="{{ widget.value|default:'#5090C1' }}"
+           class="color-picker-text"
+           maxlength="7"
+           placeholder="#000000">
+</div>
+<script>
+(function() {
+    var container = document.getElementById("{{ widget.attrs.id }}").parentNode;
+    var swatch = container.querySelector(".color-picker-swatch");
+    var text = container.querySelector(".color-picker-text");
+    swatch.addEventListener("input", function() {
+        text.value = swatch.value;
+    });
+    text.addEventListener("input", function() {
+        if (/^#[0-9a-fA-F]{6}$/.test(text.value)) {
+            swatch.value = text.value;
+        }
+    });
+})();
+</script>

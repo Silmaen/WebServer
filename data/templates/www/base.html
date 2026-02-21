@@ -67,13 +67,27 @@
         <ul class="archives-subnav-menu">
             {% for sp in subpages %}
             <li class="archives-subnav-item {% if subpage == sp.name %}current-page{% endif %}">
+                {% if sp.href %}
+                <a href="{{ sp.href }}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
+                {% else %}
                 <a href="{% url sp.url %}"><span class="mdi {{ sp.icon }}">{{ sp.name }}</span></a>
+                {% endif %}
             </li>
             {% endfor %}
         </ul>
     </div>
     {% endif %}
 </header>
+{% if messages %}
+<div class="messages-container">
+    {% for message in messages %}
+    <div class="msg msg-{{ message.tags }}">
+        <span class="msg-icon mdi {% if message.tags == 'success' %}mdi-check-circle{% elif message.tags == 'error' %}mdi-alert-circle{% elif message.tags == 'warning' %}mdi-alert{% else %}mdi-information{% endif %}"></span>
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 <div class="PageCenter">
     <div class="PageContent">
         {% block content %}

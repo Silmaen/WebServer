@@ -1,0 +1,59 @@
+<div class="icon-picker" id="icon-picker-{{ widget.name }}">
+    <div class="icon-picker-preview">
+        <span class="icon-picker-preview-icon mdi{% if widget.value %} mdi-{{ widget.value }}{% endif %}"></span>
+        <span class="icon-picker-preview-name">{% if widget.value %}{{ widget.value }}{% else %}Aucune icône{% endif %}</span>
+        <button type="button" class="userbtn icon-picker-clear" title="Retirer l'icône"><span class="mdi mdi-close"></span></button>
+    </div>
+    <input type="text" class="icon-picker-search" placeholder="Rechercher une icône...">
+    <div class="icon-picker-grid">
+        {% for icon_name, icon_label in icons %}
+        <button type="button"
+                class="icon-picker-item{% if widget.value == icon_name %} icon-picker-selected{% endif %}"
+                data-icon="{{ icon_name }}"
+                data-label="{{ icon_label }}"
+                title="{{ icon_label }} ({{ icon_name }})">
+            <span class="mdi mdi-{{ icon_name }}"></span>
+        </button>
+        {% endfor %}
+    </div>
+    <input type="hidden" name="{{ widget.name }}" value="{{ widget.value|default:'' }}"{% include "django/forms/widgets/attrs.html" %}>
+</div>
+<script>
+(function() {
+    var picker = document.getElementById("icon-picker-{{ widget.name }}");
+    var hidden = picker.querySelector("input[type=hidden]");
+    var search = picker.querySelector(".icon-picker-search");
+    var preview = picker.querySelector(".icon-picker-preview-icon");
+    var previewName = picker.querySelector(".icon-picker-preview-name");
+    var items = picker.querySelectorAll(".icon-picker-item");
+    var clearBtn = picker.querySelector(".icon-picker-clear");
+
+    function selectIcon(iconName, label) {
+        hidden.value = iconName;
+        preview.className = "icon-picker-preview-icon mdi" + (iconName ? " mdi-" + iconName : "");
+        previewName.textContent = iconName || "Aucune icône";
+        for (var i = 0; i < items.length; i++) {
+            items[i].classList.toggle("icon-picker-selected", items[i].getAttribute("data-icon") === iconName);
+        }
+    }
+
+    for (var i = 0; i < items.length; i++) {
+        items[i].addEventListener("click", function() {
+            selectIcon(this.getAttribute("data-icon"), this.getAttribute("data-label"));
+        });
+    }
+
+    clearBtn.addEventListener("click", function() {
+        selectIcon("", "");
+    });
+
+    search.addEventListener("input", function() {
+        var q = this.value.toLowerCase();
+        for (var i = 0; i < items.length; i++) {
+            var name = items[i].getAttribute("data-icon").toLowerCase();
+            var label = items[i].getAttribute("data-label").toLowerCase();
+            items[i].style.display = (name.indexOf(q) !== -1 || label.indexOf(q) !== -1) ? "" : "none";
+        }
+    });
+})();
+</script>

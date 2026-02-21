@@ -1,0 +1,22 @@
+{% extends "www/base.html" %}
+{% block content %}
+<div class="static-page">
+    <div class="projet-detail" style="--projet-accent: {{ projet.couleur }}">
+        <div class="projet-detail-header">
+            {% if projet.has_icone %}<span class="projet-detail-icon">{{ projet.icone_html }}</span>{% endif %}
+            <h2>{{ projet.titre }}</h2>
+            {% if projet.lien_externe %}
+            <a class="projet-link" href="{{ projet.lien_externe }}" target="_blank" rel="noopener"><span class="mdi mdi-open-in-new"></span> Lien externe</a>
+            {% endif %}
+        </div>
+        <div class="projet-detail-meta">
+            <span class="mdi mdi-folder-outline"></span>
+            <a href="{% url 'mes_projets_categorie' projet.categorie.slug %}">{{ projet.categorie.nom }}</a>
+            <span class="projet-detail-date"><span class="mdi mdi-calendar"></span> {{ projet.date_creation }}</span>
+        </div>
+        <div class="projet-detail-content">
+            {{ projet.contenu_md|safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}

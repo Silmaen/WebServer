@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Django 5.2 web application for **argawaen.net**. Single-site architecture serving articles with categories, user authentication and Markdown content. The project language (UI, comments, templates) is **French**. Timezone: Europe/Paris.
+Django 5.2 web application for **argawaen.net**. Single-site architecture serving articles with categories, personal projects, user authentication and Markdown content. The project language (UI, comments, templates) is **French**. Timezone: Europe/Paris.
 
 ## Common Commands
 
@@ -59,10 +59,10 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 - `www.urls` — app-specific routes:
   - `/` — accueil (homepage, public)
   - `/a-propos/` — about page (public), with sub-pages `cv/` and `publications/`
-  - `/mes-projets/` — projects (public)
+  - `/mes-projets/` — projects (public, filtered by visibility level), with sub-routes `categorie/<slug>/` and `projet/<slug>/`
   - `/archives/` — archives main, `news/`, `research/` (requires `avance` level)
   - `/bricolage/` — DIY section (requires `avance` level)
-  - `/administration/` — admin panel, `utilisateurs/` (requires `administrateur` level)
+  - `/administration/` — admin panel (requires `administrateur` level), sub-routes: `utilisateurs/`, `projets/` (CRUD for projects and categories)
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
 - `admin/` — Django admin
 - `markdownx/` — Markdown editor support
@@ -73,12 +73,12 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
   - **`multisite/`** — Project settings, URL config, WSGI/ASGI
   - **`connector/`** — User auth & profiles (login, register, password reset)
   - **`common/`** — Base models (`SiteArticle`, `SiteArticleComment`), utilities, management commands
-  - **`www/`** — Main website (articles with categories, template tags, context processors)
+  - **`www/`** — Main website (articles, projects, custom widgets, template tags, context processors)
 - **`data/`** — Static files, media uploads, and templates
   - **`data/templates/common/`** — Shared base templates and registration templates
-  - **`data/templates/www/`** — WWW app templates
+  - **`data/templates/www/`** — WWW app templates (including `widgets/` for custom form widgets)
   - **`data/static/`** — CSS, JS, images, fonts
-  - **`data/media/`** — User uploads (avatars, article images)
+  - **`data/media/`** — User uploads (avatars, article images, project icons)
   - **`data/db/`** — SQLite database file
 - **`docker_data/`** — Docker runtime data (db, media, markdownx — not versioned)
 
@@ -99,6 +99,8 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 - `SubCategory` — article sub-category (`nom`, `mdi_icon_name`)
 - `Article` (extends `SiteArticle`) — adds `categorie` (FK) and `sous_categorie` (FK)
 - `ArticleComment` (extends `SiteArticleComment`)
+- `ProjetCategorie` — project category (`nom`, `slug`, `mdi_icon_name`, `ordre`)
+- `Projet` — personal project (`titre`, `slug`, `categorie` FK, `resume`, `contenu` MarkdownxField, `lien_externe`, `couleur`, `date_creation`, `actif`, `visibilite`, `ordre`) with multi-mode icon system (`mdi_icon_name`, `icone_image`, `icone_url` — only one active at a time)
 
 `connector/models.py` defines `UserProfile` (OneToOne with `User`, auto-created via `post_save` signal) with `avatar`, `birthDate`, and `user_level`.
 
@@ -109,6 +111,8 @@ Database: SQLite (fichier `data/db/db.sqlite3`, monté via volume Docker pour la
 - **1 — AUTORISE** (authorized)
 - **2 — AVANCE** (advanced)
 - **3 — ADMINISTRATEUR** (administrator)
+
+`get_user_level()` returns **-1** for anonymous (unauthenticated) users.
 
 Helpers in `common/user_utils.py`: `get_user_level()`, `user_is_autorise()`, `user_is_avance()`, `user_is_administrateur()`. Legacy aliases `user_is_validated`, `user_is_developper`, `user_is_moderator` still exist.
 
@@ -121,6 +125,28 @@ Articles have 4 boolean flags: `private`, `superprivate`, `staff`, `developper`.
 - `superprivate` → sets `private`
 
 Filtering logic in `www/render_utils.py`: `get_articles()`, `get_news_articles()`, `get_article()`.
+
+### Project Visibility
+
+Projects use a single integer field `visibilite` (default=-1) indicating the minimum user level required:
+- **-1** — Public (visible to anonymous)
+- **0** — Enregistré
+- **1** — Autorisé
+- **2** — Avancé
+- **3** — Administrateur
+
+Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering in the 3 public views (`mes_projets`, `mes_projets_categorie`, `mes_projets_detail`) uses `visibilite__lte=get_user_level(request.user)`. Admin views show all projects regardless of visibility.
+
+### Forms & Widgets
+
+`www/forms.py`:
+- `ArticleCommentForm` — comment creation (field: `contenu`)
+- `ProjetCategorieForm` — project category (auto-slug, auto-ordre)
+- `ProjetForm` — project (auto-slug, auto-ordre, validates single icon mode, cleans unused icon fields)
+
+`www/widgets.py`:
+- `ColorPickerWidget` — HTML5 color picker with hex input (template: `www/widgets/color_picker.html`)
+- `MdiIconPickerWidget` — icon selection grid with search from curated list of ~95 MDI icons (template: `www/widgets/mdi_icon_picker.html`)
 
 ### Key Utilities
 
@@ -136,3 +162,8 @@ Filtering logic in `www/render_utils.py`: `get_articles()`, `get_news_articles()
 - `TemplatesTest` — correct templates used
 - `AdminUsersAccessTest` — user management access control and superuser protection
 - `RemovedPagesTest` — old URLs return 404
+- `ProjetsAccessTest` — project pages access, inactive project returns 404
+- `ProjetsTemplatesTest` — correct templates for project pages
+- `AdminProjetsAccessTest` — admin project CRUD access control and operations
+- `ProjetIconeTest` — multi-mode icon system (MDI, URL, image, validation)
+- `ProjetVisibiliteTest` — visibility filtering by user level (anonymous, registered, advanced, admin)

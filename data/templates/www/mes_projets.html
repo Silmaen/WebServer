@@ -2,7 +2,37 @@
 {% block content %}
 <div class="static-page">
     <h2>Mes projets</h2>
-    <p>Cette section est en construction.</p>
-    <p>Vous retrouverez bientôt ici les liens vers les différents projets en cours.</p>
+    {% for categorie in categories %}
+        {% if categorie.projets.all %}
+        <div class="projet-section">
+            <h3 class="projet-section-title">
+                <a href="{% url 'mes_projets_categorie' categorie.slug %}">
+                    {% if categorie.mdi_icon_name %}<span class="mdi mdi-{{ categorie.mdi_icon_name }}"></span> {% endif %}{{ categorie.nom }}
+                </a>
+            </h3>
+            <div class="projet-grid">
+                {% for projet in categorie.projets.all %}
+                <div class="projet-card" style="--projet-accent: {{ projet.couleur }}">
+                    <div class="projet-card-header">
+                        {% if projet.has_icone %}<span class="projet-card-icon">{{ projet.icone_html }}</span>{% endif %}
+                        <a class="projet-card-title" href="{% url 'mes_projets_detail' projet.slug %}">{{ projet.titre }}</a>
+                    </div>
+                    <div class="projet-card-body">
+                        <p>{{ projet.resume }}</p>
+                    </div>
+                    <div class="projet-card-footer">
+                        {% if projet.lien_externe %}
+                        <a class="projet-link" href="{{ projet.lien_externe }}" target="_blank" rel="noopener"><span class="mdi mdi-open-in-new"></span> Lien</a>
+                        {% endif %}
+                        <a class="projet-link" href="{% url 'mes_projets_detail' projet.slug %}"><span class="mdi mdi-arrow-right"></span> Détails</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    {% empty %}
+        <p>Aucun projet disponible pour le moment.</p>
+    {% endfor %}
 </div>
 {% endblock %}

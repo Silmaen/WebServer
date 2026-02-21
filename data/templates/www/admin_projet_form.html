@@ -1,0 +1,118 @@
+{% extends "www/base.html" %}
+{% block additionnalhead %}
+{{ form.media }}
+{% endblock %}
+{% block content %}
+<div class="admin-form-card">
+    <h2 class="reg-card-title">{{ form_title }}</h2>
+    <div class="admin-form-body">
+        {% if form.errors %}
+        <div class="alert-danger">
+            <ul>
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ field }} : {{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% for field in form %}
+                {% if field.name == "icone_image" or field.name == "icone_url" %}
+                    {# Rendus dans le groupe tabulé ci-dessous #}
+                {% elif field.name == "mdi_icon_name" %}
+                    <!-- Groupe icône multi-mode -->
+                    <div class="form-group">
+                        <label>Icône</label>
+                        <div class="icone-mode-tabs">
+                            <button type="button" class="icone-tab icone-tab-active" data-panel="icone-panel-mdi">MDI</button>
+                            <button type="button" class="icone-tab" data-panel="icone-panel-upload">Image</button>
+                            <button type="button" class="icone-tab" data-panel="icone-panel-url">URL</button>
+                        </div>
+                        <div id="icone-panel-mdi" class="icone-panel">
+                            {{ field }}
+                        </div>
+                        <div id="icone-panel-upload" class="icone-panel icone-panel-hidden">
+                            {% with img_field=form.icone_image %}
+                            {% if img_field.value %}
+                            <div class="icone-preview">
+                                <img src="{{ img_field.value.url }}" class="projet-icone-img" style="width: 48px; height: 48px;">
+                            </div>
+                            {% endif %}
+                            <label class="file-input-label" for="{{ img_field.id_for_label }}">
+                                <span class="mdi mdi-upload"></span> Choisir une image
+                            </label>
+                            {{ img_field }}
+                            <span class="file-input-name"></span>
+                            {% endwith %}
+                        </div>
+                        <div id="icone-panel-url" class="icone-panel icone-panel-hidden">
+                            {{ form.icone_url }}
+                        </div>
+                    </div>
+                {% else %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                    <small>{{ field.help_text }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="userbtn"><span class="mdi mdi-content-save"></span> Enregistrer</button>
+                <a class="userbtn" href="{% url 'admin_projets' %}"><span class="mdi mdi-arrow-left"></span> Retour</a>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(function() {
+    var tabs = document.querySelectorAll(".icone-tab");
+    var panels = document.querySelectorAll(".icone-panel");
+
+    // Détection du mode actif initial
+    var urlField = document.getElementById("{{ form.icone_url.id_for_label }}");
+    var uploadField = document.getElementById("{{ form.icone_image.id_for_label }}");
+    var hasUrl = urlField && urlField.value;
+    var hasUpload = uploadField && uploadField.getAttribute("data-has-file") === "true";
+    // Vérifier aussi si une image existante est affichée
+    var uploadPanel = document.getElementById("icone-panel-upload");
+    var hasExistingImage = uploadPanel && uploadPanel.querySelector(".icone-preview");
+
+    if (hasUrl) {
+        activateTab("icone-panel-url");
+    } else if (hasExistingImage) {
+        activateTab("icone-panel-upload");
+    }
+
+    function activateTab(panelId) {
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.toggle("icone-tab-active", tabs[i].getAttribute("data-panel") === panelId);
+        }
+        for (var j = 0; j < panels.length; j++) {
+            panels[j].classList.toggle("icone-panel-hidden", panels[j].id !== panelId);
+        }
+    }
+
+    for (var i = 0; i < tabs.length; i++) {
+        tabs[i].addEventListener("click", function() {
+            activateTab(this.getAttribute("data-panel"));
+        });
+    }
+
+    // Affichage du nom de fichier sélectionné
+    if (uploadField) {
+        uploadField.addEventListener("change", function() {
+            var nameSpan = uploadPanel.querySelector(".file-input-name");
+            if (nameSpan && this.files.length) {
+                nameSpan.textContent = this.files[0].name;
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

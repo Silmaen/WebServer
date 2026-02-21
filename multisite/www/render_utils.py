@@ -4,8 +4,9 @@ gathering functions to render pages
 import math
 
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
 
-from .models import Article
+from .models import Article, ProjetCategorie
 from common.user_utils import (
     get_user_level, user_is_autorise, user_is_avance, user_is_administrateur,
     ENREGISTRE, AUTORISE, AVANCE, ADMINISTRATEUR,
@@ -48,6 +49,7 @@ a_propos_subpages = [
 
 admin_subpages = [
     {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
+    {"name": "Projets", "url": "admin_projets", "icon": "mdi-pickaxe"},
 ]
 
 
@@ -106,6 +108,19 @@ internal_pages = [
 def _filter_pages(pages, user_level):
     """Filtre une liste de pages selon le niveau utilisateur."""
     return [p for p in pages if p["Active"] and p["MinLevel"] <= user_level]
+
+
+def _get_projet_subpages():
+    """Retourne les sous-pages dynamiques des catégories de projets."""
+    categories = ProjetCategorie.objects.all()
+    return [
+        {
+            "name": cat.nom,
+            "href": reverse("mes_projets_categorie", args=[cat.slug]),
+            "icon": f"mdi-{cat.mdi_icon_name}" if cat.mdi_icon_name else "",
+        }
+        for cat in categories
+    ]
 
 
 def get_articles(user, category):
@@ -181,6 +196,8 @@ def get_page_data(user, page_name):
             "subpage": ""}
     if page_name == "a_propos":
         data["subpages"] = a_propos_subpages
+    elif page_name == "mes_projets":
+        data["subpages"] = _get_projet_subpages()
     elif page_name == "archives":
         data["subpages"] = archives_subpages
     elif page_name == "administration":

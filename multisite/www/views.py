@@ -1,18 +1,21 @@
 """La page de view.py"""
 from functools import wraps
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.db import models
 from django.http import HttpResponseForbidden
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 from common.user_utils import (
-    user_is_moderator, user_is_avance, user_is_administrateur,
+    get_user_level, user_is_moderator, user_is_avance, user_is_administrateur,
     USER_LEVEL_CHOICES, ADMINISTRATEUR,
 )
 from . import settings
+from .models import ProjetCategorie, Projet
 from .render_utils import get_page_data, get_articles, get_article, get_news_articles
-from .forms import ArticleCommentForm
+from .forms import ArticleCommentForm, ProjetCategorieForm, ProjetForm
 
 
 def avance_required(view_func):
@@ -90,13 +93,203 @@ def a_propos_publications(request):
 def mes_projets(request):
     """
     Page des projets personnels.
-     :param request : La requ\u00eate du client.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "mes_projets")
+    niveau = get_user_level(request.user)
+    categories = ProjetCategorie.objects.prefetch_related(
+        models.Prefetch("projets", queryset=Projet.objects.filter(
+            actif=True, visibilite__lte=niveau))
+    )
     return render(request, "www/mes_projets.html", {
         **settings.base_info, **data,
+        "categories": categories,
     })
+
+
+def mes_projets_categorie(request, slug):
+    """
+    Page des projets d'une catégorie.
+     :param request : La requête du client.
+     :param slug : Le slug de la catégorie.
+     :return : La page rendue.
+    """
+    categorie = get_object_or_404(ProjetCategorie, slug=slug)
+    data = get_page_data(request.user, "mes_projets")
+    niveau = get_user_level(request.user)
+    projets = categorie.projets.filter(actif=True, visibilite__lte=niveau)
+    return render(request, "www/mes_projets_categorie.html", {
+        **settings.base_info, **data,
+        "subpage": categorie.nom,
+        "categorie": categorie,
+        "projets": projets,
+    })
+
+
+def mes_projets_detail(request, slug):
+    """
+    Page détaillée d'un projet.
+     :param request : La requête du client.
+     :param slug : Le slug du projet.
+     :return : La page rendue.
+    """
+    niveau = get_user_level(request.user)
+    projet = get_object_or_404(Projet, slug=slug, actif=True, visibilite__lte=niveau)
+    data = get_page_data(request.user, "mes_projets")
+    return render(request, "www/mes_projets_detail.html", {
+        **settings.base_info, **data,
+        "subpage": projet.categorie.nom,
+        "projet": projet,
+    })
+
+
+@admin_required
+def admin_projets(request):
+    """
+    Page d'administration des projets.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "administration")
+    projets = Projet.objects.select_related("categorie")
+    categories = ProjetCategorie.objects.all()
+    return render(request, "www/admin_projets.html", {
+        **settings.base_info, **data,
+        "subpage": "Projets",
+        "projets": projets,
+        "categories": categories,
+    })
+
+
+@admin_required
+def admin_projet_ajouter(request):
+    """
+    Formulaire d'ajout de projet.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ProjetForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Projet ajouté avec succès.")
+            return redirect("admin_projets")
+    else:
+        form = ProjetForm()
+    return render(request, "www/admin_projet_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Projets",
+        "form": form,
+        "form_title": "Ajouter un projet",
+    })
+
+
+@admin_required
+def admin_projet_modifier(request, projet_id):
+    """
+    Formulaire de modification de projet.
+     :param request : La requête du client.
+     :param projet_id : L'identifiant du projet.
+     :return : La page rendue ou redirection.
+    """
+    projet = get_object_or_404(Projet, pk=projet_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ProjetForm(request.POST, request.FILES, instance=projet)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Projet « {projet.titre} » modifié avec succès.")
+            return redirect("admin_projets")
+    else:
+        form = ProjetForm(instance=projet)
+    return render(request, "www/admin_projet_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Projets",
+        "form": form,
+        "form_title": f"Modifier : {projet.titre}",
+    })
+
+
+@admin_required
+def admin_projet_supprimer(request, projet_id):
+    """
+    Suppression d'un projet (POST uniquement).
+     :param request : La requête du client.
+     :param projet_id : L'identifiant du projet.
+     :return : Redirection vers la liste.
+    """
+    projet = get_object_or_404(Projet, pk=projet_id)
+    if request.method == "POST":
+        messages.success(request, f"Projet « {projet.titre} » supprimé.")
+        projet.delete()
+    return redirect("admin_projets")
+
+
+@admin_required
+def admin_projet_categorie_ajouter(request):
+    """
+    Formulaire d'ajout de catégorie de projet.
+     :param request : La requête du client.
+     :return : La page rendue ou redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ProjetCategorieForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Catégorie ajoutée avec succès.")
+            return redirect("admin_projets")
+    else:
+        form = ProjetCategorieForm()
+    return render(request, "www/admin_projet_categorie_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Projets",
+        "form": form,
+        "form_title": "Ajouter une catégorie",
+    })
+
+
+@admin_required
+def admin_projet_categorie_modifier(request, categorie_id):
+    """
+    Formulaire de modification de catégorie de projet.
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : La page rendue ou redirection.
+    """
+    categorie = get_object_or_404(ProjetCategorie, pk=categorie_id)
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        form = ProjetCategorieForm(request.POST, instance=categorie)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Catégorie « {categorie.nom} » modifiée avec succès.")
+            return redirect("admin_projets")
+    else:
+        form = ProjetCategorieForm(instance=categorie)
+    return render(request, "www/admin_projet_categorie_form.html", {
+        **settings.base_info, **data,
+        "subpage": "Projets",
+        "form": form,
+        "form_title": f"Modifier : {categorie.nom}",
+    })
+
+
+@admin_required
+def admin_projet_categorie_supprimer(request, categorie_id):
+    """
+    Suppression d'une catégorie de projet (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    categorie = get_object_or_404(ProjetCategorie, pk=categorie_id)
+    if request.method == "POST":
+        messages.success(request, f"Catégorie « {categorie.nom} » supprimée.")
+        categorie.delete()
+    return redirect("admin_projets")
 
 
 @avance_required
