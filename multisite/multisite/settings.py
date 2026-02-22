@@ -158,7 +158,17 @@ LOGOUT_REDIRECT_URL = '/'
 MARKDOWNX_MARKDOWN_EXTENSIONS = [
     'markdown.extensions.extra',
     'markdown.extensions.codehilite',
+    'pymdownx.tasklist',
 ]
+MARKDOWNX_MARKDOWN_EXTENSION_CONFIGS = {
+    'markdown.extensions.codehilite': {
+        'css_class': 'codehilite',
+        'guess_lang': True,
+    },
+    'pymdownx.tasklist': {
+        'custom_checkbox': True,
+    },
+}
 
 # Celery
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")

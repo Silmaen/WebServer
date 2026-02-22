@@ -17,7 +17,7 @@
             {% endif %}
         </div>
     </div>
-    <div class="ArticleContent">
+    <div class="ArticleContent markdown-body">
         {{ article.contenu_md|safe }}
     </div>
     <div class="ArticleFooter">
@@ -35,7 +35,7 @@
                     <div class="c_author mdi mdi-account-circle">{{cc.auteur}}</div>
                     <div class="c_date mdi mdi-clock-fast">{{cc.date}}</div>
                 </div>
-                <div class="c_body">{{cc.contenu_md| safe}}</div>
+                <div class="c_body markdown-body">{{cc.contenu_md| safe}}</div>
             </div>
         {% endfor%}
     </div>

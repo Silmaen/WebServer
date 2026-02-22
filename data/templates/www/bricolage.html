@@ -8,7 +8,7 @@
             <a class="bricolage-card-title" href="{% url 'bricolage_detail' article.slug %}">{{ article.titre }}</a>
             <span class="bricolage-card-date"><span class="mdi mdi-calendar"></span> {{ article.date }}</span>
         </div>
-        <div class="bricolage-card-body">
+        <div class="bricolage-card-body markdown-body">
             {{ article.resume_md|safe }}
         </div>
         <div class="bricolage-card-footer">

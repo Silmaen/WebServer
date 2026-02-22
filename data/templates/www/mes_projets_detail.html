@@ -14,7 +14,7 @@
             <a href="{% url 'mes_projets_categorie' projet.categorie.slug %}">{{ projet.categorie.nom }}</a>
             <span class="projet-detail-date"><span class="mdi mdi-calendar"></span> {{ projet.date_creation }}</span>
         </div>
-        <div class="projet-detail-content">
+        <div class="projet-detail-content markdown-body">
             {{ projet.contenu_md|safe }}
         </div>
     </div>
