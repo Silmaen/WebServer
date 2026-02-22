@@ -835,23 +835,44 @@ class MachineModelTest(TestCase):
             nom="NAS", categorie=self.categorie)
         self.assertEqual(str(machine), "NAS")
 
-    def test_machine_ip_statique_valide(self):
+    def test_machine_ip_statique_valide_reseau_principal(self):
         """Vérifie qu'une IP statique dans 10.10.0.0/16 est acceptée."""
         machine = Machine(
             nom="valide.home.lan", categorie=self.categorie,
             ip_statique="10.10.5.42")
-        machine.full_clean()  # ne doit pas lever d'erreur
+        machine.full_clean()
+
+    def test_machine_ip_statique_valide_reseau_guest(self):
+        """Vérifie qu'une IP statique dans 10.8.0.0/16 (guest) est acceptée."""
+        machine = Machine(
+            nom="guest.home.lan", categorie=self.categorie,
+            ip_statique="10.8.1.10")
+        machine.full_clean()
+
+    def test_machine_ip_statique_valide_reseau_iot(self):
+        """Vérifie qu'une IP statique dans 10.9.0.0/16 (IoT) est acceptée."""
+        machine = Machine(
+            nom="capteur.home.lan", categorie=self.categorie,
+            ip_statique="10.9.0.50")
+        machine.full_clean()
+
+    def test_machine_ip_statique_valide_reseau_routeur(self):
+        """Vérifie qu'une IP statique dans 10.0.0.0/24 (routeur ↔ box) est acceptée."""
+        machine = Machine(
+            nom="routeur.home.lan", categorie=self.categorie,
+            ip_statique="10.0.0.1")
+        machine.full_clean()
 
     def test_machine_ip_statique_hors_reseau(self):
-        """Vérifie qu'une IP statique hors 10.10.0.0/16 est rejetée."""
+        """Vérifie qu'une IP statique hors des réseaux locaux est rejetée."""
         machine = Machine(
             nom="invalide.home.lan", categorie=self.categorie,
             ip_statique="192.168.1.1")
         with self.assertRaises(ValidationError):
             machine.full_clean()
 
-    def test_machine_ip_statique_reseau_10_mais_hors_10_10(self):
-        """Vérifie qu'une IP statique en 10.20.x.x est rejetée."""
+    def test_machine_ip_statique_reseau_10_mais_hors_reseaux_locaux(self):
+        """Vérifie qu'une IP en 10.20.x.x (hors réseaux locaux) est rejetée."""
         machine = Machine(
             nom="invalide.home.lan", categorie=self.categorie,
             ip_statique="10.20.0.1")
@@ -1468,12 +1489,12 @@ class MachineHostnameTest(TestCase):
 
     @unittest.mock.patch("socket.gethostbyname", return_value="192.168.1.1")
     def test_resoudre_ip_hors_reseau(self, mock_dns):
-        """IP résolue hors réseau local retourne une alerte."""
+        """IP résolue hors des réseaux locaux retourne une alerte."""
         machine = Machine(
             nom="NAS", categorie=self.categorie)
         ip, alerte = machine.resoudre_ip()
         self.assertEqual(ip, "192.168.1.1")
-        self.assertIn("hors du réseau", alerte)
+        self.assertIn("hors des réseaux locaux", alerte)
 
     @unittest.mock.patch("socket.gethostbyname", return_value="10.10.0.42")
     def test_resoudre_ip_divergence_ip_statique(self, mock_dns):

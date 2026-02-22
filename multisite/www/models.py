@@ -192,7 +192,18 @@ class ServiceCategorie(models.Model):
         return self.nom
 
 
-RESEAU_LOCAL = ipaddress.ip_network("10.10.0.0/16")
+RESEAUX_LOCAUX = [
+    ipaddress.ip_network("10.10.0.0/16"),   # Réseau principal
+    ipaddress.ip_network("10.8.0.0/16"),     # Réseau guest
+    ipaddress.ip_network("10.9.0.0/16"),     # Réseau IoT
+    ipaddress.ip_network("10.0.0.0/24"),     # Réseau routeur ↔ box
+]
+
+
+def ip_dans_reseaux_locaux(ip):
+    """Vérifie si une adresse IP appartient à l'un des réseaux locaux."""
+    addr = ipaddress.ip_address(ip)
+    return any(addr in reseau for reseau in RESEAUX_LOCAUX)
 
 
 class Machine(models.Model):
@@ -249,10 +260,10 @@ class Machine(models.Model):
         except socket.gaierror:
             return None, f"Résolution DNS impossible pour {fqdn}"
 
-        # Vérifier que l'IP est dans le réseau local
+        # Vérifier que l'IP est dans un réseau local connu
         try:
-            if ipaddress.ip_address(ip_resolue) not in RESEAU_LOCAL:
-                return ip_resolue, f"L'IP résolue {ip_resolue} est hors du réseau {RESEAU_LOCAL}"
+            if not ip_dans_reseaux_locaux(ip_resolue):
+                return ip_resolue, f"L'IP résolue {ip_resolue} est hors des réseaux locaux"
         except ValueError:
             return None, f"IP résolue invalide : {ip_resolue}"
 
@@ -263,17 +274,17 @@ class Machine(models.Model):
         return ip_resolue, alerte
 
     def clean(self):
-        """Valide que l'IP statique est dans le réseau local 10.10.0.0/16."""
+        """Valide que l'IP statique est dans l'un des réseaux locaux."""
         super().clean()
         if self.ip_statique:
             try:
-                ip = ipaddress.ip_address(self.ip_statique)
+                ip = self.ip_statique
+                if not ip_dans_reseaux_locaux(ip):
+                    raise ValidationError({
+                        "ip_statique": "L'adresse doit être dans un réseau local autorisé."
+                    })
             except ValueError:
                 raise ValidationError({"ip_statique": "Adresse IP invalide."})
-            if ip not in RESEAU_LOCAL:
-                raise ValidationError({
-                    "ip_statique": f"L'adresse doit être dans le réseau {RESEAU_LOCAL}."
-                })
 
 
 class Serveur(models.Model):

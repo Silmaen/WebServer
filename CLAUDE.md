@@ -64,6 +64,8 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
 - celery[redis]>=5.4
 - python-nmap>=0.7
 - psycopg[binary]>=3.1
+- Pygments>=2.17
+- pymdown-extensions>=10.0
 
 ## Architecture
 
@@ -121,7 +123,7 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
 - `Projet` — personal project (`titre`, `slug`, `categorie` FK, `resume`, `contenu` MarkdownxField, `lien_externe`, `couleur`, `date_creation`, `actif`, `visibilite`, `ordre`) with multi-mode icon system (`mdi_icon_name`, `icone_image`, `icone_url` — only one active at a time)
 - `BricolageArticle` — DIY article (`titre`, `slug`, `contenu` MarkdownxField, `date`), with `resume_md()` truncated to 200 chars
 - `ServiceCategorie` — service/monitoring category (`nom`, `slug`, `mdi_icon_name`, `ordre`)
-- `Machine` — network machine to monitor (`nom`/hostname, `categorie` FK, `adresse_ip`, `ip_statique`, `alerte_ip`, `ports_supplementaires`, `en_ligne`, `derniere_verification`, `derniere_vue_en_ligne`, `ports_ouverts` JSON, `dernier_scan_ports`). Validates IP in `RESEAU_LOCAL` (10.10.0.0/16). Methods: `hostname_complet()`, `resoudre_ip()`, `clean()`
+- `Machine` — network machine to monitor (`nom`/hostname, `categorie` FK, `adresse_ip`, `ip_statique`, `alerte_ip`, `ports_supplementaires`, `en_ligne`, `derniere_verification`, `derniere_vue_en_ligne`, `ports_ouverts` JSON, `dernier_scan_ports`). Validates IP in `RESEAUX_LOCAUX` (10.10.0.0/16 principal, 10.8.0.0/16 guest, 10.9.0.0/16 IoT, 10.0.0.0/24 routeur↔box) via `ip_dans_reseaux_locaux()`. Methods: `hostname_complet()`, `resoudre_ip()`, `clean()`
 - `Serveur` — web service to monitor (`titre`, `categorie` FK, `description`, `url`, `hostname`, `adresse`, `port`, `en_ligne`, `reverse_proxy_ok`, `derniere_verification`, `derniere_vue_en_ligne`). Multi-mode icon system like `Projet`. Methods: `has_icone()`, `icone_html()`, `lien()`, `adresse_effective()`, `clean()`. Requires at least `url` or `(adresse|hostname)+port`
 
 `connector/models.py` defines `UserProfile` (OneToOne with `User`, auto-created via `post_save` signal) with `avatar`, `birthDate`, and `user_level`.
@@ -200,6 +202,15 @@ CELERY_BEAT_SCHEDULE = {
 MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")
 ```
 
+### Markdown Rendering
+
+Markdown is rendered via `django-markdownx` using `markdownify()` from `markdownx.utils`. Extensions configured in `MARKDOWNX_MARKDOWN_EXTENSIONS`:
+- `markdown.extensions.extra` — tables, fenced code, footnotes, abbreviations, attr_list, def_list
+- `markdown.extensions.codehilite` — syntax highlighting via Pygments (theme monokai, `guess_lang: True`)
+- `pymdownx.tasklist` — GitHub-style task lists (`- [ ]` / `- [x]`) with custom checkboxes
+
+CSS: all markdown output containers use the `.markdown-body` class (added in templates), which restores standard HTML styling (headings bold with margins, list bullets, blockquote borders, code blocks, tables). Pygments monokai theme colors are scoped under `.markdown-body .codehilite`. Task list checkboxes styled under `.markdown-body .task-list-control`.
+
 ### Key Utilities
 
 - **`www/render_utils.py`** — Page metadata, navigation structure, article filtering and pagination (10 articles/page). Navigation includes pages for accueil, à propos, mes projets, archives, bricolage (AVANCE), monitoring (ADMINISTRATEUR), administration (ADMINISTRATEUR). Admin subpages: utilisateurs, projets, bricolages, services
@@ -223,7 +234,7 @@ MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")
 - `AdminBricolagesAccessTest` — bricolage admin CRUD access control and operations (add, modify, delete)
 - `MonitoringAccessTest` — monitoring page requires administrateur level (anonymous→302, regular→403, avance→403, admin→200)
 - `AdminServicesAccessTest` — services admin CRUD for machines, servers and categories
-- `MachineModelTest` — Machine model: __str__, IP validation in 10.10.0.0/16
+- `MachineModelTest` — Machine model: __str__, IP validation across all local networks (principal, guest, IoT, routeur)
 - `ServeurModelTest` — Serveur model: icons, lien(), clean(), reverse_proxy, icon validation
 - `MachineDetailAccessTest` — machine detail page and SSE endpoint access control
 - `ScannerPingTest` — SSE ping generator: online/offline states
