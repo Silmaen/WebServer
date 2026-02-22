@@ -16,6 +16,8 @@
         </button>
         {% endfor %}
     </div>
+    <div class="icon-picker-dynamic-grid" style="display: none;"></div>
+    <div class="icon-picker-status"></div>
     <input type="hidden" name="{{ widget.name }}" value="{{ widget.value|default:'' }}"{% include "django/forms/widgets/attrs.html" %}>
 </div>
 <script>
@@ -25,35 +27,197 @@
     var search = picker.querySelector(".icon-picker-search");
     var preview = picker.querySelector(".icon-picker-preview-icon");
     var previewName = picker.querySelector(".icon-picker-preview-name");
-    var items = picker.querySelectorAll(".icon-picker-item");
+    var curatedGrid = picker.querySelector(".icon-picker-grid");
+    var dynamicGrid = picker.querySelector(".icon-picker-dynamic-grid");
+    var statusEl = picker.querySelector(".icon-picker-status");
+    var curatedItems = picker.querySelectorAll(".icon-picker-item");
     var clearBtn = picker.querySelector(".icon-picker-clear");
 
-    function selectIcon(iconName, label) {
+    var CDN_URL = "https://cdn.jsdelivr.net/npm/@mdi/svg@7.4.47/meta.json";
+    var MAX_RESULTS = 60;
+    var debounceTimer = null;
+
+    function selectIcon(iconName) {
         hidden.value = iconName;
         preview.className = "icon-picker-preview-icon mdi" + (iconName ? " mdi-" + iconName : "");
         previewName.textContent = iconName || "Aucune icône";
-        for (var i = 0; i < items.length; i++) {
-            items[i].classList.toggle("icon-picker-selected", items[i].getAttribute("data-icon") === iconName);
+        for (var i = 0; i < curatedItems.length; i++) {
+            curatedItems[i].classList.toggle("icon-picker-selected", curatedItems[i].getAttribute("data-icon") === iconName);
+        }
+        var dynBtns = dynamicGrid.querySelectorAll(".icon-picker-item");
+        for (var i = 0; i < dynBtns.length; i++) {
+            dynBtns[i].classList.toggle("icon-picker-selected", dynBtns[i].getAttribute("data-icon") === iconName);
         }
     }
 
-    for (var i = 0; i < items.length; i++) {
-        items[i].addEventListener("click", function() {
-            selectIcon(this.getAttribute("data-icon"), this.getAttribute("data-label"));
+    for (var i = 0; i < curatedItems.length; i++) {
+        curatedItems[i].addEventListener("click", function() {
+            selectIcon(this.getAttribute("data-icon"));
         });
     }
 
     clearBtn.addEventListener("click", function() {
-        selectIcon("", "");
+        selectIcon("");
     });
 
-    search.addEventListener("input", function() {
-        var q = this.value.toLowerCase();
-        for (var i = 0; i < items.length; i++) {
-            var name = items[i].getAttribute("data-icon").toLowerCase();
-            var label = items[i].getAttribute("data-label").toLowerCase();
-            items[i].style.display = (name.indexOf(q) !== -1 || label.indexOf(q) !== -1) ? "" : "none";
+    /* --- Cache partagé pour le meta.json MDI --- */
+    function ensureCache() {
+        if (!window._mdiIconPickerCache) {
+            window._mdiIconPickerCache = { promise: null, icons: null, error: false };
         }
+        var cache = window._mdiIconPickerCache;
+        if (!cache.promise) {
+            cache.promise = fetch(CDN_URL)
+                .then(function(resp) {
+                    if (!resp.ok) throw new Error("HTTP " + resp.status);
+                    return resp.json();
+                })
+                .then(function(data) {
+                    cache.icons = [];
+                    for (var i = 0; i < data.length; i++) {
+                        var icon = data[i];
+                        if (icon.deprecated) continue;
+                        var parts = [icon.name];
+                        if (icon.aliases) {
+                            for (var j = 0; j < icon.aliases.length; j++) parts.push(icon.aliases[j]);
+                        }
+                        if (icon.tags) {
+                            for (var j = 0; j < icon.tags.length; j++) parts.push(icon.tags[j]);
+                        }
+                        cache.icons.push({
+                            name: icon.name,
+                            searchText: parts.join(" ").toLowerCase()
+                        });
+                    }
+                    return cache.icons;
+                })
+                .catch(function(err) {
+                    cache.error = true;
+                    throw err;
+                });
+        }
+        return cache;
+    }
+
+    function setStatus(text, cls) {
+        statusEl.textContent = text;
+        statusEl.className = "icon-picker-status" + (cls ? " " + cls : "");
+    }
+
+    function setStatusLoading() {
+        statusEl.innerHTML = '<span class="mdi mdi-loading mdi-spin"></span> Chargement de la banque d\u2019icônes\u2026';
+        statusEl.className = "icon-picker-status icon-picker-status-loading";
+    }
+
+    function showCurated() {
+        curatedGrid.style.display = "";
+        dynamicGrid.style.display = "none";
+        setStatus("", "");
+    }
+
+    function showDynamic() {
+        curatedGrid.style.display = "none";
+        dynamicGrid.style.display = "";
+    }
+
+    function filterCurated(q) {
+        for (var i = 0; i < curatedItems.length; i++) {
+            var name = curatedItems[i].getAttribute("data-icon").toLowerCase();
+            var label = curatedItems[i].getAttribute("data-label").toLowerCase();
+            curatedItems[i].style.display = (name.indexOf(q) !== -1 || label.indexOf(q) !== -1) ? "" : "none";
+        }
+    }
+
+    function renderDynamic(icons, q) {
+        var frag = document.createDocumentFragment();
+        var count = 0;
+        var truncated = false;
+        var currentVal = hidden.value;
+
+        for (var i = 0; i < icons.length; i++) {
+            if (icons[i].searchText.indexOf(q) === -1) continue;
+            count++;
+            if (count > MAX_RESULTS) {
+                truncated = true;
+                continue;
+            }
+            var btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "icon-picker-item" + (icons[i].name === currentVal ? " icon-picker-selected" : "");
+            btn.setAttribute("data-icon", icons[i].name);
+            btn.title = icons[i].name;
+            var span = document.createElement("span");
+            span.className = "mdi mdi-" + icons[i].name;
+            btn.appendChild(span);
+            btn.addEventListener("click", function() {
+                selectIcon(this.getAttribute("data-icon"));
+            });
+            frag.appendChild(btn);
+        }
+
+        dynamicGrid.innerHTML = "";
+        dynamicGrid.appendChild(frag);
+        showDynamic();
+
+        if (count === 0) {
+            setStatus("Aucune icône trouvée.", "icon-picker-status-empty");
+        } else if (truncated) {
+            setStatus(count + " résultats — " + MAX_RESULTS + " premiers affichés. Précisez votre recherche.", "icon-picker-status-truncated");
+        } else {
+            setStatus(count + " résultat" + (count > 1 ? "s" : "") + ".", "");
+        }
+    }
+
+    function doSearch(q) {
+        if (!q) {
+            showCurated();
+            return;
+        }
+
+        var cache = ensureCache();
+
+        if (cache.icons) {
+            renderDynamic(cache.icons, q);
+            return;
+        }
+
+        if (cache.error) {
+            showCurated();
+            filterCurated(q);
+            setStatus("Banque d\u2019icônes indisponible — recherche dans la liste restreinte.", "icon-picker-status-error");
+            return;
+        }
+
+        showDynamic();
+        dynamicGrid.innerHTML = "";
+        setStatusLoading();
+
+        cache.promise.then(function(icons) {
+            var currentQ = search.value.toLowerCase().trim();
+            if (currentQ === q) {
+                renderDynamic(icons, q);
+            }
+        }).catch(function() {
+            var currentQ = search.value.toLowerCase().trim();
+            if (currentQ === q) {
+                showCurated();
+                filterCurated(q);
+                setStatus("Banque d\u2019icônes indisponible — recherche dans la liste restreinte.", "icon-picker-status-error");
+            }
+        });
+    }
+
+    search.addEventListener("input", function() {
+        clearTimeout(debounceTimer);
+        var q = search.value.toLowerCase().trim();
+        if (!q) {
+            showCurated();
+            filterCurated("");
+            return;
+        }
+        debounceTimer = setTimeout(function() {
+            doSearch(q);
+        }, 250);
     });
 })();
 </script>
