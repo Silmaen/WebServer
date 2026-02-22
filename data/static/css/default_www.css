@@ -1100,6 +1100,34 @@ select:focus {
 .admin-color-sample {
 	color: var(--sample-color);
 }
+.admin-ordre-cell {
+	display: flex;
+	gap: 2px;
+	align-items: center;
+}
+.admin-ordre-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: var(--bg-button);
+	color: var(--text-secondary);
+	font-size: 1.1em;
+	cursor: pointer;
+	transition: background .2s, color .2s;
+}
+.admin-ordre-btn:hover:not(:disabled) {
+	background: var(--bg-button-hover);
+	color: var(--blue);
+}
+.admin-ordre-btn:disabled {
+	opacity: 0.3;
+	cursor: default;
+}
 
 /* ========== Sélecteur d'icône ========== */
 .icon-picker {

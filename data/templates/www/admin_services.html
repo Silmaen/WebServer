@@ -108,7 +108,16 @@
                     <td>{{ cat.nom }}</td>
                     <td>{{ cat.slug }}</td>
                     <td>{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
-                    <td>{{ cat.ordre }}</td>
+                    <td class="admin-ordre-cell">
+                        <form method="post" action="{% url 'admin_service_categorie_monter' cat.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="admin-ordre-btn" title="Monter"{% if forloop.first %} disabled{% endif %}><span class="mdi mdi-arrow-up"></span></button>
+                        </form>
+                        <form method="post" action="{% url 'admin_service_categorie_descendre' cat.pk %}" class="admin-inline-form">
+                            {% csrf_token %}
+                            <button type="submit" class="admin-ordre-btn" title="Descendre"{% if forloop.last %} disabled{% endif %}><span class="mdi mdi-arrow-down"></span></button>
+                        </form>
+                    </td>
                     <td class="admin-actions">
                         <a class="userbtn" href="{% url 'admin_service_categorie_modifier' cat.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
                         <form method="post" action="{% url 'admin_service_categorie_supprimer' cat.pk %}" class="admin-inline-form">

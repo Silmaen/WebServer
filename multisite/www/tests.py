@@ -318,7 +318,6 @@ class AdminProjetsAccessTest(TestCase):
             "date_creation": "2025-06-01",
             "actif": True,
             "visibilite": -1,
-            "ordre": 1,
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Projet.objects.filter(slug="nouveau-projet").exists())
@@ -337,7 +336,6 @@ class AdminProjetsAccessTest(TestCase):
         response = self.client.post(reverse("admin_projet_categorie_ajouter"), {
             "nom": "Hardware",
             "mdi_icon_name": "",
-            "ordre": 1,
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(ProjetCategorie.objects.filter(slug="hardware").exists())
@@ -348,7 +346,6 @@ class AdminProjetsAccessTest(TestCase):
             reverse("admin_projet_categorie_modifier", args=[self.categorie.pk]), {
                 "nom": "Logiciel modifié",
                 "mdi_icon_name": "",
-                "ordre": 1,
             })
         self.assertEqual(response.status_code, 302)
         self.categorie.refresh_from_db()
@@ -360,6 +357,133 @@ class AdminProjetsAccessTest(TestCase):
         response = self.client.post(reverse("admin_projet_categorie_supprimer", args=[cat.pk]))
         self.assertEqual(response.status_code, 302)
         self.assertFalse(ProjetCategorie.objects.filter(pk=cat.pk).exists())
+
+
+class OrdreTest(TestCase):
+    """Tests des boutons monter/descendre pour l'ordre des éléments."""
+
+    def setUp(self):
+        self.admin = User.objects.create_user(username="adminuser", password="adminpass")
+        self.admin.userprofile.user_level = ADMINISTRATEUR
+        self.admin.userprofile.save()
+        self.client = Client()
+        self.client.login(username="adminuser", password="adminpass")
+        self.cat_projet = ProjetCategorie.objects.create(
+            nom="Cat A", slug="cat-a", ordre=1)
+        self.cat_projet_b = ProjetCategorie.objects.create(
+            nom="Cat B", slug="cat-b", ordre=2)
+
+    def test_projet_monter(self):
+        """Monter un projet échange l'ordre avec le précédent."""
+        p1 = Projet.objects.create(
+            titre="P1", slug="p1", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=1)
+        p2 = Projet.objects.create(
+            titre="P2", slug="p2", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=2)
+        response = self.client.post(reverse("admin_projet_monter", args=[p2.pk]))
+        self.assertEqual(response.status_code, 302)
+        p1.refresh_from_db()
+        p2.refresh_from_db()
+        self.assertEqual(p2.ordre, 1)
+        self.assertEqual(p1.ordre, 2)
+
+    def test_projet_descendre(self):
+        """Descendre un projet échange l'ordre avec le suivant."""
+        p1 = Projet.objects.create(
+            titre="P1", slug="p1", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=1)
+        p2 = Projet.objects.create(
+            titre="P2", slug="p2", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=2)
+        response = self.client.post(reverse("admin_projet_descendre", args=[p1.pk]))
+        self.assertEqual(response.status_code, 302)
+        p1.refresh_from_db()
+        p2.refresh_from_db()
+        self.assertEqual(p1.ordre, 2)
+        self.assertEqual(p2.ordre, 1)
+
+    def test_projet_monter_premier_ne_change_rien(self):
+        """Monter le premier projet ne change rien."""
+        p1 = Projet.objects.create(
+            titre="P1", slug="p1", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=1)
+        response = self.client.post(reverse("admin_projet_monter", args=[p1.pk]))
+        self.assertEqual(response.status_code, 302)
+        p1.refresh_from_db()
+        self.assertEqual(p1.ordre, 1)
+
+    def test_projet_categorie_monter(self):
+        """Monter une catégorie de projet échange l'ordre."""
+        response = self.client.post(
+            reverse("admin_projet_categorie_monter", args=[self.cat_projet_b.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.cat_projet.refresh_from_db()
+        self.cat_projet_b.refresh_from_db()
+        self.assertEqual(self.cat_projet_b.ordre, 1)
+        self.assertEqual(self.cat_projet.ordre, 2)
+
+    def test_projet_categorie_descendre(self):
+        """Descendre une catégorie de projet échange l'ordre."""
+        response = self.client.post(
+            reverse("admin_projet_categorie_descendre", args=[self.cat_projet.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.cat_projet.refresh_from_db()
+        self.cat_projet_b.refresh_from_db()
+        self.assertEqual(self.cat_projet.ordre, 2)
+        self.assertEqual(self.cat_projet_b.ordre, 1)
+
+    def test_service_categorie_monter(self):
+        """Monter une catégorie de service échange l'ordre."""
+        sc1 = ServiceCategorie.objects.create(
+            nom="Svc A", slug="svc-a", ordre=1)
+        sc2 = ServiceCategorie.objects.create(
+            nom="Svc B", slug="svc-b", ordre=2)
+        response = self.client.post(
+            reverse("admin_service_categorie_monter", args=[sc2.pk]))
+        self.assertEqual(response.status_code, 302)
+        sc1.refresh_from_db()
+        sc2.refresh_from_db()
+        self.assertEqual(sc2.ordre, 1)
+        self.assertEqual(sc1.ordre, 2)
+
+    def test_service_categorie_descendre(self):
+        """Descendre une catégorie de service échange l'ordre."""
+        sc1 = ServiceCategorie.objects.create(
+            nom="Svc A", slug="svc-a", ordre=1)
+        sc2 = ServiceCategorie.objects.create(
+            nom="Svc B", slug="svc-b", ordre=2)
+        response = self.client.post(
+            reverse("admin_service_categorie_descendre", args=[sc1.pk]))
+        self.assertEqual(response.status_code, 302)
+        sc1.refresh_from_db()
+        sc2.refresh_from_db()
+        self.assertEqual(sc1.ordre, 2)
+        self.assertEqual(sc2.ordre, 1)
+
+    def test_ordre_anonymous_redirects(self):
+        """Un anonyme est redirigé vers le login."""
+        self.client.logout()
+        p1 = Projet.objects.create(
+            titre="P1", slug="p1", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=1)
+        response = self.client.post(reverse("admin_projet_monter", args=[p1.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("login", response.url)
+
+    def test_ordre_get_ne_modifie_pas(self):
+        """Un GET ne modifie pas l'ordre."""
+        p1 = Projet.objects.create(
+            titre="P1", slug="p1", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=1)
+        p2 = Projet.objects.create(
+            titre="P2", slug="p2", categorie=self.cat_projet,
+            resume="R", date_creation=datetime.date(2025, 1, 1), ordre=2)
+        self.client.get(reverse("admin_projet_monter", args=[p2.pk]))
+        p1.refresh_from_db()
+        p2.refresh_from_db()
+        self.assertEqual(p1.ordre, 1)
+        self.assertEqual(p2.ordre, 2)
 
 
 class ProjetIconeTest(TestCase):
@@ -428,7 +552,6 @@ class ProjetIconeTest(TestCase):
             "date_creation": "2025-06-01",
             "actif": True,
             "visibilite": -1,
-            "ordre": 1,
         })
         self.assertEqual(response.status_code, 302)
         projet = Projet.objects.get(slug="projet-url")
@@ -452,7 +575,6 @@ class ProjetIconeTest(TestCase):
             "date_creation": "2025-06-01",
             "actif": True,
             "visibilite": -1,
-            "ordre": 1,
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(Projet.objects.filter(slug="projet-double").exists())
@@ -788,7 +910,6 @@ class AdminServicesAccessTest(TestCase):
         response = self.client.post(reverse("admin_service_categorie_ajouter"), {
             "nom": "Monitoring",
             "mdi_icon_name": "",
-            "ordre": 1,
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(ServiceCategorie.objects.filter(slug="monitoring").exists())
@@ -800,7 +921,6 @@ class AdminServicesAccessTest(TestCase):
             reverse("admin_service_categorie_modifier", args=[self.categorie.pk]), {
                 "nom": "Infra modifiée",
                 "mdi_icon_name": "",
-                "ordre": 1,
             })
         self.assertEqual(response.status_code, 302)
         self.categorie.refresh_from_db()

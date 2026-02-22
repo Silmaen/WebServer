@@ -840,6 +840,102 @@ def admin_service_categorie_supprimer(request, categorie_id):
     return redirect("admin_services")
 
 
+def _deplacer_ordre(model_class, pk, direction):
+    """
+    Échange l'ordre d'un objet avec son voisin.
+     :param model_class : Le modèle (doit avoir un champ 'ordre').
+     :param pk : L'identifiant de l'objet à déplacer.
+     :param direction : 'monter' ou 'descendre'.
+    """
+    objet = get_object_or_404(model_class, pk=pk)
+    if direction == "monter":
+        voisin = model_class.objects.filter(ordre__lt=objet.ordre).order_by("-ordre").first()
+    else:
+        voisin = model_class.objects.filter(ordre__gt=objet.ordre).order_by("ordre").first()
+    if voisin:
+        objet.ordre, voisin.ordre = voisin.ordre, objet.ordre
+        objet.save()
+        voisin.save()
+
+
+@admin_required
+def admin_projet_monter(request, projet_id):
+    """
+    Monte un projet d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param projet_id : L'identifiant du projet.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(Projet, projet_id, "monter")
+    return redirect("admin_projets")
+
+
+@admin_required
+def admin_projet_descendre(request, projet_id):
+    """
+    Descend un projet d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param projet_id : L'identifiant du projet.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(Projet, projet_id, "descendre")
+    return redirect("admin_projets")
+
+
+@admin_required
+def admin_projet_categorie_monter(request, categorie_id):
+    """
+    Monte une catégorie de projet d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(ProjetCategorie, categorie_id, "monter")
+    return redirect("admin_projets")
+
+
+@admin_required
+def admin_projet_categorie_descendre(request, categorie_id):
+    """
+    Descend une catégorie de projet d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(ProjetCategorie, categorie_id, "descendre")
+    return redirect("admin_projets")
+
+
+@admin_required
+def admin_service_categorie_monter(request, categorie_id):
+    """
+    Monte une catégorie de service d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(ServiceCategorie, categorie_id, "monter")
+    return redirect("admin_services")
+
+
+@admin_required
+def admin_service_categorie_descendre(request, categorie_id):
+    """
+    Descend une catégorie de service d'un cran dans l'ordre (POST uniquement).
+     :param request : La requête du client.
+     :param categorie_id : L'identifiant de la catégorie.
+     :return : Redirection vers la liste.
+    """
+    if request.method == "POST":
+        _deplacer_ordre(ServiceCategorie, categorie_id, "descendre")
+    return redirect("admin_services")
+
+
 @avance_required
 def research(request):
     """

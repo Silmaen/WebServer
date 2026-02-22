@@ -26,23 +26,19 @@ class ProjetCategorieForm(forms.ModelForm):
     class Meta:
         """Meta informations"""
         model = ProjetCategorie
-        exclude = ("slug",)
+        exclude = ("slug", "ordre")
         widgets = {
             "mdi_icon_name": MdiIconPickerWidget(),
         }
 
-    def __init__(self, *args, **kwargs):
-        """Pré-remplit l'ordre pour les nouvelles catégories."""
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk:
-            max_ordre = ProjetCategorie.objects.aggregate(m=Max("ordre"))["m"]
-            self.fields["ordre"].initial = (max_ordre or 0) + 1
-
     def save(self, commit=True):
-        """Auto-génère le slug à la création."""
+        """Auto-génère le slug et l'ordre à la création."""
         instance = super().save(commit=False)
         if not instance.slug:
             instance.slug = slugify(instance.nom)
+        if not instance.pk:
+            max_ordre = ProjetCategorie.objects.aggregate(m=Max("ordre"))["m"]
+            instance.ordre = (max_ordre or 0) + 1
         if commit:
             instance.save()
         return instance
@@ -53,7 +49,7 @@ class ProjetForm(forms.ModelForm):
     class Meta:
         """Meta informations"""
         model = Projet
-        exclude = ("slug",)
+        exclude = ("slug", "ordre")
         widgets = {
             "mdi_icon_name": MdiIconPickerWidget(),
             "couleur": ColorPickerWidget(),
@@ -61,13 +57,6 @@ class ProjetForm(forms.ModelForm):
             "icone_image": django_forms.ClearableFileInput(attrs={"accept": "image/*"}),
             "icone_url": django_forms.URLInput(),
         }
-
-    def __init__(self, *args, **kwargs):
-        """Pré-remplit l'ordre pour les nouveaux projets."""
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk:
-            max_ordre = Projet.objects.aggregate(m=Max("ordre"))["m"]
-            self.fields["ordre"].initial = (max_ordre or 0) + 1
 
     def clean(self):
         """Valide qu'un seul mode d'icône est actif à la fois."""
@@ -87,10 +76,13 @@ class ProjetForm(forms.ModelForm):
         return cleaned
 
     def save(self, commit=True):
-        """Auto-génère le slug et nettoie les champs icône inactifs."""
+        """Auto-génère le slug, l'ordre et nettoie les champs icône inactifs."""
         instance = super().save(commit=False)
         if not instance.slug:
             instance.slug = slugify(instance.titre)
+        if not instance.pk:
+            max_ordre = Projet.objects.aggregate(m=Max("ordre"))["m"]
+            instance.ordre = (max_ordre or 0) + 1
         # Nettoyage : un seul mode d'icône actif
         if instance.mdi_icon_name:
             instance.icone_image = ""
@@ -111,23 +103,19 @@ class ServiceCategorieForm(forms.ModelForm):
     class Meta:
         """Meta informations"""
         model = ServiceCategorie
-        exclude = ("slug",)
+        exclude = ("slug", "ordre")
         widgets = {
             "mdi_icon_name": MdiIconPickerWidget(),
         }
 
-    def __init__(self, *args, **kwargs):
-        """Pré-remplit l'ordre pour les nouvelles catégories."""
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk:
-            max_ordre = ServiceCategorie.objects.aggregate(m=Max("ordre"))["m"]
-            self.fields["ordre"].initial = (max_ordre or 0) + 1
-
     def save(self, commit=True):
-        """Auto-génère le slug à la création."""
+        """Auto-génère le slug et l'ordre à la création."""
         instance = super().save(commit=False)
         if not instance.slug:
             instance.slug = slugify(instance.nom)
+        if not instance.pk:
+            max_ordre = ServiceCategorie.objects.aggregate(m=Max("ordre"))["m"]
+            instance.ordre = (max_ordre or 0) + 1
         if commit:
             instance.save()
         return instance

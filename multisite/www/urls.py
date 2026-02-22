@@ -12,8 +12,10 @@ from .views import (
     monitoring_serveur_detail, serveur_check_sse,
     administration, admin_users,
     admin_projets, admin_projet_ajouter, admin_projet_modifier, admin_projet_supprimer,
+    admin_projet_monter, admin_projet_descendre,
     admin_projet_categorie_ajouter, admin_projet_categorie_modifier,
     admin_projet_categorie_supprimer,
+    admin_projet_categorie_monter, admin_projet_categorie_descendre,
     admin_bricolages, admin_bricolage_ajouter, admin_bricolage_modifier,
     admin_bricolage_supprimer,
     admin_services,
@@ -21,6 +23,7 @@ from .views import (
     admin_serveur_ajouter, admin_serveur_modifier, admin_serveur_supprimer,
     admin_service_categorie_ajouter, admin_service_categorie_modifier,
     admin_service_categorie_supprimer,
+    admin_service_categorie_monter, admin_service_categorie_descendre,
 )
 
 
@@ -51,9 +54,13 @@ urlpatterns = [
     path('administration/projets/ajouter/', admin_projet_ajouter, name='admin_projet_ajouter'),
     path('administration/projets/modifier/<int:projet_id>/', admin_projet_modifier, name='admin_projet_modifier'),
     path('administration/projets/supprimer/<int:projet_id>/', admin_projet_supprimer, name='admin_projet_supprimer'),
+    path('administration/projets/monter/<int:projet_id>/', admin_projet_monter, name='admin_projet_monter'),
+    path('administration/projets/descendre/<int:projet_id>/', admin_projet_descendre, name='admin_projet_descendre'),
     path('administration/projets/categories/ajouter/', admin_projet_categorie_ajouter, name='admin_projet_categorie_ajouter'),
     path('administration/projets/categories/modifier/<int:categorie_id>/', admin_projet_categorie_modifier, name='admin_projet_categorie_modifier'),
     path('administration/projets/categories/supprimer/<int:categorie_id>/', admin_projet_categorie_supprimer, name='admin_projet_categorie_supprimer'),
+    path('administration/projets/categories/monter/<int:categorie_id>/', admin_projet_categorie_monter, name='admin_projet_categorie_monter'),
+    path('administration/projets/categories/descendre/<int:categorie_id>/', admin_projet_categorie_descendre, name='admin_projet_categorie_descendre'),
     path('administration/bricolages/', admin_bricolages, name='admin_bricolages'),
     path('administration/bricolages/ajouter/', admin_bricolage_ajouter, name='admin_bricolage_ajouter'),
     path('administration/bricolages/modifier/<int:article_id>/', admin_bricolage_modifier, name='admin_bricolage_modifier'),
@@ -68,4 +75,6 @@ urlpatterns = [
     path('administration/services/categories/ajouter/', admin_service_categorie_ajouter, name='admin_service_categorie_ajouter'),
     path('administration/services/categories/modifier/<int:categorie_id>/', admin_service_categorie_modifier, name='admin_service_categorie_modifier'),
     path('administration/services/categories/supprimer/<int:categorie_id>/', admin_service_categorie_supprimer, name='admin_service_categorie_supprimer'),
+    path('administration/services/categories/monter/<int:categorie_id>/', admin_service_categorie_monter, name='admin_service_categorie_monter'),
+    path('administration/services/categories/descendre/<int:categorie_id>/', admin_service_categorie_descendre, name='admin_service_categorie_descendre'),
 ] + static(main_settings.MEDIA_URL, document_root=main_settings.MEDIA_ROOT)
