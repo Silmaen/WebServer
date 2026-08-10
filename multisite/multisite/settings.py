@@ -302,6 +302,11 @@ OIDC_RENEW_ID_TOKEN_EXPIRY_SECONDS = 900
 OIDC_REDIRECT_ALLOWED_HOSTS = os.environ.get("OIDC_REDIRECT_ALLOWED_HOSTS", "").split(",")
 OIDC_REDIRECT_URL = os.environ.get("OIDC_REDIRECT_URL", "")
 
+# Signing out ends the authentik session as well, not just the local one. See
+# apps/core/sso.py: without this, logout drops the Django session and the next
+# "Sign in" is answered instantly from the SSO session still open behind it.
+OIDC_OP_LOGOUT_URL_METHOD = "apps.core.sso.oidc_logout_url"
+
 # How long per-device check results are kept.
 MONITORING_RESULT_RETENTION_DAYS = int(os.environ.get("MONITORING_RESULT_RETENTION_DAYS", "30"))
 

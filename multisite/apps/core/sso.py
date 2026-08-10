@@ -23,7 +23,7 @@ import logging
 
 from django.conf import settings
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import NoReverseMatch, reverse
 from mozilla_django_oidc.views import OIDCAuthenticationRequestView
 
 logger = logging.getLogger("apps")
@@ -99,6 +99,17 @@ class SilentSSOMiddleware:
 
         response = self.get_response(request)
 
+        # Signing out has to also stop the silent attempt, or logout does not exist:
+        # the Django session is cleared, the authentik one is not, and the next page
+        # load logs the user straight back in. That is what happened -- an account
+        # nobody could leave, on the monitoring page, with Django admin attached.
+        #
+        # Checked on the *request* path, so it covers the POST that performs the
+        # logout, before any redirect.
+        if self._is_logout(request):
+            response.delete_cookie(HINT_COOKIE)
+            return response
+
         # Set the hint on the way out rather than from a `user_logged_in` signal: a
         # signal has no response to attach a cookie to, and doing it here catches both
         # the local form and the OIDC callback with one rule.
@@ -106,6 +117,17 @@ class SilentSSOMiddleware:
         if user is not None and user.is_authenticated and request.COOKIES.get(HINT_COOKIE) != "1":
             remember_browser(response)
         return response
+
+    @staticmethod
+    def _is_logout(request):
+        """Is this request the one that signs the user out?"""
+        for name in ("logout", "oidc_logout"):
+            try:
+                if request.path == reverse(name):
+                    return True
+            except NoReverseMatch:
+                continue
+        return False
 
 
 def remember_browser(response):
@@ -118,3 +140,31 @@ def remember_browser(response):
         samesite="Lax",
     )
     return response
+
+
+def oidc_logout_url(request):
+    """Where to send the browser after clearing the Django session.
+
+    RP-initiated logout, so signing out ends the **authentik** session too. Without
+    it, logging out only drops the local session: the next click on "Sign in" is
+    answered instantly from the still-valid SSO session, which makes logout look
+    broken even once the hint cookie is gone.
+
+    Falls back to the site root when no end-session endpoint is configured, which is
+    what mozilla-django-oidc does on its own.
+    """
+    from urllib.parse import urlencode
+
+    endpoint = getattr(settings, "OIDC_OP_LOGOUT_ENDPOINT", "")
+    home = request.build_absolute_uri("/")
+    if not endpoint:
+        return home
+
+    params = {"post_logout_redirect_uri": home}
+    # authentik matches this against the provider's redirect URIs, so the id_token
+    # hint is what lets it end the right session without asking anything.
+    token = request.session.get("oidc_id_token")
+    if token:
+        params["id_token_hint"] = token
+    separator = "&" if "?" in endpoint else "?"
+    return f"{endpoint}{separator}{urlencode(params)}"

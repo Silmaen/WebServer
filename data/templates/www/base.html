@@ -27,7 +27,11 @@
                 {% if user.userprofile.avatar.url != "" %}<img alt="" src="{{ user.userprofile.avatar.url }}" width="30" height="30">{% endif %}
                 <span>{{ user.username }}</span>
                 <a class="userbtn mdi mdi-account-circle" href="{% url 'profile' %}">Profil</a>
-                <form method="post" action="{% url 'logout' %}">
+                {% comment %} Avec le SSO actif, la déconnexion passe par oidc_logout : il
+                   vide la session Django *et* ferme celle d'authentik. Sinon se
+                   déconnecter ne fait rien de visible, puisque le SSO rouvre la
+                   session au clic suivant. {% endcomment %}
+                <form method="post" action="{% if oidc_enabled %}{% url 'oidc_logout' %}{% else %}{% url 'logout' %}{% endif %}">
                     {% csrf_token %}
                     <button type="submit" class="userbtn mdi mdi-logout">Sign out</button>
                 </form>

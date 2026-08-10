@@ -18,6 +18,24 @@ logger = logging.getLogger("apps")
 class OIDCAuthBackend(OIDCAuthenticationBackend):
     """Authentik OIDC backend with group mapping."""
 
+    def get_username(self, claims):
+        """A readable username, not the base64 digest of the `sub`.
+
+        mozilla-django-oidc defaults to a hash of the subject, which is stable and
+        unguessable and completely unreadable -- an account showing up as
+        `KaNtWxUr_L3upTYghh-xbflI8MQ` in the site header, which is what it did here.
+        authentik sends `preferred_username`; fall back to the local part of the email,
+        and only then to the default.
+        """
+        for claim in ("preferred_username", "nickname"):
+            value = (claims.get(claim) or "").strip()
+            if value:
+                return value
+        email = (claims.get("email") or "").strip()
+        if email:
+            return email.split("@", 1)[0]
+        return super().get_username(claims)
+
     def create_user(self, claims):
         user = super().create_user(claims)
         self._update_user_from_claims(user, claims)
@@ -47,17 +65,20 @@ class OIDCAuthBackend(OIDCAuthenticationBackend):
         # Always keep OIDC users active (group check handled by middleware)
         user.is_active = True
 
+        # `is_staff` is deliberately NOT set here. The site derives it from
+        # `userprofile.user_level` inside `UserProfile.save()`, and a `post_save` on
+        # User calls that on every save -- so assigning it here is overwritten a
+        # moment later, and the final value only happened to be right because
+        # `_sync_site_level()` runs afterwards. One lever, one owner: this backend
+        # sets the level, the site derives the flag.
         if is_admin:
-            user.is_staff = True
             user.groups.add(admins_group)
             user.groups.remove(viewers_group)
         elif is_viewer:
-            user.is_staff = False
             user.groups.add(viewers_group)
             user.groups.remove(admins_group)
         else:
             # No authorized group — keep active but no group (middleware will block)
-            user.is_staff = False
             user.groups.remove(admins_group, viewers_group)
             logger.warning("OIDC user %s denied: not in any authorized group (groups=%s)", user.username, oidc_groups)
 
