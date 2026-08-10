@@ -14,8 +14,18 @@ echo "Démarrage de nginx..."
 nginx
 
 # Démarrer celery worker
+#
+# -Q celery,maintenance : sans la seconde file, les purges de la console ne sont
+# jamais consommées. Deux files plutôt qu'une seule parce que kombu alterne entre
+# elles, donc une purge publiée derrière un gros retard de checks obtient quand même
+# son tour. Partager une file unique avait affamé cleanup_old_results pendant des mois
+# et laissé la table des résultats atteindre 1,9 M de lignes.
+#
+# La file `network` n'est PAS ici : le scanner a besoin du réseau de l'hôte et de
+# NET_RAW, ce qui n'a rien à faire dans le conteneur qui sert le site public. Il a son
+# propre service dans docker-compose.yml.
 echo "Démarrage de celery worker..."
-cd /app/multisite && celery -A multisite worker --loglevel=info --detach --pidfile=/tmp/celery-worker.pid
+cd /app/multisite && celery -A multisite worker -Q celery,maintenance --loglevel=info --detach --pidfile=/tmp/celery-worker.pid
 
 # Démarrer celery beat
 echo "Démarrage de celery beat..."

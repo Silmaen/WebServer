@@ -10,6 +10,10 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-argawaen}
     volumes:
       - ${SERVER_PATH_PGDB:-./docker_data/db}:/var/lib/postgresql/data
+    # On the loopback only, and only because celery_scanner runs with the host's
+    # network namespace: from there the `db` service name resolves to nothing.
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-argawaen} -d ${POSTGRES_DB:-argawaen}"]
       interval: 10s
@@ -20,6 +24,9 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
+    # Same reason as db above: the scanner reaches it at 127.0.0.1.
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -37,6 +44,12 @@ services:
       - .env
     volumes:
       - ${SERVER_PATH_MEDIA:-./docker_data/media}:/app/data/media
+      # The lab's machine list, read-only, from the home-server-stacks checkout on the
+      # same machine. apps.fleet mirrors it into Machine rows and never writes it back:
+      # busybox awk on the router parses the same file, so it stays the source of
+      # truth. Without it the fleet page can only show machines that reported -- and a
+      # machine that never reported is the interesting case.
+      - ${INVENTORY_FILE:-/srv/home-server-stacks/_common/inventory.conf}:/app/inventory.conf:ro
     depends_on:
       db:
         condition: service_healthy
@@ -48,3 +61,35 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+
+  # network discovery worker
+  #
+  # Separate from `web` on purpose, and the only service with privileges: scanning the
+  # LAN needs the host's network namespace plus NET_ADMIN/NET_RAW, and none of that
+  # belongs in the container that serves a publicly exposed site. It consumes only the
+  # `network` queue -- apps.network.* and apps.devices.tasks.* are routed there by
+  # CELERY_TASK_ROUTES.
+  #
+  # network_mode: host is why db and redis publish on 127.0.0.1 above: inside the
+  # host's namespace the compose service names do not resolve.
+  celery_scanner:
+    build: .
+    restart: unless-stopped
+    entrypoint: [""]
+    command: celery -A multisite worker -Q network -n scanner@%h --concurrency 4 --loglevel=info
+    working_dir: /app/multisite
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=127.0.0.1
+      - DB_PORT=${POSTGRES_PORT:-5432}
+      - CELERY_BROKER_URL=redis://127.0.0.1:${REDIS_PORT:-6379}/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
