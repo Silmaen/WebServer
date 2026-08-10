@@ -17,7 +17,7 @@ the point of "the main page becomes the monitoring".
 
 from django.shortcuts import redirect
 
-from .views import accueil, monitoring, user_is_administrateur
+from .views import a_propos, monitoring, user_is_administrateur
 
 # The Django groups the OIDC backend maps authentik's groups onto. Checked here
 # rather than hardcoding authentik's names, so renaming a group there stays one env
@@ -38,10 +38,15 @@ def is_viewer(user):
 
 
 def home(request):
-    """The CV for a guest, the monitoring for an authorised session."""
+    """Les infos personnelles pour un invité, le monitoring pour une session autorisée.
+
+    `a_propos` et non `accueil` : la page d'accueil générique ("Bienvenue sur le site
+    personnel de…", avec un lien « Se connecter ») n'apprend rien à un visiteur venu
+    voir qui on est. Les infos personnelles, si.
+    """
     if is_admin(request.user):
         return monitoring(request)
     if is_viewer(request.user):
-        # Read-only: the console's fleet page rather than www's admin monitoring.
+        # Lecture seule : la console plutôt que le monitoring de www, réservé aux admins.
         return redirect("fleet:index")
-    return accueil(request)
+    return a_propos(request)

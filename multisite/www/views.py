@@ -536,6 +536,11 @@ def monitoring(request):
     """
     data = get_page_data(request.user, "monitoring")
     categories = ServiceCategorie.objects.prefetch_related("machines", "serveurs")
+    # Chaque machine gagne un attribut `.flotte` : ce que la machine rapporte
+    # d'elle-même (uptime, MAJ, dérive, images en retard, stacks). La structure reste
+    # la tienne, l'enrichissement vient de apps.fleet -- un seul assembleur.
+    from apps.fleet.enrich import annotate
+    categories = annotate(list(categories))
     return render(request, "www/monitoring.html", {
         **settings.base_info, **data,
         "categories": categories,

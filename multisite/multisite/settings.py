@@ -234,19 +234,17 @@ CELERY_BEAT_SCHEDULE = {
         "task": "apps.monitoring.tasks.cleanup_old_results",
         "schedule": 86400.0,
     },
-    # --- www's own, older monitoring --------------------------------------
-    # These overlap with apps.monitoring above and are a third check engine in the
-    # lab, after gatus and that one. Reconciling them is the point of having a single
-    # repository; until then they run side by side.
-    "verifier-machines": {
-        "task": "www.tasks.verifier_machines",
-        "schedule": 300.0,
-    },
-    "verifier-serveurs": {
-        "task": "www.tasks.verifier_serveurs",
-        "schedule": 300.0,
-    },
 }
+
+# www.tasks.verifier_machines et verifier_serveurs ne sont plus planifiés : un seul
+# moteur de checks, celui de apps.monitoring. Ils écrivaient `Machine.en_ligne`, que la
+# page de monitoring lisait -- ce champ est maintenant dérivé à l'affichage du statut
+# observé par ce moteur (voir apps/fleet/enrich.py), donc rien ne se figeait en les
+# débranchant.
+#
+# Les fonctions restent dans www/tasks.py : le module porte aussi scanner_ping,
+# scanner_ports et scanner_serveur, que les vues SSE appellent à la demande, et ceux-là
+# n'ont pas d'équivalent dans apps.monitoring.
 
 # Monitoring
 MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")
