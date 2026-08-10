@@ -32,7 +32,7 @@
 {% block console_content %}
 <!-- Header -->
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-0 border-bottom">
-    <h1 class="h2"><i class="bi bi-activity me-2"></i>Monitoring</h1>
+    <h1 class="h2"><i class="mdi mdi-pulse me-2"></i>Monitoring</h1>
 </div>
 
 <!-- Filter bar -->
@@ -102,7 +102,7 @@
             <label class="form-label small mb-1">&nbsp;</label>
             <div>
                 <button class="btn btn-sm btn-outline-warning" id="reset-filters" title="R&eacute;initialiser les filtres">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                    <i class="mdi mdi-undo me-1"></i> Reset
                 </button>
             </div>
         </div>
@@ -119,7 +119,7 @@
                     <option value="300">5min</option>
                 </select>
                 <button class="btn btn-outline-secondary" id="refresh-now" title="Rafra&icirc;chir maintenant">
-                    <i class="bi bi-arrow-clockwise"></i>
+                    <i class="mdi mdi-refresh"></i>
                 </button>
             </div>
         </div>
@@ -171,7 +171,7 @@
 <!-- Main chart -->
 <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <h6 class="mb-0"><i class="bi bi-graph-up me-1"></i> &Eacute;tat des appareils</h6>
+        <h6 class="mb-0"><i class="mdi mdi-chart-line me-1"></i> &Eacute;tat des appareils</h6>
         <small class="text-muted" id="chart-info"></small>
     </div>
     <div class="card-body">
@@ -184,7 +184,7 @@
 <!-- State changes list -->
 <div class="card" id="state-changes-card">
     <div class="card-header d-flex justify-content-between align-items-center py-2">
-        <h6 class="mb-0"><i class="bi bi-shuffle me-1"></i> Changements d'&eacute;tat</h6>
+        <h6 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'&eacute;tat</h6>
         <small class="text-muted" id="changes-count"></small>
     </div>
     <div class="card-body p-0">
@@ -464,7 +464,7 @@
             const lastTime = new Date(lastChange.time).toLocaleString('fr-FR');
 
             const transitions = d.changes.map(c => {
-                return statusToBadge(c.from) + ' <i class="bi bi-arrow-right arrow-change"></i> ' + statusToBadge(c.to);
+                return statusToBadge(c.from) + ' <i class="mdi mdi-arrow-right arrow-change"></i> ' + statusToBadge(c.to);
             }).join(' ');
 
             const catLabel = categoryLabels[d.category] || d.category;
@@ -479,7 +479,7 @@
                 + '<td><small>' + lastTime + '</small></td>'
                 + '<td>'
                 + '<button class="btn btn-sm btn-outline-primary isolate-btn" title="Afficher uniquement cet appareil">'
-                + '<i class="bi bi-eye"></i>'
+                + '<i class="mdi mdi-eye"></i>'
                 + '</button>'
                 + '</td>'
                 + '</tr>';

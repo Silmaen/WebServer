@@ -3,7 +3,7 @@
         <div class="card">
             <div class="card-body text-center">
                 <div class="fs-1 text-primary mb-2">
-                    <i class="bi bi-pc-display"></i>
+                    <i class="mdi mdi-desktop-tower-monitor"></i>
                 </div>
                 <h5>{{ device_count }} appareil{{ device_count|pluralize:"s" }}</h5>
                 <div class="text-muted small">
@@ -18,7 +18,7 @@
         <div class="card">
             <div class="card-body text-center">
                 <div class="fs-1 text-info mb-2">
-                    <i class="bi bi-diagram-3"></i>
+                    <i class="mdi mdi-sitemap"></i>
                 </div>
                 <h5>{{ network_count }} r&eacute;seau{{ network_count|pluralize:"x" }}</h5>
                 <div class="text-muted small">
@@ -31,7 +31,7 @@
         <div class="card">
             <div class="card-body text-center">
                 <div class="fs-1 text-warning mb-2">
-                    <i class="bi bi-list-check"></i>
+                    <i class="mdi mdi-format-list-checks"></i>
                 </div>
                 <h5>{{ task_active_count }} t&acirc;che{{ task_active_count|pluralize:"s" }} active{{ task_active_count|pluralize:"s" }}</h5>
                 <div class="text-muted small">
@@ -45,7 +45,7 @@
 <div class="row g-3 mt-2">
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header"><i class="bi bi-activity me-1"></i> Monitoring</div>
+            <div class="card-header"><i class="mdi mdi-pulse me-1"></i> Monitoring</div>
             <div class="card-body">
                 <table class="table table-borderless table-sm mb-0">
                     <tr>
@@ -66,17 +66,17 @@
     </div>
     <div class="col-md-6">
         <div class="card">
-            <div class="card-header"><i class="bi bi-link-45deg me-1"></i> Liens rapides</div>
+            <div class="card-header"><i class="mdi mdi-link-variant me-1"></i> Liens rapides</div>
             <div class="card-body">
                 <div class="d-grid gap-2">
                     <a href="/admin/" class="btn btn-outline-secondary btn-sm" target="_blank">
-                        <i class="bi bi-box-arrow-up-right me-1"></i> Django Admin
+                        <i class="mdi mdi-open-in-new me-1"></i> Django Admin
                     </a>
                     <a href="{% url 'core:task-list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-list-check me-1"></i> T&acirc;ches (page compl&egrave;te)
+                        <i class="mdi mdi-format-list-checks me-1"></i> T&acirc;ches (page compl&egrave;te)
                     </a>
                     <a href="{% url 'network:credential-list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-key me-1"></i> Credentials Gateway (page compl&egrave;te)
+                        <i class="mdi mdi-key me-1"></i> Credentials Gateway (page compl&egrave;te)
                     </a>
                 </div>
             </div>

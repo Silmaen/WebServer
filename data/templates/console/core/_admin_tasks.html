@@ -17,20 +17,20 @@
                 <td><a href="{% url 'core:task-detail' task.pk %}">{{ task.name }}</a></td>
                 <td>
                     {% if task.triggered_by %}
-                        <i class="bi bi-person"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
+                        <i class="mdi mdi-account"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
                     {% else %}
-                        <i class="bi bi-clock-history text-muted"></i> <span class="text-muted">Auto</span>
+                        <i class="mdi mdi-history text-muted"></i> <span class="text-muted">Auto</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if task.status == "pending" %}
-                        <span class="badge text-bg-secondary"><i class="bi bi-hourglass me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-secondary"><i class="mdi mdi-timer-sand me-1"></i>{{ task.get_status_display }}</span>
                     {% elif task.status == "running" %}
                         <span class="badge text-bg-primary"><span class="spinner-border spinner-border-sm me-1"></span>{{ task.get_status_display }}</span>
                     {% elif task.status == "success" %}
-                        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-success"><i class="mdi mdi-check-circle me-1"></i>{{ task.get_status_display }}</span>
                     {% elif task.status == "failure" %}
-                        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-danger"><i class="mdi mdi-close-circle me-1"></i>{{ task.get_status_display }}</span>
                     {% endif %}
                 </td>
                 <td>{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
@@ -61,7 +61,7 @@
                     <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
-                            <i class="bi bi-x-circle"></i>
+                            <i class="mdi mdi-close-circle"></i>
                         </button>
                     </form>
                     {% endif %}
@@ -78,7 +78,7 @@
 {% if tasks %}
 <div class="text-end">
     <a href="{% url 'core:task-list' %}" class="btn btn-sm btn-outline-secondary">
-        Voir tout <i class="bi bi-arrow-right ms-1"></i>
+        Voir tout <i class="mdi mdi-arrow-right ms-1"></i>
     </a>
 </div>
 {% endif %}

@@ -26,20 +26,20 @@
                 <td><a href="{% url 'core:task-detail' task.pk %}">{{ task.name }}</a></td>
                 <td>
                     {% if task.triggered_by %}
-                        <i class="bi bi-person"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
+                        <i class="mdi mdi-account"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
                     {% else %}
-                        <i class="bi bi-clock-history text-muted"></i> <span class="text-muted">Auto</span>
+                        <i class="mdi mdi-history text-muted"></i> <span class="text-muted">Auto</span>
                     {% endif %}
                 </td>
                 <td>
                     {% if task.status == "pending" %}
-                        <span class="badge text-bg-secondary"><i class="bi bi-hourglass me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-secondary"><i class="mdi mdi-timer-sand me-1"></i>{{ task.get_status_display }}</span>
                     {% elif task.status == "running" %}
                         <span class="badge text-bg-primary"><span class="spinner-border spinner-border-sm me-1"></span>{{ task.get_status_display }}</span>
                     {% elif task.status == "success" %}
-                        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-success"><i class="mdi mdi-check-circle me-1"></i>{{ task.get_status_display }}</span>
                     {% elif task.status == "failure" %}
-                        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ task.get_status_display }}</span>
+                        <span class="badge text-bg-danger"><i class="mdi mdi-close-circle me-1"></i>{{ task.get_status_display }}</span>
                     {% endif %}
                 </td>
                 <td>{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
@@ -71,7 +71,7 @@
                     <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
-                            <i class="bi bi-x-circle me-1"></i>Annuler
+                            <i class="mdi mdi-close-circle me-1"></i>Annuler
                         </button>
                     </form>
                     {% endif %}{% endif %}
@@ -90,13 +90,13 @@
 <nav>
     <ul class="pagination justify-content-center">
         {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="mdi mdi-chevron-left"></i></a></li>
         {% endif %}
         {% for num in page_obj.paginator.page_range %}
         <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
         {% endfor %}
         {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="mdi mdi-chevron-right"></i></a></li>
         {% endif %}
     </ul>
 </nav>

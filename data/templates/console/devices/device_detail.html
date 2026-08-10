@@ -12,33 +12,33 @@
                 {% csrf_token %}
                 <input type="hidden" name="mode" value="quick">
                 <button type="submit" class="btn btn-info" title="Top 100 ports + OS (~30s)">
-                    <i class="bi bi-search me-1"></i> Quick probe
+                    <i class="mdi mdi-magnify me-1"></i> Quick probe
                 </button>
             </form>
             <form method="post" action="{% url 'devices:probe' device.pk %}" class="d-inline">
                 {% csrf_token %}
                 <input type="hidden" name="mode" value="deep">
                 <button type="submit" class="btn btn-outline-info" title="Tous les ports TCP + OS + versions (~5-15min)">
-                    <i class="bi bi-search-heart me-1"></i> Deep probe
+                    <i class="mdi mdi-magnify-plus me-1"></i> Deep probe
                 </button>
             </form>
         </div>
         <a href="{% url 'devices:update' device.pk %}" class="btn btn-warning">
-            <i class="bi bi-pencil me-1"></i> Modifier
+            <i class="mdi mdi-pencil me-1"></i> Modifier
         </a>
         <a href="{% url 'devices:delete' device.pk %}" class="btn btn-danger">
-            <i class="bi bi-trash me-1"></i> Supprimer
+            <i class="mdi mdi-delete me-1"></i> Supprimer
         </a>
         {% endif %}
         <a href="{% url 'devices:list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Retour
+            <i class="mdi mdi-arrow-left me-1"></i> Retour
         </a>
     </div>
 </div>
 
 {% if device.category == "unknown" and user.is_staff %}
 <div class="alert alert-info d-flex align-items-center mb-3">
-    <i class="bi bi-question-diamond me-2 fs-5"></i>
+    <i class="mdi mdi-help-rhombus me-2 fs-5"></i>
     <div>
         Cet appareil n'est <strong>pas encore classifi&eacute;</strong>. Veuillez v&eacute;rifier et compl&eacute;ter ses informations.
         <a href="{% url 'devices:update' device.pk %}" class="alert-link ms-1">Modifier maintenant</a>
@@ -50,7 +50,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-1"></i> Informations g&eacute;n&eacute;rales</h5>
+                <h5 class="mb-0"><i class="mdi mdi-information me-1"></i> Informations g&eacute;n&eacute;rales</h5>
             </div>
             <div class="card-body">
                 <table class="table table-borderless mb-0">
@@ -99,7 +99,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-gear me-1"></i> D&eacute;tails</h5>
+                <h5 class="mb-0"><i class="mdi mdi-cog me-1"></i> D&eacute;tails</h5>
             </div>
             <div class="card-body">
                 <table class="table table-borderless mb-0">
@@ -136,7 +136,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-activity me-1"></i> Checks de monitoring</h5>
+                <h5 class="mb-0"><i class="mdi mdi-pulse me-1"></i> Checks de monitoring</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -184,7 +184,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-hdd-network me-1"></i> Ports ouverts</h5>
+                <h5 class="mb-0"><i class="mdi mdi-server-network me-1"></i> Ports ouverts</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -222,7 +222,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-cpu me-1"></i> D&eacute;tection OS</h5>
+                <h5 class="mb-0"><i class="mdi mdi-memory me-1"></i> D&eacute;tection OS</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -258,7 +258,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-shuffle me-1"></i> Changements d'&eacute;tat (monitoring)</h5>
+                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'&eacute;tat (monitoring)</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -279,7 +279,7 @@
                                     {% else %}
                                         <span class="badge text-bg-danger">DOWN</span>
                                     {% endif %}
-                                    <i class="bi bi-arrow-right mx-1"></i>
+                                    <i class="mdi mdi-arrow-right mx-1"></i>
                                     {% if change.to == "up" %}
                                         <span class="badge text-bg-success">UP</span>
                                     {% else %}
@@ -302,7 +302,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Pr&eacute;sence r&eacute;seau (scans)</h5>
+                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Pr&eacute;sence r&eacute;seau (scans)</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
@@ -320,9 +320,9 @@
                                 <td>{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
                                 <td>
                                     {% if log.event == "connected" %}
-                                        <span class="badge text-bg-success"><i class="bi bi-box-arrow-in-right me-1"></i>Connect&eacute;</span>
+                                        <span class="badge text-bg-success"><i class="mdi mdi-login me-1"></i>Connect&eacute;</span>
                                     {% else %}
-                                        <span class="badge text-bg-danger"><i class="bi bi-box-arrow-right me-1"></i>D&eacute;connect&eacute;</span>
+                                        <span class="badge text-bg-danger"><i class="mdi mdi-logout me-1"></i>D&eacute;connect&eacute;</span>
                                     {% endif %}
                                 </td>
                                 <td>

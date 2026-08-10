@@ -28,13 +28,13 @@
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">
         {% if task.status == "pending" %}
-            <i class="bi bi-hourglass text-secondary me-2"></i>
+            <i class="mdi mdi-timer-sand text-secondary me-2"></i>
         {% elif task.status == "running" %}
             <span class="spinner-border spinner-border-sm text-primary me-2"></span>
         {% elif task.status == "success" %}
-            <i class="bi bi-check-circle text-success me-2"></i>
+            <i class="mdi mdi-check-circle text-success me-2"></i>
         {% elif task.status == "failure" %}
-            <i class="bi bi-x-circle text-danger me-2"></i>
+            <i class="mdi mdi-close-circle text-danger me-2"></i>
         {% endif %}
         {{ task.name }}
     </h1>
@@ -43,12 +43,12 @@
         <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger">
-                <i class="bi bi-x-circle me-1"></i> Annuler
+                <i class="mdi mdi-close-circle me-1"></i> Annuler
             </button>
         </form>
         {% endif %}{% endif %}
         <a href="{% url 'core:task-list' %}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i> Retour
+            <i class="mdi mdi-arrow-left me-1"></i> Retour
         </a>
     </div>
 </div>
@@ -57,7 +57,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-info-circle me-1"></i> Informations</h5>
+                <h5 class="mb-0"><i class="mdi mdi-information me-1"></i> Informations</h5>
             </div>
             <div class="card-body">
                 <table class="table table-borderless mb-0">
@@ -65,13 +65,13 @@
                         <th class="text-muted" style="width:35%">Statut</th>
                         <td>
                             {% if task.status == "pending" %}
-                                <span class="badge text-bg-secondary"><i class="bi bi-hourglass me-1"></i>{{ task.get_status_display }}</span>
+                                <span class="badge text-bg-secondary"><i class="mdi mdi-timer-sand me-1"></i>{{ task.get_status_display }}</span>
                             {% elif task.status == "running" %}
                                 <span class="badge text-bg-primary"><span class="spinner-border spinner-border-sm me-1"></span>{{ task.get_status_display }}</span>
                             {% elif task.status == "success" %}
-                                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ task.get_status_display }}</span>
+                                <span class="badge text-bg-success"><i class="mdi mdi-check-circle me-1"></i>{{ task.get_status_display }}</span>
                             {% elif task.status == "failure" %}
-                                <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ task.get_status_display }}</span>
+                                <span class="badge text-bg-danger"><i class="mdi mdi-close-circle me-1"></i>{{ task.get_status_display }}</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -79,9 +79,9 @@
                         <th class="text-muted">D&eacute;clench&eacute;e par</th>
                         <td>
                             {% if task.triggered_by %}
-                                <i class="bi bi-person me-1"></i>{{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
+                                <i class="mdi mdi-account me-1"></i>{{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
                             {% else %}
-                                <i class="bi bi-clock-history me-1"></i><span class="text-muted">Automatique</span>
+                                <i class="mdi mdi-history me-1"></i><span class="text-muted">Automatique</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -118,7 +118,7 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clipboard-data me-1"></i> R&eacute;sultat</h5>
+                <h5 class="mb-0"><i class="mdi mdi-clipboard-text me-1"></i> R&eacute;sultat</h5>
             </div>
             <div class="card-body">
                 {% if task.status == "success" and task.result %}
@@ -132,7 +132,7 @@
                     </table>
                 {% elif task.status == "failure" and task.error %}
                     <div class="alert alert-danger mb-0">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <i class="mdi mdi-alert me-1"></i>
                         {{ task.error }}
                     </div>
                 {% elif task.status == "pending" or task.status == "running" %}
@@ -148,7 +148,7 @@
 <!-- Log output -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-terminal me-1"></i> Log d'ex&eacute;cution</h5>
+        <h5 class="mb-0"><i class="mdi mdi-console me-1"></i> Log d'ex&eacute;cution</h5>
         {% if task.status == "pending" or task.status == "running" %}
         <small class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Mise &agrave; jour automatique</small>
         {% endif %}

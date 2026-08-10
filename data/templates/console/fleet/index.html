@@ -13,7 +13,7 @@
 
 {% if wud_error %}
 <div class="alert alert-warning d-flex align-items-center" role="alert">
-    <i class="bi bi-exclamation-triangle me-2"></i>
+    <i class="mdi mdi-alert me-2"></i>
     <div>
         wud est injoignable, la colonne « images » est vide : <code>{{ wud_error }}</code>
     </div>
@@ -24,7 +24,7 @@
 {% comment %} The two states no other check in the lab can see. gatus sees healthy containers
    and wud sees a fine image, so this banner is the only place they surface. {% endcomment %}
 <div class="alert alert-danger" role="alert">
-    <h6 class="alert-heading"><i class="bi bi-file-earmark-x me-2"></i>Stacks sans fichier compose exploitable</h6>
+    <h6 class="alert-heading"><i class="mdi mdi-file-remove me-2"></i>Stacks sans fichier compose exploitable</h6>
     <ul class="mb-0 small">
         {% for stack in stack_alerts %}
         <li>
@@ -206,7 +206,7 @@
                 {% for s in m.stacks %}
                 <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
                     <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
-                    <td>{{ s.repo }}{% if s.foreign %} <i class="bi bi-box-arrow-up-right text-muted small" title="dépôt externe"></i>{% endif %}</td>
+                    <td>{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
                     <td><code class="small">{{ s.head|default:"-" }}</code></td>
                     <td class="small">{{ s.worktree|default:"-" }}</td>
                     <td class="small">{% if s.behind %}{{ s.behind }}{% elif s.behind == 0 %}0{% else %}-{% endif %}</td>

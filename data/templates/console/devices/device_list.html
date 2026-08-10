@@ -7,7 +7,7 @@
     <h1 class="h2">Appareils</h1>
     {% if user.is_staff %}
     <a href="{% url 'devices:create' %}" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i> Ajouter un appareil
+        <i class="mdi mdi-plus me-1"></i> Ajouter un appareil
     </a>
     {% endif %}
 </div>
@@ -40,7 +40,7 @@
             </div>
             <div class="col-md-2">
                 <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-search me-1"></i> Filtrer
+                    <i class="mdi mdi-magnify me-1"></i> Filtrer
                 </button>
             </div>
         </form>
@@ -82,14 +82,14 @@
                 <td>{{ device.manufacturer|default:"-" }}</td>
                 <td>
                     <a href="{% url 'devices:detail' device.pk %}" class="btn btn-sm btn-outline-info" title="Voir">
-                        <i class="bi bi-eye"></i>
+                        <i class="mdi mdi-eye"></i>
                     </a>
                     {% if user.is_staff %}
                     <a href="{% url 'devices:update' device.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
-                        <i class="bi bi-pencil"></i>
+                        <i class="mdi mdi-pencil"></i>
                     </a>
                     <a href="{% url 'devices:delete' device.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                        <i class="bi bi-trash"></i>
+                        <i class="mdi mdi-delete"></i>
                     </a>
                     {% endif %}
                 </td>
@@ -110,11 +110,11 @@
         {% if page_obj.has_previous %}
         <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_search %}&q={{ current_search }}{% endif %}">
-                <i class="bi bi-chevron-left"></i>
+                <i class="mdi mdi-chevron-left"></i>
             </a>
         </li>
         {% else %}
-        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-left"></i></span></li>
         {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
@@ -126,11 +126,11 @@
         {% if page_obj.has_next %}
         <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_search %}&q={{ current_search }}{% endif %}">
-                <i class="bi bi-chevron-right"></i>
+                <i class="mdi mdi-chevron-right"></i>
             </a>
         </li>
         {% else %}
-        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-right"></i></span></li>
         {% endif %}
     </ul>
 </nav>

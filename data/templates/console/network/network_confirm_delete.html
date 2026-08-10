@@ -12,7 +12,7 @@
         <div class="card border-danger">
             <div class="card-body">
                 <h5 class="card-title text-danger">
-                    <i class="bi bi-exclamation-triangle me-1"></i> Confirmation
+                    <i class="mdi mdi-alert me-1"></i> Confirmation
                 </h5>
                 <p class="card-text">
                     &Ecirc;tes-vous s&ucirc;r de vouloir supprimer le r&eacute;seau
@@ -23,7 +23,7 @@
                     {% csrf_token %}
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-danger">
-                            <i class="bi bi-trash me-1"></i> Supprimer
+                            <i class="mdi mdi-delete me-1"></i> Supprimer
                         </button>
                         <a href="{% url 'network:list' %}" class="btn btn-outline-secondary">Annuler</a>
                     </div>

@@ -11,7 +11,7 @@
     <div class="col-md-3">
         <div class="card text-bg-success">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-check-circle me-1"></i> En ligne</h5>
+                <h5 class="card-title"><i class="mdi mdi-check-circle me-1"></i> En ligne</h5>
                 <p class="card-text display-6">{{ online_count }}</p>
             </div>
         </div>
@@ -19,7 +19,7 @@
     <div class="col-md-3">
         <div class="card text-bg-danger">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-x-circle me-1"></i> Hors ligne</h5>
+                <h5 class="card-title"><i class="mdi mdi-close-circle me-1"></i> Hors ligne</h5>
                 <p class="card-text display-6">{{ offline_count }}</p>
             </div>
         </div>
@@ -27,7 +27,7 @@
     <div class="col-md-3">
         <div class="card text-bg-warning">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-exclamation-triangle me-1"></i> En erreur</h5>
+                <h5 class="card-title"><i class="mdi mdi-alert me-1"></i> En erreur</h5>
                 <p class="card-text display-6">{{ failed_count }}</p>
             </div>
         </div>
@@ -35,7 +35,7 @@
     <div class="col-md-3">
         <div class="card text-bg-info">
             <div class="card-body">
-                <h5 class="card-title"><i class="bi bi-pc-display me-1"></i> Total appareils</h5>
+                <h5 class="card-title"><i class="mdi mdi-desktop-tower-monitor me-1"></i> Total appareils</h5>
                 <p class="card-text display-6">{{ total_devices }}</p>
             </div>
         </div>
@@ -44,7 +44,7 @@
 
 {% if unknown_category_count > 0 %}
 <div class="alert alert-info d-flex align-items-center mt-3">
-    <i class="bi bi-question-diamond me-2 fs-5"></i>
+    <i class="mdi mdi-help-rhombus me-2 fs-5"></i>
     <div>
         <strong>{{ unknown_category_count }} appareil{{ unknown_category_count|pluralize:"s" }} non class&eacute;{{ unknown_category_count|pluralize:"s" }}</strong>
         en attente de classification.
@@ -92,7 +92,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-pie-chart me-1"></i> Par cat&eacute;gorie</h5>
+                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1"></i> Par cat&eacute;gorie</h5>
             </div>
             <div class="card-body">
                 <canvas id="categoryChart" height="250"></canvas>
@@ -102,7 +102,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Top 5 lents</h5>
+                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Top 5 lents</h5>
             </div>
             <ul class="list-group list-group-flush">
                 {% for item in slowest_checks %}
@@ -119,7 +119,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-shuffle me-1"></i> Changements d'&eacute;tat</h5>
+                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'&eacute;tat</h5>
             </div>
             <ul class="list-group list-group-flush">
                 {% for change in recent_state_changes %}
@@ -148,7 +148,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Appareils r&eacute;cents</h5>
+                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Appareils r&eacute;cents</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

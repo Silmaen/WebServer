@@ -9,6 +9,10 @@
     <link rel="shortcut icon" href="{% static 'img/favicon_www.ico' %}"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- feuille de style -->
+    {% comment %} La police d'icones du site. common_base.html la chargeait deja, mais pas
+       ce gabarit : tous les `class="mdi mdi-..."` des pages de www ne rendaient donc
+       rien. Meme source et meme version que common_base.html, pour n'en avoir qu'une. {% endcomment %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="{% static 'css/default_www.css' %}">
     <script src="{% static 'js/chartutils.js' %}"></script>
     {% block additionnalhead %}

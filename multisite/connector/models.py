@@ -19,7 +19,19 @@ class UserProfile(models.Model):
     )
 
     def save(self, *args, **kwargs):
-        """Synchronise user_level et User.is_staff."""
+        """Enregistre le profil, puis derive `User.is_staff` de son niveau.
+
+        Le niveau est la source de verite, `is_staff` en est deduit : une seule
+        direction, et c'est ce qui rend le resultat previsible.
+
+        Ce n'etait pas le cas avant. Un second recepteur `post_save` sur `User`
+        appelait `instance.userprofile.save()`, donc enregistrer un profil sauvait
+        l'utilisateur, ce qui reenregistrait le profil -- parfois une instance
+        perimee, chargee avant la modification, qui reecrivait alors l'ancien niveau.
+        Symptome observe : poser `user_level = 3`, sauver, relire 0, avec `is_staff`
+        pourtant passe a True. Le recepteur ne fait plus que garantir l'existence du
+        profil, il ne le reenregistre jamais.
+        """
         if not self.user_id:
             super().save(*args, **kwargs)
             return
@@ -33,13 +45,17 @@ class UserProfile(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    """Lorsque l'on cr\u00e9e un `User`, cela cr\u00e9e un profil aussi."""
-    if created:
-        UserProfile.objects.create(user=instance)
+def ensure_user_profile(sender, instance, created, **kwargs):
+    """Garantit qu'un `User` a un profil, sans jamais reenregistrer celui qui existe.
 
+    Remplace les deux recepteurs precedents. Celui qui reenregistrait le profil a
+    chaque sauvegarde d'utilisateur formait une boucle avec `UserProfile.save()` --
+    voir l'explication la-bas. Creer ce qui manque suffit : un niveau n'a pas besoin
+    d'etre reecrit pour rester ce qu'il est.
 
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """Lorsque l'on sauve un `User` on le fait aussi pour son profil."""
-    instance.userprofile.save()
+    La branche sans `created` couvre les comptes importes, anterieurs a l'obligation
+    de profil : sans elle, le context processor de navigation leve une exception sur
+    chacune de leurs pages.
+    """
+    if created or not UserProfile.objects.filter(user=instance).exists():
+        UserProfile.objects.get_or_create(user=instance)

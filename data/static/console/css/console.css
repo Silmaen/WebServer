@@ -147,6 +147,6 @@
 .console .small, .console small { font-size: .85em; }
 .console code { color: var(--blue-light); }
 
-/* Les glyphes de bootstrap-icons ne sont plus chargés ; les balises restent dans les
-   gabarits et ne doivent pas laisser de trou dans la mise en page. */
-.console .bi::before { content: ""; }
+/* Les icônes ont été converties de bootstrap-icons vers la police Material Design du
+   site (bi-trash -> mdi-delete, etc.) : elles rendent donc de vrais glyphes, et non
+   plus le vide qui laissait les boutons sans texte complètement muets. */
