@@ -62,6 +62,7 @@ class OIDCAuthBackend(OIDCAuthenticationBackend):
             logger.warning("OIDC user %s denied: not in any authorized group (groups=%s)", user.username, oidc_groups)
 
         user.save()
+        self._sync_site_level(user, is_admin, is_viewer)
 
         logger.info(
             "OIDC user %s synced: admin=%s, viewer=%s, expected_admin_group=%s, expected_viewer_group=%s, oidc_groups=%s, django_groups=%s",
@@ -69,6 +70,41 @@ class OIDCAuthBackend(OIDCAuthenticationBackend):
             admin_group_name, viewer_group_name,
             oidc_groups, list(user.groups.values_list("name", flat=True)),
         )
+
+    @staticmethod
+    def _sync_site_level(user, is_admin, is_viewer):
+        """Carry the authentik group over to the site's own access level.
+
+        This is the join between two authorisation models that had no reason to know
+        about each other until the console moved into the site.
+
+        Django groups and `is_staff` are what the console checks. The site is older
+        and checks `userprofile.user_level` (Enregistré / Autorisé / Avancé /
+        Administrateur), which is what `@admin_required` on its monitoring page and on
+        every one of its admin views tests. Setting only the group left an authentik
+        administrator at level *Enregistré*: logged in, in the `admins` group, and 403
+        on the very pages they were given the group for.
+
+        So `admin domain` -> Administrateur, `user home` -> Autorisé. A user in
+        neither is left where they are: they may well be an ordinary member of the
+        public site who also happens to exist in authentik, and demoting them here
+        would take away access this backend was never asked to manage.
+        """
+        from common.user_utils import ADMINISTRATEUR, AUTORISE
+        from connector.models import UserProfile
+
+        if is_admin:
+            level = ADMINISTRATEUR
+        elif is_viewer:
+            level = AUTORISE
+        else:
+            return
+
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        if profile.user_level != level:
+            profile.user_level = level
+            profile.save(update_fields=["user_level"])
+            logger.info("niveau site de %s porté à %s (groupes authentik)", user.username, level)
 
     def filter_users_by_claims(self, claims):
         """Match existing users by email (Authentik may change usernames)."""

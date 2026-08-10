@@ -74,6 +74,10 @@ MIDDLEWARE = [
     'django_htmx.middleware.HtmxMiddleware',
     'mozilla_django_oidc.middleware.SessionRefresh',
     'apps.core.middleware.InactiveUserMiddleware',
+    # After AuthenticationMiddleware, because it reads request.user. Only ever acts on
+    # a browser that has signed in here before -- see apps/core/sso.py for why that
+    # condition is the design and not a shortcut.
+    'apps.core.sso.SilentSSOMiddleware',
 ]
 
 ROOT_URLCONF = 'multisite.urls'
@@ -99,6 +103,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.core.context_processors.sso',
                 'www.context_processors.navigation',
             ],
         },
