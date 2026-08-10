@@ -1,0 +1,153 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Network Monitor</title>
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1rem;
+            background: rgba(22, 27, 34, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+        .login-header {
+            text-align: center;
+            padding: 2rem 2rem 1rem;
+        }
+        .login-header .logo {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 1rem;
+        }
+        .login-body {
+            padding: 1rem 2rem 2rem;
+        }
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.25rem 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+        }
+        .divider::before, .divider::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .divider span {
+            padding: 0 0.75rem;
+        }
+        .btn-sso {
+            background: linear-gradient(135deg, #fd4b2d 0%, #e03e1a 100%);
+            border: none;
+            color: #fff;
+            font-weight: 600;
+            padding: 0.7rem;
+            font-size: 1rem;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-sso:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(253, 75, 45, 0.3);
+            color: #fff;
+        }
+        .local-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+        .local-toggle:hover {
+            color: #c9d1d9 !important;
+        }
+        .form-control:focus {
+            border-color: rgba(253, 75, 45, 0.5);
+            box-shadow: 0 0 0 0.2rem rgba(253, 75, 45, 0.15);
+        }
+        .network-bg {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Ccircle cx='20' cy='20' r='3' fill='%23fff'/%3E%3Ccircle cx='100' cy='50' r='3' fill='%23fff'/%3E%3Ccircle cx='180' cy='30' r='3' fill='%23fff'/%3E%3Ccircle cx='60' cy='100' r='3' fill='%23fff'/%3E%3Ccircle cx='140' cy='120' r='3' fill='%23fff'/%3E%3Ccircle cx='40' cy='180' r='3' fill='%23fff'/%3E%3Ccircle cx='160' cy='170' r='3' fill='%23fff'/%3E%3Cline x1='20' y1='20' x2='100' y2='50' stroke='%23fff' stroke-width='0.5'/%3E%3Cline x1='100' y1='50' x2='180' y2='30' stroke='%23fff' stroke-width='0.5'/%3E%3Cline x1='100' y1='50' x2='60' y2='100' stroke='%23fff' stroke-width='0.5'/%3E%3Cline x1='60' y1='100' x2='140' y2='120' stroke='%23fff' stroke-width='0.5'/%3E%3Cline x1='140' y1='120' x2='160' y2='170' stroke='%23fff' stroke-width='0.5'/%3E%3Cline x1='60' y1='100' x2='40' y2='180' stroke='%23fff' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body>
+    <div class="network-bg"></div>
+
+    <div class="login-card">
+        <div class="login-header">
+            <img src="{% static 'favicon.svg' %}" alt="" class="logo">
+            <h4 class="mb-1">Network Monitor</h4>
+            <p class="text-muted small mb-0">Surveillance r&eacute;seau du homelab</p>
+        </div>
+
+        <div class="login-body">
+            {% if form.errors %}
+            <div class="alert alert-danger py-2 small">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                Identifiants invalides. V&eacute;rifiez votre nom d'utilisateur et mot de passe.
+            </div>
+            {% endif %}
+
+            {% if oidc_enabled %}
+            <!-- SSO button -->
+            <a href="{% url 'oidc_authentication_init' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}" class="btn btn-sso w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-shield-lock me-2"></i>
+                Se connecter avec Authentik
+            </a>
+
+            <div class="divider"><span>ou connexion locale</span></div>
+            {% endif %}
+
+            <!-- Local login form (collapsed if SSO enabled) -->
+            <div id="local-form" {% if oidc_enabled and not form.errors %}class="collapse"{% endif %}>
+                <form method="post" action="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next }}{% endif %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="id_username" class="form-label small">Nom d'utilisateur</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" id="id_username" class="form-control" autocomplete="username" autofocus required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_password" class="form-label small">Mot de passe</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-key"></i></span>
+                            <input type="password" name="password" id="id_password" class="form-control" autocomplete="current-password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-outline-light w-100">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Connexion locale
+                    </button>
+                </form>
+            </div>
+
+            {% if oidc_enabled and not form.errors %}
+            <div class="text-center mt-2">
+                <small class="text-muted local-toggle" data-bs-toggle="collapse" data-bs-target="#local-form">
+                    <i class="bi bi-chevron-down me-1"></i>Connexion locale (admin)
+                </small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

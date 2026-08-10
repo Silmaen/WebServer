@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+
+{% block title %}Monitoring - Network Monitor{% endblock %}
+
+{% block extra_css %}
+<style>
+.filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bs-body-bg);
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--bs-border-color);
+    margin-bottom: 1rem;
+}
+.stat-card .display-6 { font-size: 2rem; }
+.dropdown-check-list { max-height: 250px; overflow-y: auto; }
+.dropdown-check-list .form-check { padding: .15rem 0 .15rem 1.75rem; }
+.dropdown-check-list .form-check-label { font-size: .85rem; }
+.refresh-indicator { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.refresh-indicator.active { background: #198754; animation: pulse 2s infinite; }
+.refresh-indicator.paused { background: #6c757d; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.4; } }
+#main-chart-container { position: relative; height: 400px; }
+.state-change-row { cursor: pointer; transition: background .15s; }
+.state-change-row:hover { background: rgba(var(--bs-primary-rgb), .08); }
+.state-change-row.isolated { background: rgba(var(--bs-primary-rgb), .15); }
+.arrow-change { font-size: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-0 border-bottom">
+    <h1 class="h2"><i class="bi bi-activity me-2"></i>Monitoring</h1>
+</div>
+
+<!-- Filter bar -->
+<div class="filter-bar">
+    <div class="row g-2 align-items-end">
+        <!-- Period selector -->
+        <div class="col-auto">
+            <label class="form-label small mb-1">P&eacute;riode</label>
+            <div class="btn-group btn-group-sm" id="period-selector">
+                <button class="btn btn-outline-secondary" data-period="1h">1h</button>
+                <button class="btn btn-outline-secondary active" data-period="6h">6h</button>
+                <button class="btn btn-outline-secondary" data-period="24h">24h</button>
+                <button class="btn btn-outline-secondary" data-period="7d">7j</button>
+                <button class="btn btn-outline-secondary" data-period="30d">30j</button>
+            </div>
+        </div>
+
+        <!-- Category filter (checkbox dropdown) -->
+        <div class="col-auto position-relative">
+            <label class="form-label small mb-1">Cat&eacute;gories</label>
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="category-dropdown-btn" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                Toutes
+            </button>
+            <div class="dropdown-menu p-2" style="min-width:220px;" id="category-dropdown">
+                <div class="d-flex justify-content-between mb-2">
+                    <button class="btn btn-sm btn-outline-primary" id="select-all-categories">Toutes</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="select-none-categories">Aucune</button>
+                </div>
+                <div class="dropdown-check-list" id="category-list">
+                    {% for value, label in categories %}
+                    <div class="form-check">
+                        <input class="form-check-input category-checkbox" type="checkbox" value="{{ value }}" id="cat-{{ value }}" checked>
+                        <label class="form-check-label" for="cat-{{ value }}">{{ label }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Device multi-select -->
+        <div class="col-auto position-relative">
+            <label class="form-label small mb-1">Appareils</label>
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="device-dropdown-btn" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                Tous (<span id="device-count">{{ devices|length }}</span>)
+            </button>
+            <div class="dropdown-menu p-2" style="min-width:300px;" id="device-dropdown">
+                <div class="d-flex justify-content-between mb-2">
+                    <button class="btn btn-sm btn-outline-primary" id="select-all-devices">Tous</button>
+                    <button class="btn btn-sm btn-outline-secondary" id="select-none-devices">Aucun</button>
+                </div>
+                <input type="text" class="form-control form-control-sm mb-2" placeholder="Rechercher..." id="device-search">
+                <div class="dropdown-check-list" id="device-list">
+                    {% for device in devices %}
+                    <div class="form-check" data-hostname="{{ device.hostname|lower }}" data-category="{{ device.category }}">
+                        <input class="form-check-input device-checkbox" type="checkbox" value="{{ device.pk }}" id="dev-{{ device.pk }}" checked>
+                        <label class="form-check-label" for="dev-{{ device.pk }}">
+                            {{ device.hostname }} <small class="text-muted">({{ device.ip_address }})</small>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Reset button -->
+        <div class="col-auto">
+            <label class="form-label small mb-1">&nbsp;</label>
+            <div>
+                <button class="btn btn-sm btn-outline-warning" id="reset-filters" title="R&eacute;initialiser les filtres">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset
+                </button>
+            </div>
+        </div>
+
+        <!-- Auto-refresh -->
+        <div class="col-auto">
+            <label class="form-label small mb-1">Rafra&icirc;chissement</label>
+            <div class="input-group input-group-sm" style="width:160px;">
+                <select class="form-select form-select-sm" id="refresh-interval">
+                    <option value="0">Manuel</option>
+                    <option value="10">10s</option>
+                    <option value="30" selected>30s</option>
+                    <option value="60">1min</option>
+                    <option value="300">5min</option>
+                </select>
+                <button class="btn btn-outline-secondary" id="refresh-now" title="Rafra&icirc;chir maintenant">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Refresh indicator -->
+        <div class="col-auto d-flex align-items-end pb-1">
+            <span class="refresh-indicator active" id="refresh-dot"></span>
+            <small class="text-muted ms-1" id="last-update">--</small>
+        </div>
+    </div>
+</div>
+
+<!-- Stats cards -->
+<div class="row g-2 mb-3">
+    <div class="col">
+        <div class="card stat-card text-center">
+            <div class="card-body py-2">
+                <div class="text-muted small">Total checks</div>
+                <div class="display-6" id="stat-total">{{ total_checks }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card stat-card text-center border-success">
+            <div class="card-body py-2">
+                <div class="text-muted small">UP</div>
+                <div class="display-6 text-success" id="stat-up">{{ checks_up }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card stat-card text-center border-danger">
+            <div class="card-body py-2">
+                <div class="text-muted small">DOWN</div>
+                <div class="display-6 text-danger" id="stat-down">{{ checks_down }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card stat-card text-center border-warning">
+            <div class="card-body py-2">
+                <div class="text-muted small">En erreur</div>
+                <div class="display-6 text-warning" id="stat-failing">{{ checks_failing }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main chart -->
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <h6 class="mb-0"><i class="bi bi-graph-up me-1"></i> &Eacute;tat des appareils</h6>
+        <small class="text-muted" id="chart-info"></small>
+    </div>
+    <div class="card-body">
+        <div id="main-chart-container">
+            <canvas id="upChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- State changes list -->
+<div class="card" id="state-changes-card">
+    <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <h6 class="mb-0"><i class="bi bi-shuffle me-1"></i> Changements d'&eacute;tat</h6>
+        <small class="text-muted" id="changes-count"></small>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Appareil</th>
+                        <th>IP</th>
+                        <th>Cat&eacute;gorie</th>
+                        <th>&Eacute;tat actuel</th>
+                        <th>Transitions</th>
+                        <th>Derni&egrave;re transition</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="state-changes-body">
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">Chargement...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    // State
+    let currentPeriod = '6h';
+    let refreshTimer = null;
+    let chart = null;
+    let isolatedDeviceId = null;
+
+    // DOM refs
+    const periodBtns = document.querySelectorAll('#period-selector button');
+    const refreshSelect = document.getElementById('refresh-interval');
+    const refreshBtn = document.getElementById('refresh-now');
+    const refreshDot = document.getElementById('refresh-dot');
+    const lastUpdateEl = document.getElementById('last-update');
+    const chartInfo = document.getElementById('chart-info');
+    const deviceSearch = document.getElementById('device-search');
+    const selectAllDevicesBtn = document.getElementById('select-all-devices');
+    const selectNoneDevicesBtn = document.getElementById('select-none-devices');
+    const selectAllCategoriesBtn = document.getElementById('select-all-categories');
+    const selectNoneCategoriesBtn = document.getElementById('select-none-categories');
+    const deviceCountEl = document.getElementById('device-count');
+    const deviceDropdownBtn = document.getElementById('device-dropdown-btn');
+    const categoryDropdownBtn = document.getElementById('category-dropdown-btn');
+    const resetBtn = document.getElementById('reset-filters');
+    const changesBody = document.getElementById('state-changes-body');
+    const changesCount = document.getElementById('changes-count');
+
+    // Category labels for display
+    const categoryLabels = {};
+    {% for value, label in categories %}
+    categoryLabels['{{ value }}'] = '{{ label }}';
+    {% endfor %}
+
+    // Period selector
+    periodBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            periodBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentPeriod = btn.dataset.period;
+            fetchData();
+        });
+    });
+
+    // === Category checkbox dropdown ===
+    document.getElementById('category-dropdown').addEventListener('click', e => e.stopPropagation());
+
+    selectAllCategoriesBtn.addEventListener('click', () => {
+        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = true);
+        onCategoryChange();
+    });
+    selectNoneCategoriesBtn.addEventListener('click', () => {
+        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
+        onCategoryChange();
+    });
+    document.getElementById('category-list').addEventListener('change', onCategoryChange);
+
+    function onCategoryChange() {
+        updateCategoryLabel();
+        // Filter device checkboxes based on selected categories
+        const selected = getSelectedCategories();
+        document.querySelectorAll('#device-list .form-check').forEach(el => {
+            if (selected.length === 0 || selected.includes(el.dataset.category)) {
+                el.style.display = '';
+                el.querySelector('input').checked = true;
+            } else {
+                el.style.display = 'none';
+                el.querySelector('input').checked = false;
+            }
+        });
+        updateDeviceCount();
+        fetchData();
+    }
+
+    function getSelectedCategories() {
+        return Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+    }
+
+    function updateCategoryLabel() {
+        const checked = document.querySelectorAll('.category-checkbox:checked').length;
+        const total = document.querySelectorAll('.category-checkbox').length;
+        if (checked === 0 || checked === total) {
+            categoryDropdownBtn.innerHTML = 'Toutes <span class="badge text-bg-secondary ms-1">' + total + '</span>';
+        } else {
+            categoryDropdownBtn.innerHTML = checked + ' / ' + total + ' <span class="badge text-bg-primary ms-1">' + checked + '</span>';
+        }
+    }
+
+    // === Device checkbox dropdown ===
+    document.getElementById('device-dropdown').addEventListener('click', e => e.stopPropagation());
+
+    deviceSearch.addEventListener('input', () => {
+        const q = deviceSearch.value.toLowerCase();
+        document.querySelectorAll('#device-list .form-check').forEach(el => {
+            const matchesSearch = el.dataset.hostname.includes(q);
+            const isHiddenByCategory = el.style.display === 'none' && !q;
+            el.style.display = matchesSearch && !isHiddenByCategory ? '' : 'none';
+        });
+    });
+
+    selectAllDevicesBtn.addEventListener('click', () => {
+        document.querySelectorAll('#device-list .form-check:not([style*="display: none"]) .device-checkbox').forEach(cb => cb.checked = true);
+        isolatedDeviceId = null;
+        updateDeviceCount();
+        fetchData();
+    });
+    selectNoneDevicesBtn.addEventListener('click', () => {
+        document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = false);
+        isolatedDeviceId = null;
+        updateDeviceCount();
+        fetchData();
+    });
+
+    document.getElementById('device-list').addEventListener('change', () => {
+        isolatedDeviceId = null;
+        updateDeviceCount();
+        fetchData();
+    });
+
+    function updateDeviceCount() {
+        const checked = document.querySelectorAll('.device-checkbox:checked').length;
+        const total = document.querySelectorAll('.device-checkbox').length;
+        deviceCountEl.textContent = checked;
+        if (checked === total) {
+            deviceDropdownBtn.innerHTML = 'Tous (<span id="device-count">' + total + '</span>)';
+        } else {
+            deviceDropdownBtn.innerHTML = '<span id="device-count">' + checked + '</span> / ' + total;
+        }
+    }
+
+    // === Reset all filters ===
+    resetBtn.addEventListener('click', () => {
+        // Reset categories
+        document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = true);
+        updateCategoryLabel();
+        // Reset devices
+        document.querySelectorAll('#device-list .form-check').forEach(el => el.style.display = '');
+        document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = true);
+        isolatedDeviceId = null;
+        updateDeviceCount();
+        // Reset search
+        deviceSearch.value = '';
+        // Highlight reset to indicate cleared state
+        highlightStateChangeRows(null);
+        fetchData();
+    });
+
+    // === Isolate a single device ===
+    function isolateDevice(deviceId) {
+        if (isolatedDeviceId === deviceId) {
+            // Toggle off: re-select all
+            document.querySelectorAll('.device-checkbox').forEach(cb => cb.checked = true);
+            isolatedDeviceId = null;
+        } else {
+            document.querySelectorAll('.device-checkbox').forEach(cb => {
+                cb.checked = (cb.value === deviceId);
+            });
+            isolatedDeviceId = deviceId;
+        }
+        updateDeviceCount();
+        highlightStateChangeRows(isolatedDeviceId);
+        fetchData();
+    }
+
+    function highlightStateChangeRows(deviceId) {
+        document.querySelectorAll('.state-change-row').forEach(row => {
+            row.classList.toggle('isolated', deviceId && row.dataset.deviceId === deviceId);
+        });
+    }
+
+    // Refresh controls
+    refreshSelect.addEventListener('change', setupRefresh);
+    refreshBtn.addEventListener('click', fetchData);
+
+    function setupRefresh() {
+        if (refreshTimer) clearInterval(refreshTimer);
+        const secs = parseInt(refreshSelect.value);
+        if (secs > 0) {
+            refreshTimer = setInterval(fetchData, secs * 1000);
+            refreshDot.className = 'refresh-indicator active';
+        } else {
+            refreshDot.className = 'refresh-indicator paused';
+        }
+    }
+
+    // Build query params
+    function buildParams() {
+        const params = new URLSearchParams();
+        params.set('period', currentPeriod);
+
+        const categories = getSelectedCategories();
+        const totalCategories = document.querySelectorAll('.category-checkbox').length;
+        if (categories.length > 0 && categories.length < totalCategories) {
+            params.set('categories', categories.join(','));
+        }
+
+        const devices = Array.from(document.querySelectorAll('.device-checkbox:checked')).map(cb => cb.value);
+        const allDevices = document.querySelectorAll('.device-checkbox').length;
+        if (devices.length < allDevices && devices.length > 0) {
+            params.set('devices', devices.join(','));
+        }
+
+        return params;
+    }
+
+    // Fetch data and update chart + state changes
+    async function fetchData() {
+        try {
+            const params = buildParams();
+            const resp = await fetch('/api/monitoring/timeseries/?' + params);
+            const data = await resp.json();
+            updateChart(data);
+            updateStateChanges(data.state_changes || []);
+            if (data.stats) {
+                document.getElementById('stat-total').textContent = data.stats.total;
+                document.getElementById('stat-up').textContent = data.stats.up;
+                document.getElementById('stat-down').textContent = data.stats.down;
+                document.getElementById('stat-failing').textContent = data.stats.failing;
+            }
+            lastUpdateEl.textContent = new Date().toLocaleTimeString('fr-FR');
+            chartInfo.textContent = data.total_devices + ' appareils, ' + data.buckets.length + ' points';
+        } catch(e) {
+            console.error('Fetch error:', e);
+            lastUpdateEl.textContent = 'Erreur';
+        }
+    }
+
+    // === Status badge helper ===
+    function statusToBadge(status) {
+        if (status === 'up') return '<span class="badge text-bg-success badge-sm">En ligne</span>';
+        if (status === 'failing') return '<span class="badge text-bg-warning badge-sm">En erreur</span>';
+        return '<span class="badge text-bg-danger badge-sm">Hors ligne</span>';
+    }
+
+    // === State changes table ===
+    function updateStateChanges(changes) {
+        changesCount.textContent = changes.length + ' appareil' + (changes.length > 1 ? 's' : '');
+
+        if (changes.length === 0) {
+            changesBody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-3">Aucun changement d\u2019\u00e9tat sur cette p\u00e9riode</td></tr>';
+            return;
+        }
+
+        changesBody.innerHTML = changes.map(d => {
+            const statusBadge = statusToBadge(d.current);
+
+            const lastChange = d.changes[d.changes.length - 1];
+            const lastTime = new Date(lastChange.time).toLocaleString('fr-FR');
+
+            const transitions = d.changes.map(c => {
+                return statusToBadge(c.from) + ' <i class="bi bi-arrow-right arrow-change"></i> ' + statusToBadge(c.to);
+            }).join(' ');
+
+            const catLabel = categoryLabels[d.category] || d.category;
+            const isIsolated = isolatedDeviceId === d.id ? ' isolated' : '';
+
+            return '<tr class="state-change-row' + isIsolated + '" data-device-id="' + d.id + '">'
+                + '<td><strong>' + d.hostname + '</strong></td>'
+                + '<td><code>' + d.ip + '</code></td>'
+                + '<td><span class="badge text-bg-secondary">' + catLabel + '</span></td>'
+                + '<td>' + statusBadge + '</td>'
+                + '<td>' + transitions + '</td>'
+                + '<td><small>' + lastTime + '</small></td>'
+                + '<td>'
+                + '<button class="btn btn-sm btn-outline-primary isolate-btn" title="Afficher uniquement cet appareil">'
+                + '<i class="bi bi-eye"></i>'
+                + '</button>'
+                + '</td>'
+                + '</tr>';
+        }).join('');
+
+        // Bind isolate buttons
+        changesBody.querySelectorAll('.isolate-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const deviceId = btn.closest('tr').dataset.deviceId;
+                isolateDevice(deviceId);
+            });
+        });
+
+        // Bind row click
+        changesBody.querySelectorAll('.state-change-row').forEach(row => {
+            row.addEventListener('click', () => {
+                isolateDevice(row.dataset.deviceId);
+            });
+        });
+    }
+
+    function updateChart(data) {
+        const buckets = data.buckets;
+        const labels = buckets.map(b => new Date(b.t));
+        const upData = buckets.map(b => b.up);
+        const downData = buckets.map(b => b.down);
+        const failingData = buckets.map(b => b.failing || 0);
+        const totalDevices = data.total_devices;
+        const allMax = Math.max(...upData, ...downData, ...failingData);
+
+        if (chart) {
+            chart.data.labels = labels;
+            chart.data.datasets[0].data = upData;
+            chart.data.datasets[1].data = failingData;
+            chart.data.datasets[2].data = downData;
+            chart.options.scales.y.max = Math.max(totalDevices, allMax + 1);
+            chart.update('none');
+            return;
+        }
+
+        const ctx = document.getElementById('upChart').getContext('2d');
+
+        const upGradient = ctx.createLinearGradient(0, 0, 0, 400);
+        upGradient.addColorStop(0, 'rgba(25, 135, 84, 0.4)');
+        upGradient.addColorStop(1, 'rgba(25, 135, 84, 0.02)');
+
+        const failingGradient = ctx.createLinearGradient(0, 0, 0, 400);
+        failingGradient.addColorStop(0, 'rgba(255, 193, 7, 0.4)');
+        failingGradient.addColorStop(1, 'rgba(255, 193, 7, 0.02)');
+
+        const downGradient = ctx.createLinearGradient(0, 0, 0, 400);
+        downGradient.addColorStop(0, 'rgba(220, 53, 69, 0.4)');
+        downGradient.addColorStop(1, 'rgba(220, 53, 69, 0.02)');
+
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'En ligne',
+                        data: upData,
+                        borderColor: '#198754',
+                        backgroundColor: upGradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHitRadius: 10,
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'En erreur',
+                        data: failingData,
+                        borderColor: '#ffc107',
+                        backgroundColor: failingGradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHitRadius: 10,
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'Hors ligne',
+                        data: downData,
+                        borderColor: '#dc3545',
+                        backgroundColor: downGradient,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 0,
+                        pointHitRadius: 10,
+                        borderWidth: 2,
+                    },
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: { color: '#dee2e6', usePointStyle: true, pointStyle: 'rectRounded', padding: 15 },
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(33,37,41,0.95)',
+                        titleColor: '#dee2e6',
+                        bodyColor: '#dee2e6',
+                        borderColor: '#495057',
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function(items) {
+                                return new Date(items[0].parsed.x).toLocaleString('fr-FR');
+                            },
+                            label: function(item) {
+                                return ' ' + item.dataset.label + ': ' + item.parsed.y + ' appareil(s)';
+                            }
+                        }
+                    },
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            tooltipFormat: 'dd/MM/yyyy HH:mm',
+                            displayFormats: {
+                                minute: 'HH:mm',
+                                hour: 'HH:mm',
+                                day: 'dd/MM',
+                            },
+                        },
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#adb5bd', maxTicksLimit: 12 },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        max: Math.max(totalDevices, allMax + 1),
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: {
+                            color: '#adb5bd',
+                            stepSize: 1,
+                            callback: v => Number.isInteger(v) ? v : '',
+                        },
+                        title: { display: true, text: 'Appareils', color: '#adb5bd' },
+                    },
+                },
+            }
+        });
+    }
+
+    // Init
+    updateCategoryLabel();
+    fetchData();
+    setupRefresh();
+})();
+</script>
+{% endblock %}

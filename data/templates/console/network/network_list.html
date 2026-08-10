@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Réseaux - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Réseaux</h1>
+    {% if user.is_staff %}
+    <div class="btn-group">
+        <a href="{% url 'network:create' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-1"></i> Ajouter un r&eacute;seau
+        </a>
+        <a href="{% url 'network:credential-list' %}" class="btn btn-outline-info">
+            <i class="bi bi-key me-1"></i> Credentials gateway
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>CIDR</th>
+                <th>VLAN</th>
+                <th>Gateway</th>
+                <th>Appareils</th>
+                <th>Dernier scan</th>
+                <th>Actif</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for network in networks %}
+            <tr>
+                <td><a href="{% url 'network:detail' network.pk %}">{{ network.name }}</a></td>
+                <td><code>{{ network.cidr }}</code></td>
+                <td>{{ network.vlan_id|default:"-" }}</td>
+                <td>
+                    {{ network.gateway|default:"-" }}
+                    {% if network.can_query_gateway %}
+                        <span class="badge text-bg-info" title="API ubus configur&eacute;e"><i class="bi bi-router"></i></span>
+                    {% endif %}
+                </td>
+                <td><span class="badge text-bg-primary rounded-pill">{{ network.devices.count }}</span></td>
+                <td>{{ network.last_scan|date:"d/m/Y H:i"|default:"Jamais" }}</td>
+                <td>
+                    {% if network.is_active %}
+                        <span class="badge text-bg-success">Oui</span>
+                    {% else %}
+                        <span class="badge text-bg-secondary">Non</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'network:detail' network.pk %}" class="btn btn-sm btn-outline-info" title="Voir">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    {% if user.is_staff %}
+                    <form method="post" action="{% url 'network:scan' network.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-success" title="Scanner" {% if not network.is_active %}disabled{% endif %}>
+                            <i class="bi bi-radar"></i>
+                        </button>
+                    </form>
+                    <a href="{% url 'network:update' network.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <a href="{% url 'network:delete' network.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" class="text-center text-muted py-3">Aucun réseau enregistré</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

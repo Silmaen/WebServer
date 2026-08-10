@@ -1,0 +1,17 @@
+<div id="task-log"
+     {% if task.status == "pending" or task.status == "running" %}
+     hx-get="{% url 'core:task-detail' task.pk %}"
+     hx-trigger="every 2s"
+     hx-target="#task-log"
+     hx-swap="outerHTML"
+     {% endif %}>
+    <div class="log-output" id="log-content">{% if task.log %}{% for line in task.log.splitlines %}<span class="{% if 'ERROR' in line %}log-error{% elif 'WARNING' in line %}log-warning{% elif 'INFO' in line %}log-info{% endif %}">{{ line }}</span>
+{% endfor %}{% else %}<span class="text-muted">Aucun log disponible.</span>{% endif %}</div>
+</div>
+<script>
+// Auto-scroll to bottom
+(function() {
+    const el = document.getElementById('log-content');
+    if (el) el.scrollTop = el.scrollHeight;
+})();
+</script>

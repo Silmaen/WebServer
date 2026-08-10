@@ -1,0 +1,84 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>D&eacute;clench&eacute;e par</th>
+                <th>Statut</th>
+                <th>Cr&eacute;&eacute;e</th>
+                <th>Dur&eacute;e</th>
+                <th>R&eacute;sultat</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td><a href="{% url 'core:task-detail' task.pk %}">{{ task.name }}</a></td>
+                <td>
+                    {% if task.triggered_by %}
+                        <i class="bi bi-person"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
+                    {% else %}
+                        <i class="bi bi-clock-history text-muted"></i> <span class="text-muted">Auto</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.status == "pending" %}
+                        <span class="badge text-bg-secondary"><i class="bi bi-hourglass me-1"></i>{{ task.get_status_display }}</span>
+                    {% elif task.status == "running" %}
+                        <span class="badge text-bg-primary"><span class="spinner-border spinner-border-sm me-1"></span>{{ task.get_status_display }}</span>
+                    {% elif task.status == "success" %}
+                        <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ task.get_status_display }}</span>
+                    {% elif task.status == "failure" %}
+                        <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ task.get_status_display }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
+                <td>
+                    {% if task.started_at %}
+                        {{ task.duration.total_seconds|floatformat:1 }}s
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.status == "success" and task.result %}
+                        <small class="text-muted">
+                            {% if task.result.hosts_found is not None %}
+                                {{ task.result.hosts_found }} h&ocirc;tes
+                            {% else %}
+                                OK
+                            {% endif %}
+                        </small>
+                    {% elif task.status == "failure" %}
+                        <small class="text-danger" title="{{ task.error }}">{{ task.error|truncatechars:60 }}</small>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.status == "pending" or task.status == "running" %}
+                    <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-3">Aucune t&acirc;che</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% if tasks %}
+<div class="text-end">
+    <a href="{% url 'core:task-list' %}" class="btn btn-sm btn-outline-secondary">
+        Voir tout <i class="bi bi-arrow-right ms-1"></i>
+    </a>
+</div>
+{% endif %}

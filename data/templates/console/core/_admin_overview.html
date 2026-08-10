@@ -1,0 +1,85 @@
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="fs-1 text-primary mb-2">
+                    <i class="bi bi-pc-display"></i>
+                </div>
+                <h5>{{ device_count }} appareil{{ device_count|pluralize:"s" }}</h5>
+                <div class="text-muted small">
+                    <span class="text-success">{{ online_count }} en ligne</span>
+                    &middot;
+                    <span class="text-danger">{{ offline_count }} hors ligne</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="fs-1 text-info mb-2">
+                    <i class="bi bi-diagram-3"></i>
+                </div>
+                <h5>{{ network_count }} r&eacute;seau{{ network_count|pluralize:"x" }}</h5>
+                <div class="text-muted small">
+                    {{ gateway_count }} avec gateway configur&eacute;e
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body text-center">
+                <div class="fs-1 text-warning mb-2">
+                    <i class="bi bi-list-check"></i>
+                </div>
+                <h5>{{ task_active_count }} t&acirc;che{{ task_active_count|pluralize:"s" }} active{{ task_active_count|pluralize:"s" }}</h5>
+                <div class="text-muted small">
+                    {{ task_total_count }} au total ({{ task_failed_count }} en erreur)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-2">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-activity me-1"></i> Monitoring</div>
+            <div class="card-body">
+                <table class="table table-borderless table-sm mb-0">
+                    <tr>
+                        <td class="text-muted">Checks actifs</td>
+                        <td class="text-end"><strong>{{ check_count }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Checks UP</td>
+                        <td class="text-end"><span class="badge text-bg-success">{{ check_up_count }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Checks DOWN</td>
+                        <td class="text-end"><span class="badge text-bg-danger">{{ check_down_count }}</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-link-45deg me-1"></i> Liens rapides</div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="/admin/" class="btn btn-outline-secondary btn-sm" target="_blank">
+                        <i class="bi bi-box-arrow-up-right me-1"></i> Django Admin
+                    </a>
+                    <a href="{% url 'core:task-list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-list-check me-1"></i> T&acirc;ches (page compl&egrave;te)
+                    </a>
+                    <a href="{% url 'network:credential-list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-key me-1"></i> Credentials Gateway (page compl&egrave;te)
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

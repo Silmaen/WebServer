@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ task.name }} - Network Monitor{% endblock %}
+
+{% block extra_css %}
+<style>
+.log-output {
+    background: #1a1a2e;
+    color: #c8d6e5;
+    font-family: 'Fira Mono', 'Consolas', monospace;
+    font-size: .82rem;
+    line-height: 1.5;
+    padding: 1rem;
+    border-radius: .375rem;
+    max-height: 500px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.log-output .log-time { color: #576574; }
+.log-output .log-info { color: #48dbfb; }
+.log-output .log-warning { color: #feca57; }
+.log-output .log-error { color: #ff6b6b; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        {% if task.status == "pending" %}
+            <i class="bi bi-hourglass text-secondary me-2"></i>
+        {% elif task.status == "running" %}
+            <span class="spinner-border spinner-border-sm text-primary me-2"></span>
+        {% elif task.status == "success" %}
+            <i class="bi bi-check-circle text-success me-2"></i>
+        {% elif task.status == "failure" %}
+            <i class="bi bi-x-circle text-danger me-2"></i>
+        {% endif %}
+        {{ task.name }}
+    </h1>
+    <div>
+        {% if user.is_staff %}{% if task.status == "pending" or task.status == "running" %}
+        <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-x-circle me-1"></i> Annuler
+            </button>
+        </form>
+        {% endif %}{% endif %}
+        <a href="{% url 'core:task-list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Retour
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle me-1"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-borderless mb-0">
+                    <tr>
+                        <th class="text-muted" style="width:35%">Statut</th>
+                        <td>
+                            {% if task.status == "pending" %}
+                                <span class="badge text-bg-secondary"><i class="bi bi-hourglass me-1"></i>{{ task.get_status_display }}</span>
+                            {% elif task.status == "running" %}
+                                <span class="badge text-bg-primary"><span class="spinner-border spinner-border-sm me-1"></span>{{ task.get_status_display }}</span>
+                            {% elif task.status == "success" %}
+                                <span class="badge text-bg-success"><i class="bi bi-check-circle me-1"></i>{{ task.get_status_display }}</span>
+                            {% elif task.status == "failure" %}
+                                <span class="badge text-bg-danger"><i class="bi bi-x-circle me-1"></i>{{ task.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">D&eacute;clench&eacute;e par</th>
+                        <td>
+                            {% if task.triggered_by %}
+                                <i class="bi bi-person me-1"></i>{{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
+                            {% else %}
+                                <i class="bi bi-clock-history me-1"></i><span class="text-muted">Automatique</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Celery ID</th>
+                        <td><code class="small">{{ task.celery_task_id }}</code></td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Cr&eacute;&eacute;e</th>
+                        <td>{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">D&eacute;marr&eacute;e</th>
+                        <td>{{ task.started_at|date:"d/m/Y H:i:s"|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Termin&eacute;e</th>
+                        <td>{{ task.completed_at|date:"d/m/Y H:i:s"|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <th class="text-muted">Dur&eacute;e</th>
+                        <td>
+                            {% if task.started_at %}
+                                {{ task.duration.total_seconds|floatformat:1 }}s
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clipboard-data me-1"></i> R&eacute;sultat</h5>
+            </div>
+            <div class="card-body">
+                {% if task.status == "success" and task.result %}
+                    <table class="table table-borderless mb-0">
+                        {% for key, value in task.result.items %}
+                        <tr>
+                            <th class="text-muted" style="width:40%">{{ key }}</th>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                {% elif task.status == "failure" and task.error %}
+                    <div class="alert alert-danger mb-0">
+                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        {{ task.error }}
+                    </div>
+                {% elif task.status == "pending" or task.status == "running" %}
+                    <p class="text-muted mb-0">En cours d'ex&eacute;cution...</p>
+                {% else %}
+                    <p class="text-muted mb-0">-</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log output -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-terminal me-1"></i> Log d'ex&eacute;cution</h5>
+        {% if task.status == "pending" or task.status == "running" %}
+        <small class="text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Mise &agrave; jour automatique</small>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% include "core/task_log_partial.html" %}
+    </div>
+</div>
+{% endblock %}

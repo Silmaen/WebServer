@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-3">
+        <div class="card text-bg-success">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-check-circle me-1"></i> En ligne</h5>
+                <p class="card-text display-6">{{ online_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-danger">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-x-circle me-1"></i> Hors ligne</h5>
+                <p class="card-text display-6">{{ offline_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-warning">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-exclamation-triangle me-1"></i> En erreur</h5>
+                <p class="card-text display-6">{{ failed_count }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-info">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-pc-display me-1"></i> Total appareils</h5>
+                <p class="card-text display-6">{{ total_devices }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if unknown_category_count > 0 %}
+<div class="alert alert-info d-flex align-items-center mt-3">
+    <i class="bi bi-question-diamond me-2 fs-5"></i>
+    <div>
+        <strong>{{ unknown_category_count }} appareil{{ unknown_category_count|pluralize:"s" }} non class&eacute;{{ unknown_category_count|pluralize:"s" }}</strong>
+        en attente de classification.
+        <a href="{% url 'devices:list' %}?category=unknown" class="alert-link">Voir</a>
+    </div>
+</div>
+{% endif %}
+
+<div class="row g-3 mt-2">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Checks actifs</h6>
+                <p class="display-6 mb-0">{{ total_checks }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Checks OK</h6>
+                <p class="display-6 mb-0 text-success">{{ checks_up }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Checks en panne</h6>
+                <p class="display-6 mb-0 text-danger">{{ checks_down }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Temps moyen</h6>
+                <p class="display-6 mb-0">{% if avg_response_time %}{{ avg_response_time|floatformat:0 }}<small class="fs-6">ms</small>{% else %}-{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-pie-chart me-1"></i> Par cat&eacute;gorie</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="categoryChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Top 5 lents</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for item in slowest_checks %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <a href="{% url 'devices:detail' item.monitoring_check__device__pk %}">{{ item.monitoring_check__device__hostname }}</a>
+                    <span class="badge text-bg-warning rounded-pill">{{ item.avg_ms|floatformat:0 }} ms</span>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted">Pas de donn&eacute;es</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shuffle me-1"></i> Changements d'&eacute;tat</h5>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for change in recent_state_changes %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <span>
+                            {% if change.to == "up" %}
+                                <span class="badge text-bg-success me-1">UP</span>
+                            {% else %}
+                                <span class="badge text-bg-danger me-1">DOWN</span>
+                            {% endif %}
+                            <a href="{% url 'devices:detail' change.device_pk %}">{{ change.hostname }}</a>
+                        </span>
+                        <small class="text-muted">{{ change.time|timesince }}</small>
+                    </div>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-center text-muted">Aucun changement r&eacute;cent</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-clock-history me-1"></i> Appareils r&eacute;cents</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Hostname</th>
+                                <th>IP</th>
+                                <th>Cat&eacute;gorie</th>
+                                <th>Statut</th>
+                                <th>Derni&egrave;re activit&eacute;</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for device in recent_devices %}
+                            <tr>
+                                <td><a href="{% url 'devices:detail' device.pk %}">{{ device.hostname }}</a></td>
+                                <td>{{ device.ip_address }}</td>
+                                <td>{{ device.get_category_display }}</td>
+                                <td>
+                                    {% if device.status == "online" %}
+                                        <span class="badge text-bg-success">{{ device.get_status_display }}</span>
+                                    {% elif device.status == "offline" %}
+                                        <span class="badge text-bg-danger">{{ device.get_status_display }}</span>
+                                    {% elif device.status == "failed" %}
+                                        <span class="badge text-bg-warning">{{ device.get_status_display }}</span>
+                                    {% else %}
+                                        <span class="badge text-bg-secondary">{{ device.get_status_display }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ device.last_seen|date:"d/m/Y H:i"|default:"-" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">Aucun appareil enregistr&eacute;</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const categoryData = [
+    {% for item in by_category %}
+    {label: "{{ item.category }}", count: {{ item.count }}},
+    {% endfor %}
+];
+if (categoryData.length > 0) {
+    const colors = {
+        server: "#198754", network: "#0d6efd", ap: "#6f42c1",
+        iot: "#fd7e14", printer: "#6c757d", workstation: "#20c997",
+        phone: "#0dcaf0", camera: "#e83e8c", other: "#adb5bd", unknown: "#495057"
+    };
+    new Chart(document.getElementById('categoryChart'), {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.map(d => d.label),
+            datasets: [{
+                data: categoryData.map(d => d.count),
+                backgroundColor: categoryData.map(d => colors[d.label] || '#adb5bd'),
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {position: 'right', labels: {color: '#dee2e6', padding: 10}},
+            }
+        }
+    });
+}
+</script>
+{% endblock %}

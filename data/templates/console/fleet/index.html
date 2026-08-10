@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Flotte - Network Monitor{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
+    <h1 class="h2">Flotte</h1>
+    <span class="text-muted small">
+        {{ observed_declared }} machine{{ observed_declared|pluralize }} déclarée{{ observed_declared|pluralize }}
+        vue{{ observed_declared|pluralize }} par le scanner, sur {{ observed_total }} appareil{{ observed_total|pluralize }} observé{{ observed_total|pluralize }}
+    </span>
+</div>
+
+{% if wud_error %}
+<div class="alert alert-warning d-flex align-items-center" role="alert">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    <div>
+        wud est injoignable, la colonne « images » est vide : <code>{{ wud_error }}</code>
+    </div>
+</div>
+{% endif %}
+
+{% if stack_alerts %}
+{# The two states no other check in the lab can see. gatus sees healthy containers
+   and wud sees a fine image, so this banner is the only place they surface. #}
+<div class="alert alert-danger" role="alert">
+    <h6 class="alert-heading"><i class="bi bi-file-earmark-x me-2"></i>Stacks sans fichier compose exploitable</h6>
+    <ul class="mb-0 small">
+        {% for stack in stack_alerts %}
+        <li>
+            <strong>{{ stack.machine.name }}/{{ stack.project }}</strong> —
+            {% if stack.compose == "missing" %}
+            le fichier compose a disparu : personne ne peut redéployer ni mettre à jour cette stack
+            {% else %}
+            le fichier compose n'a jamais été commité : il disparaît avec le disque
+            {% endif %}
+            <br><code class="text-muted">{{ stack.path }}</code>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<!-- Machines déclarées -->
+<div class="table-responsive mb-4">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Machine</th>
+                <th>État</th>
+                <th>OS</th>
+                <th>Uptime</th>
+                <th>MAJ</th>
+                <th>Docker</th>
+                <th>Disque</th>
+                <th>Dérive</th>
+                <th>Images</th>
+                <th>WoL</th>
+                {% if user.is_staff %}<th>Actions</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for m in machines %}
+            <tr>
+                <td>
+                    <strong>{{ m.name }}</strong>
+                    <div class="text-muted small">{{ m.ip|default:"-" }} · {{ m.role|default:"-" }}</div>
+                </td>
+                <td>
+                    {% if m.state == "ok" %}
+                    <span class="badge text-bg-success">à jour</span>
+                    {% elif m.state == "stale" %}
+                    <span class="badge text-bg-warning">rapport ancien</span>
+                    {% else %}
+                    {# Honest rather than empty: hermes, ceryx, eudore and hecate sit
+                       here until they get an agent. #}
+                    <span class="badge text-bg-secondary">jamais rapporté</span>
+                    {% endif %}
+                    {% if m.observed %}
+                    <div class="text-muted small">scanner : {{ m.observed.status }}</div>
+                    {% endif %}
+                </td>
+                <td class="small">{{ m.facts.os|default:"-" }}<br><span class="text-muted">{{ m.facts.kernel|default:"" }}</span></td>
+                <td class="small">{{ m.facts.uptime|default:"-" }}</td>
+                <td>
+                    {% if m.facts.security and m.facts.security != "0" %}
+                    <span class="badge text-bg-danger" title="mises à jour de sécurité en attente">{{ m.facts.updates }} ⚠</span>
+                    {% elif m.facts.updates and m.facts.updates != "0" %}
+                    <span class="badge text-bg-warning">{{ m.facts.updates }}</span>
+                    {% else %}
+                    <span class="text-muted">{{ m.facts.updates|default:"-" }}</span>
+                    {% endif %}
+                    {% if m.facts.reboot == "yes" %}<div class="small text-warning">redémarrage dû</div>{% endif %}
+                </td>
+                <td class="small">
+                    {{ m.facts.docker|default:"-" }}
+                    {% if m.facts.unhealthy and m.facts.unhealthy != "0" %}
+                    <div class="text-danger">{{ m.facts.unhealthy }} unhealthy</div>
+                    {% endif %}
+                    {% if m.facts.restarting and m.facts.restarting != "0" %}
+                    <div class="text-danger">{{ m.facts.restarting }} en boucle</div>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if m.disk.percent >= 85 %}
+                    <span class="badge text-bg-danger">{{ m.disk.percent }}%</span>
+                    {% elif m.disk.percent >= 70 %}
+                    <span class="badge text-bg-warning">{{ m.disk.percent }}%</span>
+                    {% elif m.disk.percent %}
+                    <span class="text-muted">{{ m.disk.percent }}%</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                    {% if m.disk.mount %}<div class="text-muted small">{{ m.disk.mount }}</div>{% endif %}
+                </td>
+                <td>
+                    {# A status instead of a zero when the check could not run: "I
+                       could not tell" and "nothing to report" are different answers. #}
+                    {% if m.drift.status == "ok" %}
+                        {% if m.drift.count %}
+                        <span class="badge text-bg-warning" title="{{ m.drift.changes|join:', ' }}">{{ m.drift.count }}</span>
+                        {% else %}
+                        <span class="text-muted">0</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="badge text-bg-secondary">{{ m.drift.status }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if m.images.behind %}
+                    <span class="badge text-bg-warning" title="{% for b in m.images.behind %}{{ b.container }}: {{ b.tag }} → {{ b.available }}
+{% endfor %}">{{ m.images.behind|length }}/{{ m.images.total }}</span>
+                    {% elif m.images.total %}
+                    <span class="text-muted">0/{{ m.images.total }}</span>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td class="small">
+                    {# The column to watch between outages: a machine showing `d`
+                       will not wake at the next power cut. #}
+                    {% if m.wake_order %}
+                        {% if "g" in m.facts.wol %}
+                        <span class="text-success">{{ m.facts.wol }}</span>
+                        {% else %}
+                        <span class="text-danger">{{ m.facts.wol|default:"?" }}</span>
+                        {% endif %}
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                {% if user.is_staff %}
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        {% for verb, label in verbs.items %}
+                        <form method="post" action="{% url 'fleet:approve' m.name verb %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-secondary" title="{{ label }}">{{ verb }}</button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </td>
+                {% endif %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="11" class="text-center text-muted py-4">
+                    Aucune machine. <code>_common/inventory.conf</code> est-il bien monté ?
+                    Vérifier avec <code>manage.py sync_inventory</code>.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Stacks déployées -->
+<h2 class="h4 pb-2 mb-3 border-bottom">Stacks déployées</h2>
+<p class="text-muted small">
+    Rien n'est déclaré ici : compose estampille son projet, son répertoire et son fichier
+    sur chaque conteneur, donc le démon Docker sait déjà de quel checkout chaque stack
+    provient. C'est ce qui donne une trace aux stacks vivant dans leur propre dépôt git.
+</p>
+
+{% for m in machines %}
+{% if m.stacks %}
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <strong>{{ m.name }}</strong>
+        <span class="text-muted small">{{ m.stacks|length }} stack{{ m.stacks|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Projet</th>
+                    <th>Dépôt</th>
+                    <th>HEAD</th>
+                    <th>Arbre</th>
+                    <th>Retard</th>
+                    <th>Compose</th>
+                    <th>Vu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in m.stacks %}
+                <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
+                    <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
+                    <td>{{ s.repo }}{% if s.foreign %} <i class="bi bi-box-arrow-up-right text-muted small" title="dépôt externe"></i>{% endif %}</td>
+                    <td><code class="small">{{ s.head|default:"-" }}</code></td>
+                    <td class="small">{{ s.worktree|default:"-" }}</td>
+                    <td class="small">{% if s.behind %}{{ s.behind }}{% elif s.behind == 0 %}0{% else %}-{% endif %}</td>
+                    <td class="small">{{ s.get_compose_display }}</td>
+                    <td class="small text-muted">{{ s.last_seen|timesince }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endfor %}
+
+<p class="text-muted small">
+    Généré le {{ generated|date:"d/m/Y H:i:s" }}.
+    La disponibilité reste chez gatus : <a href="http://selene.argawaen.net:8080">selene:8080</a>
+    répond quand cette page est justement ce qui est cassé.
+</p>
+{% endblock %}
