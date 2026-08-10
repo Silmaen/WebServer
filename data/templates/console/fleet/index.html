@@ -21,8 +21,8 @@
 {% endif %}
 
 {% if stack_alerts %}
-{# The two states no other check in the lab can see. gatus sees healthy containers
-   and wud sees a fine image, so this banner is the only place they surface. #}
+{% comment %} The two states no other check in the lab can see. gatus sees healthy containers
+   and wud sees a fine image, so this banner is the only place they surface. {% endcomment %}
 <div class="alert alert-danger" role="alert">
     <h6 class="alert-heading"><i class="bi bi-file-earmark-x me-2"></i>Stacks sans fichier compose exploitable</h6>
     <ul class="mb-0 small">
@@ -72,8 +72,8 @@
                     {% elif m.state == "stale" %}
                     <span class="badge text-bg-warning">rapport ancien</span>
                     {% else %}
-                    {# Honest rather than empty: hermes, ceryx, eudore and hecate sit
-                       here until they get an agent. #}
+                    {% comment %} Honest rather than empty: hermes, ceryx, eudore and hecate sit
+                       here until they get an agent. {% endcomment %}
                     <span class="badge text-bg-secondary">jamais rapporté</span>
                     {% endif %}
                     {% if m.observed %}
@@ -114,8 +114,8 @@
                     {% if m.disk.mount %}<div class="text-muted small">{{ m.disk.mount }}</div>{% endif %}
                 </td>
                 <td>
-                    {# A status instead of a zero when the check could not run: "I
-                       could not tell" and "nothing to report" are different answers. #}
+                    {% comment %} A status instead of a zero when the check could not run: "I
+                       could not tell" and "nothing to report" are different answers. {% endcomment %}
                     {% if m.drift.status == "ok" %}
                         {% if m.drift.count %}
                         <span class="badge text-bg-warning" title="{{ m.drift.changes|join:', ' }}">{{ m.drift.count }}</span>
@@ -137,8 +137,8 @@
                     {% endif %}
                 </td>
                 <td class="small">
-                    {# The column to watch between outages: a machine showing `d`
-                       will not wake at the next power cut. #}
+                    {% comment %} The column to watch between outages: a machine showing `d`
+                       will not wake at the next power cut. {% endcomment %}
                     {% if m.wake_order %}
                         {% if "g" in m.facts.wol %}
                         <span class="text-success">{{ m.facts.wol }}</span>

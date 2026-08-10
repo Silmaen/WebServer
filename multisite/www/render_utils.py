@@ -107,6 +107,34 @@ internal_pages = [
         "Active": True,
         "MinLevel": ADMINISTRATEUR,
     },
+    # La console de la flotte, arrivée avec network_monitor. Déclarée ici plutôt
+    # qu'écrite en dur dans le gabarit : c'est ce qui la fait apparaître dans la
+    # navigation du site, filtrée par niveau comme le reste. Sans ces entrées la
+    # console n'était atteignable qu'en tapant /console/ à la main.
+    {
+        "name": "Flotte",
+        "url": "fleet:index",
+        "icon": "mdi-server",
+        "group": "right",
+        "Active": True,
+        "MinLevel": AUTORISE,
+    },
+    {
+        "name": "Appareils",
+        "url": "devices:list",
+        "icon": "mdi-lan",
+        "group": "right",
+        "Active": True,
+        "MinLevel": AUTORISE,
+    },
+    {
+        "name": "Réseaux",
+        "url": "network:list",
+        "icon": "mdi-sitemap",
+        "group": "right",
+        "Active": True,
+        "MinLevel": ADMINISTRATEUR,
+    },
     {
         "name": "Administration",
         "url": "administration",

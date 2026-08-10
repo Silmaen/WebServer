@@ -93,6 +93,12 @@ class OIDCAuthBackend(OIDCAuthenticationBackend):
         from common.user_utils import ADMINISTRATEUR, AUTORISE
         from connector.models import UserProfile
 
+        # Created for *every* OIDC user, before deciding on a level. The site's
+        # navigation context processor calls `user.userprofile.get_user_level_display()`
+        # on any authenticated user, so a user without a profile is a 500 on every page
+        # -- and an authentik user in neither group is exactly that case.
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+
         if is_admin:
             level = ADMINISTRATEUR
         elif is_viewer:
@@ -100,7 +106,6 @@ class OIDCAuthBackend(OIDCAuthenticationBackend):
         else:
             return
 
-        profile, _ = UserProfile.objects.get_or_create(user=user)
         if profile.user_level != level:
             profile.user_level = level
             profile.save(update_fields=["user_level"])

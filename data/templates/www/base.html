@@ -32,9 +32,9 @@
                     <button type="submit" class="userbtn mdi mdi-logout">Sign out</button>
                 </form>
                 {% else %}
-                {# SSO first: that is how one signs in on a normal day. The local form
+                {% comment %} SSO first: that is how one signs in on a normal day. The local form
                    stays one click further away, and is what still works the day
-                   authentik does not. #}
+                   authentik does not. {% endcomment %}
                 {% if oidc_enabled %}
                 <a class="userbtn mdi mdi-shield-account" href="{% url 'oidc_authentication_init' %}">Sign in</a>
                 <a class="userbtn mdi mdi-login" href="{% url 'login' %}" title="Connexion locale (secours)"></a>
