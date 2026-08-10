@@ -1,0 +1,152 @@
+/* Console — le pont entre les classes héritées de Bootstrap et le style du site.
+ *
+ * Les pages de la console viennent de network_monitor, où elles étaient écrites pour
+ * Bootstrap 5. Plutôt que de réécrire dix-sept gabarits, ce fichier redonne un sens aux
+ * quelques classes qu'ils utilisent réellement — cartes, badges, boutons, grille,
+ * tableaux — en s'appuyant sur les variables de couleur de `default_www.css`. Aucune
+ * couleur n'est redéfinie ici : si le thème du site change, la console suit.
+ *
+ * Tout le reste (en-tête, navigation, pied de page, typographie) vient du site, parce
+ * que ces pages étendent maintenant `www/base.html`.
+ */
+
+.console {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* --- grille : ce que row/col-* faisaient ------------------------------------ */
+.console .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.console .row > [class*="col"] {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+.console .col-12 { flex-basis: 100%; }
+
+/* --- cartes ---------------------------------------------------------------- */
+.console .card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.console .card-header {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--separator);
+    padding: .5rem .75rem;
+    font-weight: 600;
+}
+
+.console .card-body { padding: .75rem; }
+
+.console .card-title {
+    margin: 0 0 .35rem;
+    font-size: 1rem;
+    color: var(--text);
+}
+
+.console .card-text { margin: 0; color: var(--text-secondary); }
+
+/* --- tableaux : même rendu que .admin-table du site ------------------------ */
+.console .table-responsive { overflow-x: auto; }
+
+.console .table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-surface);
+}
+
+.console .table th,
+.console .table td {
+    padding: .4rem .6rem;
+    border-bottom: 1px solid var(--separator);
+    text-align: left;
+    vertical-align: middle;
+}
+
+.console .table th {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.console .table-hover tbody tr:hover { background: var(--bg-elevated); }
+.console .table-sm th, .console .table-sm td { padding: .25rem .5rem; font-size: .9em; }
+
+/* Les lignes que la page de la flotte colore selon la gravité. */
+.console .table-danger  { background: color-mix(in srgb, var(--red) 18%, transparent); }
+.console .table-warning { background: color-mix(in srgb, var(--yellow) 18%, transparent); }
+
+/* --- badges ---------------------------------------------------------------- */
+.console .badge {
+    display: inline-block;
+    padding: .15em .5em;
+    border-radius: 4px;
+    font-size: .82em;
+    font-weight: 600;
+    background: var(--bg-button);
+    color: var(--text);
+    white-space: nowrap;
+}
+
+/* Les variantes text-bg-* de Bootstrap, sur les couleurs du site. Le noir sur les
+   fonds clairs (succès, avertissement) parce que le texte du thème est presque blanc. */
+.console .text-bg-success   { background: var(--green);  color: #101010; }
+.console .text-bg-warning   { background: var(--yellow); color: #101010; }
+.console .text-bg-danger    { background: var(--red);    color: #fff; }
+.console .text-bg-secondary { background: var(--bg-button); color: var(--text-secondary); }
+.console .text-bg-primary   { background: var(--blue);   color: #101010; }
+
+/* --- boutons : l'aspect .userbtn du site ---------------------------------- */
+.console .btn {
+    display: inline-block;
+    padding: .3rem .6rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-button);
+    color: var(--text);
+    font-size: .9em;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.console .btn:hover { background: var(--bg-button-hover); }
+.console .btn-sm { padding: .15rem .4rem; font-size: .82em; }
+.console .btn-primary { border-color: var(--blue); color: var(--blue-light); }
+.console .btn-danger, .console .btn-outline-danger { border-color: var(--red); color: var(--red); }
+.console .btn-group { display: inline-flex; flex-wrap: wrap; gap: .25rem; }
+
+/* --- messages -------------------------------------------------------------- */
+.console .alert {
+    padding: .6rem .8rem;
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 4px;
+    background: var(--bg-surface);
+}
+
+.console .alert-danger  { border-left-color: var(--red); }
+.console .alert-warning { border-left-color: var(--yellow); }
+.console .alert-success { border-left-color: var(--green); }
+.console .alert-heading { margin: 0 0 .35rem; font-size: 1rem; }
+
+/* --- utilitaires que les gabarits utilisent au passage -------------------- */
+.console .text-muted { color: var(--text-secondary); }
+.console .text-danger { color: var(--red); }
+.console .text-success { color: var(--green); }
+.console .text-warning { color: var(--yellow); }
+.console .small, .console small { font-size: .85em; }
+.console code { color: var(--blue-light); }
+
+/* Les glyphes de bootstrap-icons ne sont plus chargés ; les balises restent dans les
+   gabarits et ne doivent pas laisser de trou dans la mise en page. */
+.console .bi::before { content: ""; }

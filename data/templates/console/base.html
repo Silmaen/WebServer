@@ -1,35 +1,41 @@
+{% extends "www/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="fr" data-bs-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Network Monitor{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'console/favicon.svg' %}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="{% static 'console/css/main.css' %}" rel="stylesheet">
-    {% block extra_css %}{% endblock %}
-</head>
-<body>
-    {% include "includes/navbar.html" %}
+{% comment %}
+La console sous le style du site.
 
-    <div class="container-fluid">
-        <div class="row">
-            {% include "includes/sidebar.html" %}
+Elle arrivait de network_monitor avec sa propre page complète : Bootstrap 5 et
+bootstrap-icons depuis un CDN, son thème sombre à elle, sa navbar et sa sidebar. Deux
+chartes graphiques dans une seule application, et quatre dépendances CDN pour des pages
+qui ne servent qu'à l'intérieur du lab.
 
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-3">
-                {% include "includes/toasts.html" %}
-                {% block content %}{% endblock %}
-            </main>
-        </div>
-    </div>
+Ce gabarit ne fait plus qu'une chose : brancher les pages de la console sur
+`www/base.html`. Elles héritent donc de l'en-tête, de la navigation, du pied de page et
+des variables de couleur du site, et il ne reste que `console/css/console.css` — une
+poignée de règles pour les quelques classes de mise en page que les pages héritées
+utilisent encore (cartes, badges, boutons, grille).
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <script src="{% static 'console/js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-</body>
-</html>
+Les pages filles définissent `console_content` et non `content` : `content` est déjà
+pris par le gabarit du site, dans lequel celui-ci vient s'insérer.
+{% endcomment %}
+
+{% block title %}{% block console_title %}Console{% endblock %} - La crypte de Lachouette{% endblock %}
+
+{% block additionnalhead %}
+<link href="{% static 'console/css/console.css' %}" rel="stylesheet">
+{% block extra_css %}{% endblock %}
+{% endblock %}
+
+{% block content %}
+<div class="PageTitle">{{ page_subtitle|default:"Console" }}</div>
+<div class="console">
+    {% include "includes/toasts.html" %}
+    {% block console_content %}{% endblock %}
+</div>
+{% endblock %}
+
+{% block additionnaljs %}
+{% comment %} htmx (3 pages) et chart.js (2 pages) sont chargés par ces pages-là dans
+   leur propre `extra_js`, pas ici : les autres n'ont pas à les payer. {% endcomment %}
+<script src="{% static 'console/js/main.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
+{% endblock %}

@@ -2,7 +2,7 @@
 
 {% block title %}Tâches - Network Monitor{% endblock %}
 
-{% block content %}
+{% block console_content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
     <h1 class="h2">Tâches en arrière-plan</h1>
 </div>
@@ -101,4 +101,8 @@
     </ul>
 </nav>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 {% endblock %}

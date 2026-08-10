@@ -1,11 +1,15 @@
-/* Network Monitor - Main JS */
-
-// Auto-dismiss toasts after 5 seconds
+/* Console - le strict nécessaire.
+ *
+ * Auparavant ce fichier appelait `bootstrap.Toast` : la console chargeait tout le
+ * bundle JS de Bootstrap depuis un CDN pour faire disparaître un message au bout de
+ * cinq secondes. Le voici sans dépendance.
+ */
 document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".toast.show").forEach(function (toast) {
+    document.querySelectorAll(".toast").forEach(function (toast) {
         setTimeout(function () {
-            var bsToast = bootstrap.Toast.getOrCreateInstance(toast);
-            bsToast.hide();
+            toast.style.transition = "opacity .4s";
+            toast.style.opacity = "0";
+            setTimeout(function () { toast.remove(); }, 400);
         }, 5000);
     });
 });

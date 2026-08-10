@@ -41,7 +41,7 @@
                    authentik does not. {% endcomment %}
                 {% if oidc_enabled %}
                 <a class="userbtn mdi mdi-shield-account" href="{% url 'oidc_authentication_init' %}">Sign in</a>
-                <a class="userbtn mdi mdi-login" href="{% url 'login' %}" title="Connexion locale (secours)"></a>
+                <a class="userbtn mdi mdi-login" href="{% url 'login' %}" title="Connexion locale, en secours si authentik est indisponible">Local</a>
                 {% else %}
                 <a class="userbtn mdi mdi-login" href="{% url 'login' %}">Sign in</a>
                 {% endif %}
@@ -130,5 +130,6 @@
         {% endif %}
     </div>
 </footer>
+{% block additionnaljs %}{% endblock %}
 </body>
 </html>
