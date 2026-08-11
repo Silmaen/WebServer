@@ -6,7 +6,7 @@
 # starts, so this script does not repeat them.
 #
 #   ./deploy.sh                 full deployment (pull + build + up + wait)
-#   ./deploy.sh --no-pull       skip the git update
+#   ./deploy.sh --no-pull       fetch nothing: neither the git update nor the images
 #   ./deploy.sh --tests         run the test suite before starting
 #   ./deploy.sh --dry-run       print what would run, execute nothing
 #   ./deploy.sh check           only look for a pending update, change nothing
@@ -201,6 +201,30 @@ check_update() {
     exit 10
 }
 
+# Refresh the images that come from a registry. Without this, a pinned tag like
+# postgres:16-alpine stays on whatever was pulled the first time, so the minor
+# releases -- which is where the security fixes are -- never land on the server.
+# The Dockerfile's base image needs its own pull: `docker compose pull` skips the
+# buildable services, and a year-old FROM is just as stale as a year-old postgres.
+# The tag is read from the Dockerfile rather than repeated here.
+#
+# A registry we cannot reach is a warning, not a failure: the images already on
+# disk are enough to deploy, and aborting would leave the update half done.
+pull_images() {
+    step "Refreshing the images"
+    local stale=0 base
+    run docker compose pull --ignore-buildable --quiet || stale=1
+    base="$(awk '/^FROM/ { print $2; exit }' Dockerfile 2>/dev/null || true)"
+    if [ -n "$base" ]; then
+        run docker pull --quiet "$base" || stale=1
+    fi
+    if [ "$stale" -eq 1 ]; then
+        warn "some images could not be refreshed, keeping the ones already on disk"
+    else
+        ok "images up to date"
+    fi
+}
+
 build_image() {
     step "Building the image"
     run docker compose build
@@ -278,6 +302,7 @@ deploy() {
     check_inventory
     prepare_directories
     [ "$PULL" -eq 1 ] && update_repository
+    [ "$PULL" -eq 1 ] && pull_images
     build_image
     [ "$TESTS" -eq 1 ] && run_tests
     start_services

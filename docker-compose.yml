@@ -8,6 +8,13 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-argawaen}
       POSTGRES_USER: ${POSTGRES_USER:-argawaen}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-argawaen}
+    # Left to itself, wud picks the "greatest" tag of the repository and announced a
+    # major update towards `19beta2-trixie` -- a beta, on Debian, not even the alpine
+    # variant. The constraint keeps it on the current major, so the fleet page reports
+    # a real lag or nothing. Bumping the image means bumping this regex on the same
+    # line of thought, which is exactly when the question deserves to be asked.
+    labels:
+      wud.tag.include: '^16-alpine$$'
     volumes:
       - ${SERVER_PATH_PGDB:-./docker_data/db}:/var/lib/postgresql/data
     # On the loopback only, and only because celery_scanner runs with the host's
@@ -22,8 +29,11 @@ services:
 
   # messaging
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     restart: unless-stopped
+    # Same reason as db: left unconstrained, wud offered `32bit-stretch` as an upgrade.
+    labels:
+      wud.tag.include: '^8-alpine$$'
     # Same reason as db above: the scanner reaches it at 127.0.0.1.
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"
@@ -37,6 +47,12 @@ services:
   web:
     build: .
     restart: unless-stopped
+    # Built here, so it exists in no registry: wud was looking up
+    # `library/webserver-web:latest` on Docker Hub and reporting a 401 for it. Nothing
+    # is lost by excluding it -- what this image tracks is the Dockerfile's base, and
+    # `deploy.sh` pulls that at every deployment.
+    labels:
+      wud.watch: 'false'
     dns: ${SERVER_DNS:-8.8.8.8}
     ports:
       - "${SERVER_PORT:-8000}:8000"
@@ -75,6 +91,9 @@ services:
   celery_scanner:
     build: .
     restart: unless-stopped
+    # Same image as web, same absence from any registry.
+    labels:
+      wud.watch: 'false'
     entrypoint: [""]
     command: celery -A multisite worker -Q network -n scanner@%h --concurrency 4 --loglevel=info
     working_dir: /app/multisite

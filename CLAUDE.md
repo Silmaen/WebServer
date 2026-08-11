@@ -28,11 +28,22 @@ python manage.py collectstatic            # Collect static files
 `deploy.sh` at the repository root is the all-in-one entry point (its user-facing text is
 in English, unlike the rest of the project). It checks the tooling and `.env`, warns on a
 missing inventory file, pre-creates the media directory with the right owner, updates the
-repository, builds, starts, and waits for `db`, `redis` and `web` to report healthy.
+repository, refreshes the images, builds, starts, and waits for `db`, `redis` and `web` to
+report healthy.
+
+`pull_images()` exists because a pinned tag never moves on its own: without it
+`postgres:16-alpine` and `redis:7-alpine` stay on the image pulled at the first deployment,
+so the minor releases — which is where the security fixes are — never land. It refreshes the
+registry-only services with `docker compose pull --ignore-buildable`, then the Dockerfile's
+`FROM` separately (a buildable service is skipped by that command, and a stale base image is
+just as bad), reading the tag from the Dockerfile rather than repeating it. A registry it
+cannot reach is a **warning, not a failure**: the images already on disk are enough to
+deploy, and aborting would leave the update half done.
 
 ```bash
 ./deploy.sh                 # déploiement complet : pull + build + up + attente
-./deploy.sh --no-pull       # sans toucher au dépôt (obligatoire si l'arbre est sale)
+./deploy.sh --no-pull       # ne rien récupérer : ni le dépôt, ni les images
+                            #   (obligatoire si l'arbre est sale)
 ./deploy.sh --tests         # lance la suite de tests avant de démarrer
 ./deploy.sh --dry-run       # affiche le plan sans rien exécuter
 ./deploy.sh check           # vérifie seulement s'il y a une mise à jour, ne change rien
@@ -205,6 +216,13 @@ So the feature spans two repositories. **In this one** everything is in place: f
 Two independent signals, deliberately kept apart on the Stacks page because they have different remedies:
 - **git** — `Stack.behind` (commits behind the remote) and `Stack.git_en_retard`. `None` when the probe cannot tell, which is not the same as zero. A commit never applied means "redeploy".
 - **images** — wud sees a newer tag. `apps/fleet/wud.py` `by_container()` returns every watched container per machine, and `apps/fleet/state.py` `_attacher_images()` maps them onto stacks: by the `com.docker.compose.project` label when wud exposes it, otherwise by container-name prefix, longest project first (a service name can contain hyphens, and two projects can share a prefix). Each stack gets an in-memory `.images` dict, like `enrich.annotate` does with `.flotte`.
+
+**A wud signal is only worth as much as the labels feeding it.** Unconstrained, wud takes the "greatest" tag of a repository, which made it announce `postgres:16-alpine` → `19beta2-trixie` and `redis:*-alpine` → `32bit-stretch`: a beta, a foreign variant, and a column that cries wolf. So `docker-compose.yml` carries, per service:
+
+- `wud.tag.include` on the images pulled from a registry, anchored on the **current major** (`'^16-alpine$$'`, `'^8-alpine$$'`). Note the `$$`: compose interpolates `$`, so a single one would corrupt the regex. Bumping the image tag means bumping this regex on the same line of thought — which is precisely when the question deserves to be asked.
+- `wud.watch: 'false'` on `web` and `celery_scanner`, built here and therefore present in no registry: wud was looking up `library/webserver-web:latest` on Docker Hub and reporting a 401 per container. What those images really track is the Dockerfile's base, which `deploy.sh` pulls at every deployment.
+
+The other stacks of the lab carry no wud label at all, so the same noise is on them (`authentik-postgresql`, `pretloc-db-1`, `sensor_server-redis-1`, the `nginx` containers, plus a 401 on every locally built image). Fixing it belongs to `home-server-stacks`, with these same two labels.
 
 ### User Levels & Access Control
 
