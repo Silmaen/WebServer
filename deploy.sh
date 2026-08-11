@@ -9,6 +9,7 @@
 #   ./deploy.sh --no-pull       skip the git update
 #   ./deploy.sh --tests         run the test suite before starting
 #   ./deploy.sh --dry-run       print what would run, execute nothing
+#   ./deploy.sh check           only look for a pending update, change nothing
 #   ./deploy.sh status          service status
 #   ./deploy.sh logs [service]  follow the logs
 #   ./deploy.sh stop            stop everything
@@ -17,6 +18,11 @@
 #   ./deploy.sh superuser       create an admin account
 #   ./deploy.sh shell           Django shell inside the web container
 #   ./deploy.sh help            this help
+#
+# `check` (alias `--check`) exits with a status meant to be scripted:
+#   0   already up to date
+#   10  an update is pending
+#   1   cannot tell (not a git repository, no upstream, fetch failed)
 #
 set -euo pipefail
 
@@ -148,6 +154,53 @@ update_repository() {
     fi
 }
 
+# Report whether the remote is ahead, and touch nothing else. `git fetch` only writes
+# remote-tracking refs, never the working tree, so this is safe to run on a schedule.
+check_update() {
+    step "Checking for a pending update"
+    [ -d .git ] || fail "not a git repository, cannot check for updates."
+
+    local branch upstream
+    branch="$(git rev-parse --abbrev-ref HEAD)"
+    upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+    [ -n "$upstream" ] || fail "branch '$branch' tracks no upstream: nothing to compare against."
+
+    if [ "$DRY_RUN" -eq 1 ]; then
+        printf '  [dry-run] git fetch --quiet\n'
+        warn "comparing against the remote refs already on disk"
+    else
+        git fetch --quiet || fail "git fetch failed: is the remote reachable?"
+    fi
+
+    local behind ahead
+    read -r behind ahead <<< "$(git rev-list --left-right --count "${upstream}...HEAD")"
+    ok "branch '$branch' tracking '$upstream'"
+
+    # A dirty tree does not block this check, but it will block the deployment.
+    if [ -n "$(git status --porcelain)" ]; then
+        warn "local changes present: a deployment will need --no-pull"
+    fi
+
+    if [ "$ahead" -gt 0 ] && [ "$behind" -eq 0 ]; then
+        ok "up to date ($ahead local commit(s) not pushed)"
+        return 0
+    fi
+
+    if [ "$behind" -eq 0 ]; then
+        ok "up to date ($(git rev-parse --short HEAD))"
+        return 0
+    fi
+
+    if [ "$ahead" -gt 0 ]; then
+        warn "branches have diverged: $behind incoming, $ahead local commit(s)"
+    else
+        warn "$behind commit(s) pending"
+    fi
+    git --no-pager log --oneline "HEAD..${upstream}"
+    printf '\n     deploy with: ./deploy.sh\n'
+    exit 10
+}
+
 build_image() {
     step "Building the image"
     run docker compose build
@@ -244,7 +297,8 @@ while [ $# -gt 0 ]; do
         --tests)    TESTS=1 ;;
         --dry-run)  DRY_RUN=1 ;;
         -h|--help|help) usage; exit 0 ;;
-        deploy|status|logs|stop|restart|tests|superuser|shell)
+        --check)    COMMAND="check" ;;
+        deploy|check|status|logs|stop|restart|tests|superuser|shell)
             COMMAND="$1"
             if [ $# -gt 1 ] && [[ "$2" != -* ]]; then
                 ARGUMENT="$2"
@@ -258,6 +312,7 @@ done
 
 case "$COMMAND" in
     deploy)    deploy ;;
+    check)     check_update ;;
     status)    check_tools; docker compose ps ;;
     logs)      docker compose logs -f ${ARGUMENT:+"$ARGUMENT"} ;;
     stop)      step "Stopping"; docker compose down; ok "services stopped" ;;

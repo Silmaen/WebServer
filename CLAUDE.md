@@ -35,6 +35,7 @@ repository, builds, starts, and waits for `db`, `redis` and `web` to report heal
 ./deploy.sh --no-pull       # sans toucher au dépôt (obligatoire si l'arbre est sale)
 ./deploy.sh --tests         # lance la suite de tests avant de démarrer
 ./deploy.sh --dry-run       # affiche le plan sans rien exécuter
+./deploy.sh check           # vérifie seulement s'il y a une mise à jour, ne change rien
 ./deploy.sh status | logs | stop | restart
 ./deploy.sh tests [app]     # tests dans un conteneur jetable, base de test dédiée
 ./deploy.sh superuser       # créer un admin
@@ -50,6 +51,12 @@ docker compose down                       # Arrêt
 docker compose exec web python /app/multisite/manage.py test www   # Lancer les tests
 docker compose logs -f web                # Suivre les logs
 ```
+
+`./deploy.sh check` (alias `--check`) ne fait qu'un `git fetch` et compare à l'upstream :
+il ne construit rien, ne démarre rien, et n'écrit que les refs de suivi. Ses codes de
+retour sont faits pour être scriptés (cron, supervision) : **0** à jour, **10** mise à
+jour en attente, **1** impossible de conclure (pas un dépôt, pas d'upstream, fetch
+échoué).
 
 Migrations et `collectstatic` sont lancés par `entrypoint.sh` au démarrage du conteneur
 `web` : ni `deploy.sh` ni toi n'avez à les rejouer à la main.
