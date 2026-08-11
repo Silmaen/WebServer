@@ -1,5 +1,23 @@
 {% extends "base.html" %}
 
+{% block extra_js %}
+{% if request.GET.attente %}
+{% comment %} Même mécanique que sur la page Stacks, et pour la même raison : une approbation
+   agit sur la machine, pas sur cette base. L'agent traite les messages en série, donc le
+   rapport de suivi publié derrière l'action arrive quand l'action est finie ; ces trois
+   rechargements sont ce qui va le chercher. {% endcomment %}
+<script>
+    (function () {
+        var tour = parseInt("{{ request.GET.attente|escapejs }}", 10) || 1;
+        if (tour > 3) { return; }
+        setTimeout(function () {
+            location.replace(location.pathname + "?attente=" + (tour + 1));
+        }, 20000);
+    })();
+</script>
+{% endif %}
+{% endblock %}
+
 {% block console_toolbar %}
 <div class="console-toolbar">
     <span class="console-toolbar-info">
@@ -60,6 +78,13 @@
                     {% else %}
                     {% comment %} Honnête plutôt que vide : une machine sans agent reste ici. {% endcomment %}
                     <span class="badge text-bg-secondary">jamais rapporté</span>
+                    {% endif %}
+                    {% comment %} L'âge en clair, et pas seulement le badge : « à jour » veut dire
+                       « le rapport n'est pas vieux », pas « cette ligne est de maintenant ». Sans
+                       ce chiffre, une page vieille de cinquante minutes est indiscernable d'une
+                       page fraîche, et toute action semble sans effet. {% endcomment %}
+                    {% if m.at %}
+                    <div class="text-muted small" title="Cette ligne date du dernier rapport de la machine, pas du chargement de la page.">rapporté il y a {{ m.at|timesince }}</div>
                     {% endif %}
                     {% if m.observed %}
                     <div class="text-muted small">scanner : {{ m.observed.status }}</div>
@@ -137,10 +162,14 @@
                 {% if user.is_staff %}
                 <td>
                     <div class="btn-group btn-group-sm">
+                        {% comment %} Le libellé, pas le verbe brut : `VERB_LABELS` existe pour ça, et
+                           « report » sur un bouton ne dit pas à son lecteur qu'il tient là le moyen
+                           de rafraîchir la ligne sans attendre l'heure suivante. Le verbe reste en
+                           `title` pour qui veut savoir ce qui part sur le sujet ntfy. {% endcomment %}
                         {% for verb, label in verbs.items %}
                         <form method="post" action="{% url 'fleet:approve' m.name verb %}">
                             {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-secondary" title="{{ label }}">{{ verb }}</button>
+                            <button type="submit" class="btn btn-outline-secondary" title="publie « {{ verb }} » sur le sujet ntfy">{{ label }}</button>
                         </form>
                         {% endfor %}
                     </div>

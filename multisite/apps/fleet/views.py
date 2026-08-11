@@ -72,11 +72,39 @@ class StacksView(FleetBaseView):
         return ctx
 
 
-def _voir_autre_page(url_name, *args):
-    """Redirige en 303, pour qu'un rafraîchissement ne rejoue pas le POST."""
+def _voir_autre_page(url_name, *args, attente=False):
+    """Redirige en 303, pour qu'un rafraîchissement ne rejoue pas le POST.
+
+    `attente` marque la page pour qu'elle se recharge quelques fois d'elle-même : une
+    action agit sur une machine, pas sur cette base, donc sans ça on revient sur l'état
+    d'avant l'action et le bouton a l'air de n'avoir rien fait.
+    """
     response = redirect(url_name, *args)
+    if attente:
+        response["Location"] = f"{response['Location']}?attente=1"
     response.status_code = 303
     return response
+
+
+def _rapport_de_suivi(verb, machine):
+    """Fait suivre une action d'une demande de rapport, et dit ce que ça change.
+
+    L'agent de la machine traite les messages du sujet **en série** : ce rapport ne
+    partira donc qu'une fois l'action terminée, et il n'y a rien à ordonnancer ici.
+
+    C'est ce qui manquait, et c'était tout le sujet de « le bouton ne fait pas ce qu'on
+    espère » : l'action partait bien et le script s'exécutait, mais la page continuait
+    d'afficher le dernier rapport horaire — jusqu'à cinquante minutes en arrière selon la
+    machine. Le `behind` ne bougeait pas, le `Vu` ne bougeait pas, donc rien ne prouvait
+    qu'il s'était passé quelque chose.
+
+    Pas de rapport de suivi après `report` : c'en est déjà un.
+    """
+    if verb == "report":
+        return ""
+    if ntfy.publish("report", machine):
+        return " (le rapport de suivi n'a pas pu être publié)"
+    return " — un rapport suivra dès que ce sera terminé, cette page se rafraîchit seule"
 
 
 class ApproveView(StaffRequiredMixin, View):
@@ -91,8 +119,9 @@ class ApproveView(StaffRequiredMixin, View):
         if error:
             messages.error(request, error)
         else:
-            messages.success(request, f"« {verb} » publié pour {machine}")
-        return _voir_autre_page("fleet:index")
+            suite = _rapport_de_suivi(verb, machine)
+            messages.success(request, f"« {verb} » publié pour {machine}{suite}")
+        return _voir_autre_page("fleet:index", attente=not error)
 
 
 class DeployStackView(StaffRequiredMixin, View):
@@ -107,5 +136,8 @@ class DeployStackView(StaffRequiredMixin, View):
         if error:
             messages.error(request, error)
         else:
-            messages.success(request, f"Mise à jour demandée pour {machine}/{project}")
-        return _voir_autre_page("fleet:stacks")
+            suite = _rapport_de_suivi("deploy", machine)
+            messages.success(
+                request, f"Mise à jour demandée pour {machine}/{project}{suite}"
+            )
+        return _voir_autre_page("fleet:stacks", attente=not error)

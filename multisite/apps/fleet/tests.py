@@ -254,10 +254,28 @@ class DeployStackViewTest(TestCase):
 
     @override_settings(FLEET_NTFY_TOKEN="jeton")
     def test_staff_publie_et_revient_en_303(self):
-        """Le staff publie, et la redirection est un 303."""
+        """Le staff publie, et la redirection demande l'attente."""
         _admin()
         self.client.login(username="admin", password="motdepasse")
         with mock.patch("apps.fleet.ntfy.requests.post"):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 303)
-        self.assertEqual(response["Location"], reverse("fleet:stacks"))
+        # `?attente=1` fait recharger la page quelques fois. Sans lui on revient sur
+        # l'état du dernier rapport horaire, et l'action semble n'avoir rien fait.
+        self.assertEqual(response["Location"], f"{reverse('fleet:stacks')}?attente=1")
+
+    @override_settings(FLEET_NTFY_TOKEN="jeton")
+    def test_un_rapport_suit_la_demande(self):
+        """Deux messages partent : la demande, puis un rapport.
+
+        L'agent de la machine traite le sujet en série, donc ce second message ne
+        s'exécute qu'une fois le déploiement terminé. C'est lui qui fait bouger la ligne
+        sans attendre le rapport horaire — l'action partait déjà, c'est la page qui ne
+        le montrait pas.
+        """
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        with mock.patch("apps.fleet.ntfy.requests.post") as poste:
+            self.client.post(self.url)
+        corps = [appel.kwargs["data"].decode() for appel in poste.call_args_list]
+        self.assertEqual(corps, ["deploy selene immich", "report selene"])
