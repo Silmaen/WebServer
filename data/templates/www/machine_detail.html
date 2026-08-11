@@ -28,13 +28,17 @@
 
     <!-- Section Ports -->
     <div class="machine-scan-section" id="section-ports">
-        <h3>
-            <span class="mdi mdi-ethernet"></span> Ports ouverts
-            <button id="btn-ports" class="userbtn machine-scan-btn" onclick="lancerScanPorts()" disabled>
-                <span class="mdi mdi-radar"></span> Scanner
-            </button>
-            <span id="status-ports" class="machine-scan-status"></span>
-        </h3>
+        {% comment %} Le bouton était à l'intérieur du `<h3>`, ce qui le désalignait du titre.
+           Il tient maintenant sa propre ligne d'actions. {% endcomment %}
+        <div class="machine-scan-header">
+            <h3><span class="mdi mdi-ethernet"></span> Ports ouverts</h3>
+            <div class="machine-scan-actions">
+                <span id="status-ports" class="machine-scan-status"></span>
+                <button id="btn-ports" class="userbtn machine-scan-btn" onclick="lancerScanPorts()" disabled>
+                    <span class="mdi mdi-radar"></span> Scanner
+                </button>
+            </div>
+        </div>
         <div class="machine-scan-result" id="result-ports">
             {% if machine.ports_ouverts %}
                 {% for p in machine.ports_ouverts %}
@@ -51,7 +55,7 @@
         </div>
     </div>
 
-    <p><a class="userbtn" href="{% url 'monitoring' %}"><span class="mdi mdi-arrow-left"></span> Retour</a></p>
+    <p><a class="userbtn" href="{% url 'monitoring' %}"><span class="mdi mdi-arrow-left"></span> Retour aux machines</a></p>
 </div>
 
 <script>

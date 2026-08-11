@@ -1,7 +1,11 @@
 @charset "UTF-8";
-@import url(https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css);
 
 /* ========== Variables ========== */
+/* La police d'icônes est chargée par le <link> de www/base.html : pas d'@import ici, il
+   sérialiserait le chargement de cette feuille derrière celui de la police. */
+/* --green, --yellow, --red, --text, --text-secondary, --bg-surface et --border doivent
+   rester des hexadécimaux à 6 chiffres : le script du tableau de bord de supervision les
+   lit et leur concatène un suffixe d'opacité (« 66 ») pour les dégradés du graphique. */
 :root {
 	--bg-body: #181818;
 	--bg-surface: #222222;
@@ -18,9 +22,20 @@
 	--bg-button: #303030;
 	--bg-button-hover: #3a3a3a;
 	--red: #e05555;
+	/* Plus soutenu que --red, et non plus clair comme --blue-hover : c'est un aplat qui
+	   porte du texte blanc (bouton destructeur survolé), où il faut du contraste. */
 	--red-hover: #c94040;
 	--green: #44cc44;
 	--yellow: #d4a843;
+	/* Texte posé sur un aplat de couleur */
+	--white: #ffffff;
+	--text-on-accent: #101010;
+	/* Ombre de l'élément actif (var(--blue) à 40 %) et ombre portée neutre */
+	--blue-shadow: rgba(80, 144, 193, .4);
+	--shadow: rgba(0, 0, 0, .4);
+	/* Hauteur d'un champ de formulaire : ligne 1.4em + padding 1em + bordures 2px.
+	   Sert à aligner les boutons posés sur la même ligne que des champs. */
+	--field-height: 2.55em;
 }
 
 /* ========== Reset ========== */
@@ -68,49 +83,49 @@ a:active,a:focus,a:hover {
 /* Restaure les styles HTML standards dans les zones de contenu markdown.
    Conserve : couleurs du thème, tailles de texte globales.
    Restaure : marges, padding, font-weight, list-style, alignement, etc. */
-.markdown-body {
+:is(.markdown-body, .markdownx-preview) {
 	text-align: left;
 	line-height: 1.7;
 }
-.markdown-body h1,
-.markdown-body h2,
-.markdown-body h3,
-.markdown-body h4,
-.markdown-body h5,
-.markdown-body h6 {
+:is(.markdown-body, .markdownx-preview) h1,
+:is(.markdown-body, .markdownx-preview) h2,
+:is(.markdown-body, .markdownx-preview) h3,
+:is(.markdown-body, .markdownx-preview) h4,
+:is(.markdown-body, .markdownx-preview) h5,
+:is(.markdown-body, .markdownx-preview) h6 {
 	font-weight: bold;
 	margin-top: 1.2em;
 	margin-bottom: 0.6em;
 	line-height: 1.3;
 }
-.markdown-body h1:first-child,
-.markdown-body h2:first-child,
-.markdown-body h3:first-child,
-.markdown-body h4:first-child,
-.markdown-body h5:first-child,
-.markdown-body h6:first-child {
+:is(.markdown-body, .markdownx-preview) h1:first-child,
+:is(.markdown-body, .markdownx-preview) h2:first-child,
+:is(.markdown-body, .markdownx-preview) h3:first-child,
+:is(.markdown-body, .markdownx-preview) h4:first-child,
+:is(.markdown-body, .markdownx-preview) h5:first-child,
+:is(.markdown-body, .markdownx-preview) h6:first-child {
 	margin-top: 0;
 }
-.markdown-body p {
+:is(.markdown-body, .markdownx-preview) p {
 	margin-bottom: 0.8em;
 }
-.markdown-body ul,
-.markdown-body ol {
+:is(.markdown-body, .markdownx-preview) ul,
+:is(.markdown-body, .markdownx-preview) ol {
 	padding-left: 2em;
 	margin-bottom: 0.8em;
 }
-.markdown-body ul {
+:is(.markdown-body, .markdownx-preview) ul {
 	list-style: disc;
 }
-.markdown-body ol {
+:is(.markdown-body, .markdownx-preview) ol {
 	list-style: decimal;
 }
-.markdown-body ul ul { list-style: circle; }
-.markdown-body ul ul ul { list-style: square; }
-.markdown-body li {
+:is(.markdown-body, .markdownx-preview) ul ul { list-style: circle; }
+:is(.markdown-body, .markdownx-preview) ul ul ul { list-style: square; }
+:is(.markdown-body, .markdownx-preview) li {
 	margin-bottom: 0.3em;
 }
-.markdown-body blockquote {
+:is(.markdown-body, .markdownx-preview) blockquote {
 	border-left: 3px solid var(--blue);
 	padding: 0.5em 1em;
 	margin: 0.8em 0;
@@ -118,10 +133,10 @@ a:active,a:focus,a:hover {
 	background: var(--bg-elevated);
 	border-radius: 0 6px 6px 0;
 }
-.markdown-body blockquote p:last-child {
+:is(.markdown-body, .markdownx-preview) blockquote p:last-child {
 	margin-bottom: 0;
 }
-.markdown-body pre {
+:is(.markdown-body, .markdownx-preview) pre {
 	background: var(--bg-elevated);
 	border: 1px solid var(--border);
 	border-radius: 6px;
@@ -130,55 +145,55 @@ a:active,a:focus,a:hover {
 	margin-bottom: 0.8em;
 	line-height: 1.5;
 }
-.markdown-body code {
+:is(.markdown-body, .markdownx-preview) code {
 	font-family: "Fira Code", "Consolas", "Monaco", monospace;
 	font-size: 0.9em;
 }
-.markdown-body :not(pre) > code {
+:is(.markdown-body, .markdownx-preview) :not(pre) > code {
 	background: var(--bg-elevated);
 	border: 1px solid var(--border);
 	border-radius: 3px;
 	padding: 0.15em 0.4em;
 }
-.markdown-body hr {
+:is(.markdown-body, .markdownx-preview) hr {
 	border: none;
 	border-top: 1px solid var(--separator);
 	margin: 1.5em 0;
 }
-.markdown-body table {
+:is(.markdown-body, .markdownx-preview) table {
 	width: 100%;
 	border-collapse: collapse;
 	margin-bottom: 0.8em;
 }
-.markdown-body th,
-.markdown-body td {
+:is(.markdown-body, .markdownx-preview) th,
+:is(.markdown-body, .markdownx-preview) td {
 	border: 1px solid var(--border);
 	padding: 0.5em 0.8em;
 	text-align: left;
 }
-.markdown-body th {
+:is(.markdown-body, .markdownx-preview) th {
 	background: var(--bg-elevated);
 	font-weight: bold;
 }
-.markdown-body img {
+:is(.markdown-body, .markdownx-preview) img {
 	max-width: 100%;
 	height: auto;
 	border-radius: 4px;
 }
-.markdown-body strong {
+:is(.markdown-body, .markdownx-preview) strong {
 	font-weight: bold;
 }
-.markdown-body em {
+:is(.markdown-body, .markdownx-preview) em {
 	font-style: italic;
 }
-.markdown-body dl {
+:is(.markdown-body, .markdownx-preview) dl {
 	margin-bottom: 0.8em;
 }
-.markdown-body dt {
+:is(.markdown-body, .markdownx-preview) dt {
 	font-weight: bold;
 	margin-top: 0.5em;
 }
-.markdown-body dd {
+:is(.markdown-body, .markdownx-preview) dd {
 	padding-left: 1.5em;
 	margin-bottom: 0.3em;
 }
@@ -396,40 +411,71 @@ a:active,a:focus,a:hover {
 }
 
 /* ========== Boutons ========== */
+/* Apparence unique des boutons de l'application : le site (.userbtn) et la console
+   (.btn) partagent ces déclarations. console.css ne fait plus que mapper les variantes. */
 .userbtn,
-.userbtn-danger {
+.userbtn-danger,
+.console .btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: .35em;
 	text-decoration:none;
 	padding: 4px 12px;
+	min-height: 1.9em;
+	line-height: 1.4;
 	border-radius: 20px;
 	border: none;
 	background: var(--bg-button);
+	color: var(--text-secondary);
 	text-align:center;
 	white-space: nowrap;
-	transition: background .2s, color .2s;
+	vertical-align: middle;
+	transition: background .2s, color .2s, border-color .2s;
 	font: inherit;
 	cursor: pointer;
-}
-.userbtn {
-	color: var(--text-secondary);
 }
 .userbtn-danger {
 	color: var(--red);
 }
 @media all and (max-width: 1000px){
 	.userbtn,
-	.userbtn-danger { padding: 1.4vw 1.8vw; }
+	.userbtn-danger,
+	.console .btn { padding: 1.4vw 1.8vw; }
 }
 .userbtn:active,
 .userbtn:focus,
-.userbtn:hover {
+.userbtn:hover,
+.console .btn:active,
+.console .btn:focus,
+.console .btn:hover {
 	text-decoration:none;
 	color: var(--blue);
 	background: var(--bg-button-hover);
 }
 .userbtn-danger:hover {
 	text-decoration: none;
-	color: #fff;
+	color: var(--white);
 	background: var(--red-hover);
+}
+/* Bouton désactivé : même rendu partout. */
+.userbtn:disabled,
+.userbtn-danger:disabled,
+.console .btn:disabled,
+.console .btn.disabled {
+	opacity: .4;
+	cursor: default;
+	pointer-events: none;
+}
+/* Bouton compact : même taille sur le site (.machine-scan-btn, posé à côté d'un titre de
+   section) et dans la console (.btn-sm, cellules d'actions et groupes de boutons). */
+.machine-scan-btn,
+.console .btn-sm,
+.console .btn-group-sm > .btn,
+.console .btn-group-sm > form > .btn {
+	padding: .1em .6em;
+	min-height: 1.6em;
+	font-size: .85em;
 }
 
 /* ========== Navigation ========== */
@@ -464,6 +510,15 @@ a:active,a:focus,a:hover {
 	border-radius: 20px;
 	transition: background .2s, color .2s;
 }
+/* Icône et libellé portés par le même élément : centrés verticalement et espacés. */
+.site-nav-item,
+.inner-nav-item > a > .mdi,
+.sub-inner-nav-item > a > .mdi,
+.archives-subnav-item > a > .mdi {
+	display: inline-flex;
+	align-items: center;
+	gap: .4em;
+}
 .site-nav-item > a:hover,
 .inner-nav-item > a:hover,
 .sub-inner-nav-item > a:hover,
@@ -488,20 +543,27 @@ a:active,a:focus,a:hover {
 }
 .archives-subnav {
 	background: var(--bg-elevated);
+	border-bottom: 1px solid var(--separator);
 	padding: 6px 0;
 }
+/* Tient de 2 à N entrées : on centre, on autorise le retour à la ligne. */
 .archives-subnav-menu {
 	justify-content: center;
+	flex-wrap: wrap;
+	gap: 8px;
 	margin: 0 auto;
 	max-width: 1690px;
 	padding: 5px 15px;
+}
+.archives-subnav-item > a {
+	background: var(--bg-surface);
 }
 /* Page active */
 .inner-nav-menu .current-page > a,
 .archives-subnav-item.current-page > a {
 	background: var(--blue);
-	color: #fff;
-	box-shadow: 0 2px 8px rgba(80, 144, 193, 0.4);
+	color: var(--white);
+	box-shadow: 0 2px 8px var(--blue-shadow);
 }
 .inner-nav-menu .current-page > a:hover,
 .archives-subnav-item.current-page > a:hover {
@@ -617,53 +679,14 @@ a:active,a:focus,a:hover {
 .markdownx textarea{
     width: 50%
 }
+/* L'aperçu markdownx ne porte plus que sa mise en page : la typographie du contenu vient
+   du bloc « Markdown body », dont il partage les sélecteurs. */
 .markdownx-preview{
     width:50%;
     margin: 1em;
     padding: 1em;
-    color: var(--text);
     background-color: var(--bg-surface);
     border-radius: 0.5em;
-    /* Hérite les styles markdown-body */
-    text-align: left;
-    line-height: 1.7;
-}
-.markdownx-preview h1,
-.markdownx-preview h2,
-.markdownx-preview h3,
-.markdownx-preview h4,
-.markdownx-preview h5,
-.markdownx-preview h6 {
-    font-weight: bold;
-    margin-top: 0.8em;
-    margin-bottom: 0.4em;
-}
-.markdownx-preview p {
-    margin-bottom: 0.6em;
-}
-.markdownx-preview ul,
-.markdownx-preview ol {
-    padding-left: 2em;
-    margin-bottom: 0.6em;
-}
-.markdownx-preview ul { list-style: disc; }
-.markdownx-preview ol { list-style: decimal; }
-.markdownx-preview li { margin-bottom: 0.2em; }
-.markdownx-preview blockquote {
-    border-left: 3px solid var(--blue);
-    padding: 0.4em 0.8em;
-    margin: 0.6em 0;
-    color: var(--text-secondary);
-}
-.markdownx-preview pre {
-    background: var(--bg-elevated);
-    border-radius: 4px;
-    padding: 0.6em;
-    overflow-x: auto;
-}
-.markdownx-preview code {
-    font-family: "Consolas", monospace;
-    font-size: 0.9em;
 }
 .comment-btn {
     background-color: var(--bg-button);
@@ -679,9 +702,6 @@ a:active,a:focus,a:hover {
 	font: inherit;
 	cursor: pointer;
 	transition: background-color .2s, color .2s;
-}
-.comment-btn-small {
-    width: max-content;
 }
 .comment-btn:hover {
     background-color: var(--bg-button-hover);
@@ -777,6 +797,8 @@ a:active,a:focus,a:hover {
 .msg-info .msg-icon { color: var(--blue); }
 
 /* ========== Formulaires ========== */
+/* Les champs de la console : ceux qui portent .form-control / .form-select, et ceux que
+   Django rend sans classe (sélecteurs d'élément) — même rendu que les champs du site. */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -785,12 +807,19 @@ input[type="search"],
 input[type="url"],
 input[type="date"],
 textarea,
-select {
+select,
+.console .form-control,
+.console .form-select,
+.console form textarea,
+.console form select,
+.console form input:not([type="checkbox"], [type="radio"], [type="hidden"],
+                        [type="submit"], [type="button"], [type="file"]) {
     background-color: var(--bg-elevated);
     color: var(--text);
     border: 1px solid var(--border);
     border-radius: 6px;
     padding: 0.5em 0.8em;
+    min-height: var(--field-height);
     font: inherit;
     width: 100%;
     transition: border-color .2s;
@@ -805,7 +834,12 @@ input[type="password"]:focus,
 input[type="number"]:focus,
 input[type="date"]:focus,
 textarea:focus,
-select:focus {
+select:focus,
+.console .form-control:focus,
+.console .form-select:focus,
+.console form textarea:focus,
+.console form select:focus,
+.console form input:focus:not([type="checkbox"], [type="radio"]) {
     outline: none;
     border-color: var(--blue);
 }
@@ -880,7 +914,8 @@ select:focus {
 .avatar-preview {
     margin-bottom: 0.5em;
 }
-.avatar-preview img {
+.avatar-preview img,
+.profile-avatar-preview {
     width: 80px;
     height: 80px;
     border-radius: 50%;
@@ -893,6 +928,15 @@ select:focus {
     padding: 2em 1.5em;
     text-align: left;
     line-height: 1.8;
+}
+/* Titre de page : c'est la forme utilisée par toutes les pages de www et de la console
+   (le bandeau .PageTitle ne sert plus qu'aux pages d'articles). Un seul rendu. */
+.static-page > h2 {
+    margin: 0 0 1em;
+    padding-bottom: 0.3em;
+    color: var(--blue-light);
+    font-weight: 600;
+    border-bottom: 2px solid var(--blue);
 }
 
 /* ========== CV ========== */
@@ -1035,11 +1079,17 @@ select:focus {
 }
 
 /* ========== Tables admin ========== */
-.admin-table-container {
+/* Base partagée avec les tableaux de la console (.console .table) : un seul rendu
+   de tableau dans l'application. */
+.admin-table-container,
+.console .table-responsive {
 	overflow-x: auto;
+}
+.admin-table-container {
 	margin-top: 1em;
 }
-.admin-table {
+.admin-table,
+.console .table {
 	width: 100%;
 	border-collapse: collapse;
 	background: var(--bg-surface);
@@ -1047,20 +1097,26 @@ select:focus {
 	overflow: hidden;
 }
 .admin-table th,
-.admin-table td {
+.admin-table td,
+.console .table th,
+.console .table td {
 	padding: 0.6em 1em;
 	text-align: left;
+	vertical-align: middle;
 	border-bottom: 1px solid var(--border);
 }
-.admin-table th {
+.admin-table th,
+.console .table th {
 	background: var(--bg-elevated);
 	color: var(--blue-light);
 	font-weight: 600;
 	font-size: 0.85em;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
+	white-space: nowrap;
 }
-.admin-table tbody tr:hover {
+.admin-table tbody tr:hover,
+.console .table-hover tbody tr:hover {
 	background: var(--bg-elevated);
 }
 .admin-badge {
@@ -1174,7 +1230,9 @@ select:focus {
 	outline: none;
 	border-color: var(--blue);
 }
-.icon-picker-grid {
+/* Grille des icônes : la liste choisie et celle chargée dynamiquement ont le même rendu. */
+.icon-picker-grid,
+.icon-picker-dynamic-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
 	gap: 4px;
@@ -1207,17 +1265,6 @@ select:focus {
 	border-color: var(--blue);
 	background: var(--bg-elevated);
 	color: var(--blue);
-}
-.icon-picker-dynamic-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
-	gap: 4px;
-	max-height: 240px;
-	overflow-y: auto;
-	padding: 4px;
-	background: var(--bg-surface);
-	border: 1px solid var(--border);
-	border-radius: 6px;
 }
 .icon-picker-status {
 	font-size: 0.85em;
@@ -1303,17 +1350,17 @@ select:focus {
 .icone-panel {
 	margin-top: 0.4em;
 }
-.icone-panel-hidden {
-	display: none;
-}
 .icone-preview {
 	margin-bottom: 0.5em;
 }
 
 /* ========== Cartes (base partagée) ========== */
+/* .console .card : mêmes fond et rayon que les cartes du site (sans le survol,
+   les cartes de la console ne sont pas cliquables). */
 .projet-card,
 .bricolage-card,
-.monitoring-card {
+.monitoring-card,
+.console .card {
 	background: var(--bg-surface);
 	border-radius: 8px;
 	transition: background .2s;
@@ -1325,6 +1372,7 @@ select:focus {
 }
 
 /* ========== Sections (base partagée) ========== */
+/* Les pages de la console utilisent les mêmes .monitoring-section / -title que www. */
 .projet-section,
 .monitoring-section {
 	margin-bottom: 2em;
@@ -1332,7 +1380,10 @@ select:focus {
 .projet-section-title,
 .monitoring-section-title {
 	font-size: 1.3em;
+	font-weight: 600;
+	padding-bottom: 0.4em;
 	margin-bottom: 0.8em;
+	border-bottom: 1px solid var(--separator);
 }
 
 /* ========== Grilles (base partagée) ========== */
@@ -1443,7 +1494,10 @@ select:focus {
 .projet-detail-date {
 	margin-left: 1em;
 }
-.projet-icone-img {
+/* Icône image d'un projet ou d'un service : même rendu, les deux classes sont émises par
+   les méthodes icone_html() des modèles. */
+.projet-icone-img,
+.service-icone-img {
 	width: 1.4em;
 	height: 1.4em;
 	object-fit: contain;
@@ -1452,6 +1506,12 @@ select:focus {
 .projet-detail-icon .projet-icone-img {
 	width: 2em;
 	height: 2em;
+}
+/* Aperçu dans un formulaire d'administration : taille fixe, indépendante du texte. */
+.icone-preview .projet-icone-img,
+.icone-preview .service-icone-img {
+	width: 48px;
+	height: 48px;
 }
 
 /* ========== Bricolage ========== */
@@ -1576,18 +1636,35 @@ select:focus {
 	font-size: 0.8em;
 	font-weight: 600;
 }
-.reverse-proxy-ok { background: var(--green); color: #fff; }
-.reverse-proxy-ko { background: var(--red); color: #fff; }
+.reverse-proxy-ok { background: var(--green); color: var(--text-on-accent); }
+.reverse-proxy-ko { background: var(--red); color: var(--white); }
 
-/* Icônes de service */
-.service-icone-img {
-	width: 1.4em;
-	height: 1.4em;
-	object-fit: contain;
-	vertical-align: middle;
+/* ========== Barre titre / actions (base partagée) ========== */
+/* Un titre à gauche, ses actions à droite, sur la même ligne. Même rendu sur les pages de
+   www (.machine-scan-header) et de la console (.console-toolbar). */
+.machine-scan-header,
+.console-toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5em 1em;
+}
+.machine-scan-actions,
+.console-toolbar-actions {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4em;
+	min-width: 0;
+}
+/* Un <form> par action (sonde, scan, annulation) : sans ceci les boutons s'empilent. */
+.machine-scan-actions > form,
+.console-toolbar-actions > form {
+	display: contents;
 }
 
-/* Machine detail */
+/* ========== Machine / serveur detail ========== */
 .machine-scan-section {
 	background: var(--bg-surface);
 	border: 1px solid var(--border);
@@ -1596,24 +1673,27 @@ select:focus {
 	margin: 12px 0;
 }
 .machine-scan-section h3 {
-	font-size: 17px;
-	margin-bottom: 10px;
+	font-size: 1.25em;
+	margin-bottom: 0.6em;
 	color: var(--blue-light);
 	display: flex;
 	align-items: center;
-	gap: 10px;
+	gap: 0.4em;
+}
+/* Dans une barre d'actions, l'écart passe sur la barre : sinon la marge du titre
+   décentre le bouton posé à côté. */
+.machine-scan-header {
+	margin-bottom: 0.6em;
+}
+.machine-scan-header h3 {
+	margin-bottom: 0;
 }
 .machine-scan-result {
 	min-height: 24px;
 }
-.machine-scan-btn {
-	font-size: 12px;
-	padding: 2px 10px;
-}
 .machine-scan-status {
 	color: var(--text-secondary);
-	font-size: 12px;
-	font-weight: normal;
+	font-size: 0.85em;
 }
 .machine-scan-error {
 	color: var(--red);
@@ -1624,9 +1704,6 @@ select:focus {
 }
 .scan-loading {
 	color: var(--yellow);
-}
-.machine-alerte-ip-hidden {
-	display: none;
 }
 .machine-alerte-ip {
 	background: rgba(212, 168, 67, 0.1);
@@ -1661,6 +1738,16 @@ select:focus {
 }
 .serveur-info-table a:hover {
 	color: var(--blue-hover);
+}
+
+/* ========== États génériques ========== */
+/* Masquage posé par le JS. En fin de feuille pour l'emporter sur le `display` des
+   composants concernés (grille d'icônes, panneaux d'icône, alerte IP, .form-check). */
+.is-hidden,
+.icone-panel-hidden,
+.machine-alerte-ip-hidden,
+.console .form-check.is-hidden {
+	display: none;
 }
 
 /* ========== Responsive ========== */
@@ -1744,84 +1831,4 @@ select:focus {
 	.monitoring-machines-table {
 		min-width: 700px;
 	}
-}
-
-/* ========== Legacy (templates orphelins) ========== */
-#line-chart {
-	display: block;
-	width: 100%;
-}
-.graph_container {
-	width:100%;
-}
-.graphpilot {
-	margin: 1em;
-	border:0;
-	border-radius: 2em;
-	background-color: var(--bg-elevated);
-	color: var(--text);
-	padding: 1em;
-	display: flex;
-	flex-direction:row;
-	justify-content:space-between;
-	width: 100%;
-}
-.graphpilot span { margin: 0.1em; }
-.graphpilot select {
-	padding: 0.1em;
-	border: none;
-	border-radius: .2em;
-	background-color: var(--bg-surface);
-	color: var(--text);
-	text-align:center;
-	opacity: .8;
-}
-.graphpilot select:hover { opacity: 1; }
-.graphpilot input[type=range] {
-	-webkit-appearance: none;
-	padding: 0;
-	font: inherit;
-	outline: none;
-	color: var(--blue);
-	opacity: .8;
-	background: var(--bg-surface);
-	box-sizing: border-box;
-	transition: opacity .2s;
-	cursor: pointer;
-	width: 15em;
-	height: 1em;
-	margin: 0;
-}
-.graphpilot input[type=range]:hover { opacity: 1; }
-.intbl { margin: 0.5em; text-align: left; }
-.graphsub { width: max-content; top: 25%; position: relative; }
-.sumarycontainer {
-	display: flex;
-	flex-wrap: wrap;
-	align-content: stretch;
-	width: 100%;
-}
-.sumary {
-	margin: 1%;
-	border-radius: 1.3vw;
-	width: 48%;
-	background: var(--bg-surface);
-	padding: 2%;
-}
-.sumarycontainer h2 { font-size: 2.5em; text-align:center; margin-bottom: .5em; }
-.tend { font-size:5em; }
-.sumtext { font-size: 4em; }
-.repporttext { font-size: 1.5em; margin-top: 0.5em; }
-.MachineList {
-	margin-top: .5em;
-	background: var(--bg-surface);
-	border-radius: 1.3vw;
-	padding: 1%;
-}
-.MachineList table { padding: 1%; border-collapse: collapse; }
-.MachineList td, .MachineList th { padding: 0.1vw .5vw; }
-
-@media (max-width: 768px) {
-	.graphpilot { flex-wrap: wrap; justify-content: center; }
-	.sumary { width: 100%; }
 }

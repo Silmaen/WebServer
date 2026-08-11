@@ -1,0 +1,37 @@
+{% comment %} Pagination des listes de la console. `{% querystring %}` conserve les filtres
+   courants en ne changeant que la page : plus besoin de recoller les paramètres à la
+   main sur chaque lien. Seules les pages autour de la page courante sont listées, plus
+   la première et la dernière. {% endcomment %}
+<nav aria-label="Pagination">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="{% querystring page=page_obj.previous_page_number %}" title="Page précédente">
+                <i class="mdi mdi-chevron-left"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-left"></i></span></li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == 1 or num == page_obj.paginator.num_pages or num >= page_obj.number|add:"-2" and num <= page_obj.number|add:"2" %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+            <a class="page-link" href="{% querystring page=num %}">{{ num }}</a>
+        </li>
+        {% elif num == 2 or num == page_obj.paginator.num_pages|add:"-1" %}
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="{% querystring page=page_obj.next_page_number %}" title="Page suivante">
+                <i class="mdi mdi-chevron-right"></i>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-right"></i></span></li>
+        {% endif %}
+    </ul>
+</nav>

@@ -1,48 +1,44 @@
 {% extends "base.html" %}
 
-{% block title %}{{ device.hostname }} - Network Monitor{% endblock %}
-
-{% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">{{ device.hostname }}</h1>
-    <div>
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-info">{{ device.ip_address|default:"-" }} &middot; {{ device.get_category_display }}</span>
+    <span class="console-toolbar-actions">
         {% if user.is_staff %}
-        <div class="btn-group d-inline-block">
-            <form method="post" action="{% url 'devices:probe' device.pk %}" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="mode" value="quick">
-                <button type="submit" class="btn btn-info" title="Top 100 ports + OS (~30s)">
-                    <i class="mdi mdi-magnify me-1"></i> Quick probe
-                </button>
-            </form>
-            <form method="post" action="{% url 'devices:probe' device.pk %}" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="mode" value="deep">
-                <button type="submit" class="btn btn-outline-info" title="Tous les ports TCP + OS + versions (~5-15min)">
-                    <i class="mdi mdi-magnify-plus me-1"></i> Deep probe
-                </button>
-            </form>
-        </div>
-        <a href="{% url 'devices:update' device.pk %}" class="btn btn-warning">
-            <i class="mdi mdi-pencil me-1"></i> Modifier
+        <form method="post" action="{% url 'devices:probe' device.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="quick">
+            <button type="submit" class="btn" title="Top 100 ports + OS (~30s)">
+                <i class="mdi mdi-magnify"></i> Sonde rapide
+            </button>
+        </form>
+        <form method="post" action="{% url 'devices:probe' device.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="mode" value="deep">
+            <button type="submit" class="btn" title="Tous les ports TCP + OS + versions (~5-15 min)">
+                <i class="mdi mdi-magnify-plus"></i> Sonde complète
+            </button>
+        </form>
+        <a href="{% url 'devices:update' device.pk %}" class="btn btn-primary">
+            <i class="mdi mdi-pencil"></i> Modifier
         </a>
         <a href="{% url 'devices:delete' device.pk %}" class="btn btn-danger">
-            <i class="mdi mdi-delete me-1"></i> Supprimer
+            <i class="mdi mdi-delete"></i> Supprimer
         </a>
         {% endif %}
-        <a href="{% url 'devices:list' %}" class="btn btn-outline-secondary">
-            <i class="mdi mdi-arrow-left me-1"></i> Retour
+        <a href="{% url 'devices:list' %}" class="btn">
+            <i class="mdi mdi-arrow-left"></i> Retour
         </a>
-    </div>
+    </span>
 </div>
+{% endblock %}
 
+{% block console_content %}
 {% if device.category == "unknown" and user.is_staff %}
-<div class="alert alert-info d-flex align-items-center mb-3">
-    <i class="mdi mdi-help-rhombus me-2 fs-5"></i>
-    <div>
-        Cet appareil n'est <strong>pas encore classifi&eacute;</strong>. Veuillez v&eacute;rifier et compl&eacute;ter ses informations.
-        <a href="{% url 'devices:update' device.pk %}" class="alert-link ms-1">Modifier maintenant</a>
-    </div>
+<div class="alert alert-warning">
+    <i class="mdi mdi-help-rhombus"></i>
+    Cet appareil n'est <strong>pas encore classifié</strong>.
+    <a href="{% url 'devices:update' device.pk %}">Compléter ses informations</a>
 </div>
 {% endif %}
 
@@ -50,12 +46,12 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-information me-1"></i> Informations g&eacute;n&eacute;rales</h5>
+                <h5 class="mb-0"><i class="mdi mdi-information me-1"></i> Informations générales</h5>
             </div>
             <div class="card-body">
-                <table class="table table-borderless mb-0">
+                <table class="table console-info-table">
                     <tr>
-                        <th class="text-muted" style="width:40%">Hostname</th>
+                        <th class="text-muted">Nom d'hôte</th>
                         <td>{{ device.hostname }}</td>
                     </tr>
                     <tr>
@@ -67,7 +63,7 @@
                         <td><code>{{ device.mac_address|default:"-" }}</code></td>
                     </tr>
                     <tr>
-                        <th class="text-muted">Cat&eacute;gorie</th>
+                        <th class="text-muted">Catégorie</th>
                         <td>{{ device.get_category_display }}</td>
                     </tr>
                     <tr>
@@ -85,11 +81,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <th class="text-muted">Premi&egrave;re d&eacute;couverte</th>
+                        <th class="text-muted">Première découverte</th>
                         <td>{{ device.created_at|date:"d/m/Y H:i" }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">Derni&egrave;re activit&eacute;</th>
+                        <th class="text-muted">Dernière activité</th>
                         <td>{{ device.last_seen|date:"d/m/Y H:i"|default:"Jamais" }}</td>
                     </tr>
                 </table>
@@ -99,20 +95,20 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-cog me-1"></i> D&eacute;tails</h5>
+                <h5 class="mb-0"><i class="mdi mdi-cog me-1"></i> Détails</h5>
             </div>
             <div class="card-body">
-                <table class="table table-borderless mb-0">
+                <table class="table console-info-table">
                     <tr>
-                        <th class="text-muted" style="width:40%">Fabricant</th>
+                        <th class="text-muted">Fabricant</th>
                         <td>{{ device.manufacturer|default:"-" }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">Mod&egrave;le</th>
+                        <th class="text-muted">Modèle</th>
                         <td>{{ device.model|default:"-" }}</td>
                     </tr>
                     <tr>
-                        <th class="text-muted">R&eacute;seau</th>
+                        <th class="text-muted">Réseau</th>
                         <td>
                             {% if device.network %}
                                 <a href="{% url 'network:detail' device.network.pk %}">{{ device.network }}</a>
@@ -144,10 +140,10 @@
                         <thead>
                             <tr>
                                 <th>Type</th>
-                                <th>&Eacute;tat</th>
+                                <th>État</th>
                                 <th>Intervalle</th>
                                 <th>Dernier check</th>
-                                <th>&Eacute;checs cons&eacute;cutifs</th>
+                                <th>Échecs consécutifs</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -222,15 +218,15 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-memory me-1"></i> D&eacute;tection OS</h5>
+                <h5 class="mb-0"><i class="mdi mdi-memory me-1"></i> Détection OS</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>OS d&eacute;tect&eacute;</th>
-                                <th>Pr&eacute;cision</th>
+                                <th>OS détecté</th>
+                                <th>Précision</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -238,8 +234,8 @@
                             <tr>
                                 <td>{{ match.name }}</td>
                                 <td>
-                                    <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar" style="width: {{ match.accuracy }}%">{{ match.accuracy }}%</div>
+                                    <div class="progress">
+                                        <div class="progress-bar" style="--progress: {{ match.accuracy }}%">{{ match.accuracy }}%</div>
                                     </div>
                                 </td>
                             </tr>
@@ -258,10 +254,10 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'&eacute;tat (monitoring)</h5>
+                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'état (monitoring)</h5>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="table-responsive console-scroll">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
@@ -289,7 +285,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="2" class="text-center text-muted py-3">Aucun changement d'&eacute;tat</td>
+                                <td colspan="2" class="console-empty">Aucun changement d'état</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -302,16 +298,16 @@
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Pr&eacute;sence r&eacute;seau (scans)</h5>
+                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Présence réseau (scans)</h5>
             </div>
             <div class="card-body p-0">
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <div class="table-responsive console-scroll">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
                                 <th>Date</th>
-                                <th>&Eacute;v&eacute;nement</th>
-                                <th>R&eacute;seau</th>
+                                <th>Événement</th>
+                                <th>Réseau</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -320,9 +316,9 @@
                                 <td>{{ log.created_at|date:"d/m/Y H:i:s" }}</td>
                                 <td>
                                     {% if log.event == "connected" %}
-                                        <span class="badge text-bg-success"><i class="mdi mdi-login me-1"></i>Connect&eacute;</span>
+                                        <span class="badge text-bg-success"><i class="mdi mdi-login me-1"></i>Connecté</span>
                                     {% else %}
-                                        <span class="badge text-bg-danger"><i class="mdi mdi-logout me-1"></i>D&eacute;connect&eacute;</span>
+                                        <span class="badge text-bg-danger"><i class="mdi mdi-logout me-1"></i>Déconnecté</span>
                                     {% endif %}
                                 </td>
                                 <td>
@@ -335,7 +331,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-3">Aucune donn&eacute;e de scan</td>
+                                <td colspan="3" class="console-empty">Aucune donnée de scan</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -350,7 +346,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-body text-muted small">
-                D&eacute;couvert le {{ device.created_at|date:"d/m/Y H:i" }} &mdash; Mis &agrave; jour le {{ device.updated_at|date:"d/m/Y H:i" }}
+                Découvert le {{ device.created_at|date:"d/m/Y H:i" }} &mdash; Mis à jour le {{ device.updated_at|date:"d/m/Y H:i" }}
             </div>
         </div>
     </div>

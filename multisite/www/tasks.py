@@ -13,7 +13,11 @@ from .models import Machine, Serveur
 
 logger = logging.getLogger(__name__)
 
-PORTS_COURANTS = "21,22,23,25,53,80,110,111,135,139,143,443,445,993,995,1433,1521,3306,3389,5432,5900,6379,8080,8443,9090,27017"
+# Les 27 ports courants scannés par défaut, en plus des ports propres à la machine.
+PORTS_COURANTS = (
+    "21,22,23,25,53,80,110,111,135,139,143,443,445,993,995,1433,1521,"
+    "3306,3389,5432,5900,6379,8080,8443,9090,27017"
+)
 
 TAILLE_CHUNK_PORTS = 50
 NMAP_TIMEOUT_CHUNK = 60
@@ -85,11 +89,18 @@ def verifier_machines():
         if machine.en_ligne:
             machine.derniere_vue_en_ligne = maintenant
         machine.save()
-        logger.info("Machine %s : %s", machine.nom, "en ligne" if machine.en_ligne else "hors ligne")
+        logger.info(
+            "Machine %s : %s", machine.nom,
+            "en ligne" if machine.en_ligne else "hors ligne",
+        )
 
 
 def scanner_ping(machine_id):
-    """Générateur SSE : résout l'IP et vérifie la connectivité d'une machine."""
+    """
+    Générateur SSE : résout l'IP et vérifie la connectivité d'une machine.
+     :param machine_id : L'identifiant de la machine.
+     :return : Les événements SSE « ping » puis « done ».
+    """
     machine = Machine.objects.get(pk=machine_id)
     maintenant = timezone.now()
 
@@ -109,8 +120,13 @@ def scanner_ping(machine_id):
 
 
 def scanner_ports(machine_id):
-    """Générateur SSE : scanne les ports ouverts d'une machine par morceaux."""
-    import nmap  # installé uniquement en Docker
+    """
+    Générateur SSE : scanne les ports ouverts d'une machine par morceaux.
+     :param machine_id : L'identifiant de la machine.
+     :return : Les événements SSE, au fil du scan.
+    """
+    # Importé ici : nmap n'est installé que dans l'image Docker.
+    import nmap
 
     machine = Machine.objects.get(pk=machine_id)
     ip, _alerte = _resoudre_et_mettre_a_jour(machine)
@@ -124,14 +140,16 @@ def scanner_ports(machine_id):
         yield _sse_event("done", {"message": "Scan des ports terminé"})
         return
 
-    # Construire la liste complète de ports, dédupliquer et trier
+    # Liste complète des ports, dédupliquée et triée.
     tous_ports = _expand_ports(PORTS_COURANTS)
     if machine.ports_supplementaires:
         tous_ports.extend(_expand_ports(machine.ports_supplementaires))
     tous_ports = sorted(set(tous_ports))
 
-    # Découper en chunks
-    chunks = [tous_ports[i:i + TAILLE_CHUNK_PORTS] for i in range(0, len(tous_ports), TAILLE_CHUNK_PORTS)]
+    chunks = [
+        tous_ports[i:i + TAILLE_CHUNK_PORTS]
+        for i in range(0, len(tous_ports), TAILLE_CHUNK_PORTS)
+    ]
 
     ports_ouverts_cumul = []
     erreurs = 0
@@ -140,7 +158,11 @@ def scanner_ports(machine_id):
     for chunk in chunks:
         chunk_str = ",".join(str(p) for p in chunk)
         try:
-            nm.scan(ip, chunk_str, arguments=f"-sV --host-timeout {NMAP_TIMEOUT_CHUNK}", timeout=NMAP_SUBPROCESS_TIMEOUT)
+            nm.scan(
+                ip, chunk_str,
+                arguments=f"-sV --host-timeout {NMAP_TIMEOUT_CHUNK}",
+                timeout=NMAP_SUBPROCESS_TIMEOUT,
+            )
             if ip in nm.all_hosts():
                 for proto in nm[ip].all_protocols():
                     for port in sorted(nm[ip][proto].keys()):
@@ -174,7 +196,10 @@ def verifier_serveurs():
     for serveur in Serveur.objects.all():
         _check_serveur(serveur, maintenant)
         serveur.save()
-        logger.info("Serveur %s : %s", serveur.titre, "en ligne" if serveur.en_ligne else "hors ligne")
+        logger.info(
+            "Serveur %s : %s", serveur.titre,
+            "en ligne" if serveur.en_ligne else "hors ligne",
+        )
 
 
 def _check_serveur(serveur, maintenant):
@@ -182,16 +207,15 @@ def _check_serveur(serveur, maintenant):
     url_ok = False
     tcp_ok = False
 
-    # Vérification HTTP via URL
     if serveur.url:
         url_ok = _verifier_url(serveur.url)
 
-    # Vérification TCP directe
     hote = serveur.adresse_effective()
     if hote and serveur.port:
         tcp_ok = _verifier_tcp(hote, serveur.port)
 
-    # Déterminer le statut en ligne
+    # Avec les deux moyens de contrôle, leur désaccord dit que le reverse proxy est
+    # en cause plutôt que le service lui-même.
     if serveur.url and hote and serveur.port:
         serveur.en_ligne = url_ok or tcp_ok
         serveur.reverse_proxy_ok = url_ok and tcp_ok
@@ -208,7 +232,11 @@ def _check_serveur(serveur, maintenant):
 
 
 def scanner_serveur(serveur_id):
-    """Générateur SSE : vérifie l'état d'un serveur."""
+    """
+    Générateur SSE : vérifie l'état d'un serveur.
+     :param serveur_id : L'identifiant du serveur.
+     :return : Les événements SSE « check » puis « done ».
+    """
     serveur = Serveur.objects.get(pk=serveur_id)
     maintenant = timezone.now()
     _check_serveur(serveur, maintenant)

@@ -1,3 +1,1 @@
-from django.shortcuts import render
-
-# Create your views here.
+"""Aucune vue ici : `common` ne porte que des modèles et des utilitaires."""

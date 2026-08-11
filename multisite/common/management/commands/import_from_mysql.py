@@ -1,23 +1,23 @@
-"""
-Commande Django pour importer les données depuis une base MySQL existante
-vers la base locale.
+"""Importe les données d'une base MySQL existante vers la base locale.
 
-Usage:
     python manage.py import_from_mysql --host=192.168.5.1 --user=www_common \
         --password=xxx --database=Site_Common
 """
-from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth.models import User
+from django.core.management.base import BaseCommand, CommandError
 
-from connector.models import UserProfile
 from common.models import SiteArticle, SiteArticleComment
-from www.models import Category, SubCategory, Article, ArticleComment
+from connector.models import UserProfile
+from www.models import Article, ArticleComment, Category, SubCategory
 
 
 class Command(BaseCommand):
+    """Recopie utilisateurs, catégories, articles et commentaires depuis MySQL."""
+
     help = "Importe les données depuis une base MySQL vers la base locale."
 
     def add_arguments(self, parser):
+        """Ajoute les paramètres de connexion à la base MySQL."""
         parser.add_argument(
             '--host', default='192.168.5.1',
             help="Hôte MySQL (défaut: 192.168.5.1)",
@@ -40,14 +40,17 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        """Ouvre la connexion MySQL puis importe chaque table dans l'ordre."""
+        # Importé ici : pymysql est une dépendance optionnelle, utile à cette seule
+        # commande.
         try:
             import pymysql
             pymysql.install_as_MySQLdb()
-        except ImportError:
+        except ImportError as exc:
             raise CommandError(
                 "Le paquet 'pymysql' est requis pour l'import. "
                 "Installez-le avec : pip install pymysql"
-            )
+            ) from exc
 
         self.stdout.write("Connexion à MySQL...")
         try:
@@ -60,7 +63,7 @@ class Command(BaseCommand):
                 charset='utf8mb4',
             )
         except pymysql.Error as e:
-            raise CommandError(f"Impossible de se connecter à MySQL : {e}")
+            raise CommandError(f"Impossible de se connecter à MySQL : {e}") from e
 
         cursor = conn.cursor(pymysql.cursors.DictCursor)
         self.stdout.write(self.style.SUCCESS("Connecté à MySQL."))
@@ -81,6 +84,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("Import terminé avec succès."))
 
     def _import_users(self, cursor):
+        """Importe les comptes de `auth_user`."""
         cursor.execute(
             "SELECT id, password, last_login, is_superuser, username, "
             "first_name, last_name, email, is_staff, is_active, date_joined "
@@ -104,12 +108,13 @@ class Command(BaseCommand):
                 is_active=row['is_active'],
                 date_joined=row['date_joined'],
             )
-            # save_base pour éviter les signaux (UserProfile auto-créé par signal)
+            # save_base pour éviter les signaux : le profil est créé par signal.
             user.save_base(raw=True)
             count += 1
         self.stdout.write(f"  auth_user : {count} importé(s) ({len(rows)} total)")
 
     def _import_userprofiles(self, cursor):
+        """Importe les profils utilisateur."""
         cursor.execute(
             "SELECT user_id, avatar, birthDate "
             "FROM connector_userprofile ORDER BY user_id"
@@ -129,6 +134,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  connector_userprofile : {count} importé(s) ({len(rows)} total)")
 
     def _import_categories(self, cursor):
+        """Importe les catégories d'article."""
         cursor.execute("SELECT id, nom, mdi_icon_name FROM www_category ORDER BY id")
         rows = cursor.fetchall()
         count = 0
@@ -145,6 +151,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  www_category : {count} importé(s) ({len(rows)} total)")
 
     def _import_subcategories(self, cursor):
+        """Importe les sous-catégories d'article."""
         cursor.execute("SELECT id, nom, mdi_icon_name FROM www_subcategory ORDER BY id")
         rows = cursor.fetchall()
         count = 0
@@ -161,6 +168,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  www_subcategory : {count} importé(s) ({len(rows)} total)")
 
     def _import_sitearticles(self, cursor):
+        """Importe les articles de base."""
         cursor.execute(
             "SELECT id, titre, slug, auteur_id, contenu, date, "
             "private, superprivate, staff, developper "
@@ -188,6 +196,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  common_sitearticle : {count} importé(s) ({len(rows)} total)")
 
     def _import_articles(self, cursor):
+        """Importe les articles de `www`, qui étendent les précédents."""
         cursor.execute(
             "SELECT sitearticle_ptr_id, categorie_id, sous_categorie_id "
             "FROM www_article ORDER BY sitearticle_ptr_id"
@@ -202,7 +211,7 @@ class Command(BaseCommand):
                 categorie_id=row['categorie_id'],
                 sous_categorie_id=row['sous_categorie_id'],
             )
-            # Copier les champs du parent déjà importé
+            # Recopier les champs du parent déjà importé.
             parent = SiteArticle.objects.get(pk=row['sitearticle_ptr_id'])
             obj.titre = parent.titre
             obj.slug = parent.slug
@@ -218,6 +227,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  www_article : {count} importé(s) ({len(rows)} total)")
 
     def _import_sitearticlecomments(self, cursor):
+        """Importe les commentaires de base."""
         cursor.execute(
             "SELECT id, article_id, auteur_id, contenu, date, active "
             "FROM common_sitearticlecomment ORDER BY id"
@@ -240,6 +250,7 @@ class Command(BaseCommand):
         self.stdout.write(f"  common_sitearticlecomment : {count} importé(s) ({len(rows)} total)")
 
     def _import_articlecomments(self, cursor):
+        """Importe les commentaires de `www`."""
         cursor.execute(
             "SELECT sitearticlecomment_ptr_id "
             "FROM www_articlecomment ORDER BY sitearticlecomment_ptr_id"

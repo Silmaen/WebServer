@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-info">
+        Rien n'est déclaré ici : compose estampille son projet, son répertoire et son
+        fichier sur chaque conteneur, donc le démon Docker sait déjà de quel checkout
+        chaque stack provient. C'est ce qui donne une trace aux stacks vivant dans leur
+        propre dépôt git.
+    </span>
+    <span class="console-toolbar-info">Généré le {{ generated|date:"d/m/Y H:i:s" }}</span>
+</div>
+{% endblock %}
+
+{% block console_content %}
+{% if stack_alerts %}
+<div class="alert alert-danger">
+    <h6 class="alert-heading"><i class="mdi mdi-file-remove"></i> Stacks sans fichier compose exploitable</h6>
+    <ul class="small">
+        {% for stack in stack_alerts %}
+        <li>
+            <strong>{{ stack.machine.name }}/{{ stack.project }}</strong> —
+            {% if stack.compose == "missing" %}
+            le fichier compose a disparu : personne ne peut redéployer ni mettre à jour cette stack
+            {% else %}
+            le fichier compose n'a jamais été commité : il disparaît avec le disque
+            {% endif %}
+            <br><code class="text-muted">{{ stack.path }}</code>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% for m in machines %}
+<div class="card">
+    <div class="card-header console-card-header">
+        <strong>{{ m.name }}</strong>
+        <span class="text-muted small">{{ m.stacks|length }} stack{{ m.stacks|length|pluralize }}</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Projet</th>
+                    <th>Dépôt</th>
+                    <th>HEAD</th>
+                    <th>Arbre</th>
+                    <th>Retard</th>
+                    <th>Compose</th>
+                    <th>Vu</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in m.stacks %}
+                <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
+                    <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
+                    <td>{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
+                    <td><code class="small">{{ s.head|default:"-" }}</code></td>
+                    <td class="small">{{ s.worktree|default:"-" }}</td>
+                    <td class="small">{% if s.behind %}{{ s.behind }}{% elif s.behind == 0 %}0{% else %}-{% endif %}</td>
+                    <td class="small">{{ s.get_compose_display }}</td>
+                    <td class="small text-muted">{{ s.last_seen|timesince }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<p class="console-empty">Aucune machine ne rapporte de stack.</p>
+{% endfor %}
+{% endblock %}

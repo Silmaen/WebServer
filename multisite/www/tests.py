@@ -1,4 +1,4 @@
-"""test.py"""
+"""Tests du site www : accès aux pages, gabarits, administration et monitoring."""
 import datetime
 import socket
 import unittest.mock
@@ -13,7 +13,7 @@ from .models import ProjetCategorie, Projet, BricolageArticle, ServiceCategorie,
 
 
 class PagesAccessTest(TestCase):
-    """Tests d'acc\u00e8s aux pages publiques du site."""
+    """Tests d'accès aux pages publiques du site."""
 
     def test_accueil_returns_200(self):
         client = Client()
@@ -108,12 +108,27 @@ class ArchivesAccessTest(TestCase):
 
 
 class TemplatesTest(TestCase):
-    """Tests des templates utilis\u00e9s par les nouvelles pages."""
+    """Tests des templates utilisés par les pages du site."""
 
-    def test_accueil_uses_correct_template(self):
+    def test_racine_montre_les_infos_personnelles_a_un_invite(self):
+        """`/` aiguille : un invité obtient les infos personnelles, pas la page d'accueil.
+
+        Depuis la fusion, `multisite.urls` place `views_home.home` avant les routes de
+        `www`, donc la racine dispatche selon le niveau. Ce test décrit ce comportement.
+        """
         client = Client()
         response = client.get(reverse("accueil"))
-        self.assertTemplateUsed(response, "www/accueil.html")
+        self.assertTemplateUsed(response, "www/a_propos.html")
+
+    def test_racine_montre_le_monitoring_a_un_administrateur(self):
+        """Une session administrateur obtient le monitoring, à la même adresse."""
+        admin = User.objects.create_user(username="adminuser", password="adminpass")
+        admin.userprofile.user_level = ADMINISTRATEUR
+        admin.userprofile.save()
+        client = Client()
+        client.login(username="adminuser", password="adminpass")
+        response = client.get(reverse("accueil"))
+        self.assertTemplateUsed(response, "www/monitoring.html")
 
     def test_a_propos_uses_correct_template(self):
         client = Client()
@@ -145,7 +160,7 @@ class TemplatesTest(TestCase):
 
 
 class AdminUsersAccessTest(TestCase):
-    """Tests d'acc\u00e8s \u00e0 la page de gestion des utilisateurs."""
+    """Tests d'accès à la page de gestion des utilisateurs."""
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpass")
@@ -192,7 +207,7 @@ class AdminUsersAccessTest(TestCase):
 
 
 class RemovedPagesTest(TestCase):
-    """Tests que les anciennes URLs supprim\u00e9es retournent 404."""
+    """Tests que les anciennes URLs supprimées retournent 404."""
 
     def test_projects_returns_404(self):
         client = Client()
@@ -829,6 +844,64 @@ class MonitoringAccessTest(TestCase):
         response = self.client.get(reverse("monitoring"))
         self.assertTemplateUsed(response, "www/monitoring.html")
 
+    def test_monitoring_expose_la_sous_navigation(self):
+        """La page machines propose le sélecteur Machines / Services."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.get(reverse("monitoring"))
+        noms = [sp["name"] for sp in response.context["subpages"]]
+        self.assertEqual(noms, ["Machines", "Services"])
+        self.assertEqual(response.context["subpage"], "Machines")
+
+
+class MonitoringServicesAccessTest(TestCase):
+    """Tests d'accès à la page des services, séparée de celle des machines."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.avance = User.objects.create_user(username="avanceuser", password="testpass")
+        self.avance.userprofile.user_level = AVANCE
+        self.avance.userprofile.save()
+        self.admin = User.objects.create_user(username="adminuser", password="adminpass")
+        self.admin.userprofile.user_level = ADMINISTRATEUR
+        self.admin.userprofile.save()
+        self.client = Client()
+
+    def test_services_anonymous_redirects(self):
+        """Un anonyme est redirigé vers le login."""
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_services_regular_user_forbidden(self):
+        """Un utilisateur normal reçoit un 403."""
+        self.client.login(username="testuser", password="testpass")
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_services_avance_user_forbidden(self):
+        """Un utilisateur avancé reçoit un 403."""
+        self.client.login(username="avanceuser", password="testpass")
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_services_admin_returns_200(self):
+        """Un administrateur accède à la page."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertEqual(response.status_code, 200)
+
+    def test_services_uses_correct_template(self):
+        """Vérifie le template de la page des services."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertTemplateUsed(response, "www/monitoring_services.html")
+
+    def test_services_est_la_sous_page_active(self):
+        """La sous-page active est Services, sous l'entrée Monitoring."""
+        self.client.login(username="adminuser", password="adminpass")
+        response = self.client.get(reverse("monitoring_services"))
+        self.assertEqual(response.context["subpage"], "Services")
+        self.assertEqual(response.context["page"], "monitoring")
+
 
 class AdminServicesAccessTest(TestCase):
     """Tests d'accès à la gestion des machines, serveurs et catégories."""
@@ -1372,7 +1445,6 @@ class ScannerPortsTest(TestCase):
 
         machine.refresh_from_db()
         self.assertEqual(machine.ports_ouverts, [])
-
 
 
 class ServeurDetailAccessTest(TestCase):

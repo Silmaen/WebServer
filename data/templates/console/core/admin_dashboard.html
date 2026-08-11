@@ -1,58 +1,38 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block title %}Administration - Network Monitor{% endblock %}
-
-{% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2"><i class="mdi mdi-cog me-2"></i>Administration</h1>
-    <a href="/admin/" class="btn btn-outline-secondary" target="_blank">
-        <i class="mdi mdi-open-in-new me-1"></i> Django Admin
-    </a>
-</div>
-
-<ul class="nav nav-tabs mb-4" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
-            <i class="mdi mdi-speedometer me-1"></i> Vue d'ensemble
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button" role="tab">
-            <i class="mdi mdi-format-list-checks me-1"></i> T&acirc;ches
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="credentials-tab" data-bs-toggle="tab" data-bs-target="#credentials" type="button" role="tab">
-            <i class="mdi mdi-key me-1"></i> Credentials Gateway
-        </button>
-    </li>
-</ul>
-
-<div class="tab-content">
-    <!-- Overview tab -->
-    <div class="tab-pane fade show active" id="overview" role="tabpanel">
-        {% include "core/_admin_overview.html" %}
-    </div>
-
-    <!-- Tasks tab -->
-    <div class="tab-pane fade" id="tasks" role="tabpanel"
-         hx-get="{% url 'core:admin-tasks-partial' %}"
-         hx-trigger="shown.bs.tab from:#tasks-tab once"
-         hx-swap="innerHTML">
-        <div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Chargement...</div>
-    </div>
-
-    <!-- Credentials tab -->
-    <div class="tab-pane fade" id="credentials" role="tabpanel"
-         hx-get="{% url 'core:admin-credentials-partial' %}"
-         hx-trigger="shown.bs.tab from:#credentials-tab once"
-         hx-swap="innerHTML">
-        <div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2"></span>Chargement...</div>
-    </div>
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-actions">
+        <a href="{% url 'admin:index' %}" class="btn" target="_blank">
+            <i class="mdi mdi-open-in-new"></i> Admin Django
+        </a>
+    </span>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+{% comment %} Trois sections empilées et non des onglets : les onglets reposaient sur le JS de
+   Bootstrap, qui n'est plus chargé — ils ne changeaient plus de panneau et les deux
+   fragments htmx ne se chargeaient jamais. Les sections empilées sont aussi la forme
+   utilisée partout ailleurs sur le site. {% endcomment %}
+{% block console_content %}
+<div class="monitoring-section">
+    <h3 class="monitoring-section-title">
+        <span class="mdi mdi-speedometer"></span> Vue d'ensemble
+    </h3>
+    {% include "core/_admin_overview.html" %}
+</div>
+
+<div class="monitoring-section">
+    <h3 class="monitoring-section-title">
+        <span class="mdi mdi-format-list-checks"></span> Tâches
+    </h3>
+    {% include "core/_admin_tasks.html" %}
+</div>
+
+<div class="monitoring-section">
+    <h3 class="monitoring-section-title">
+        <span class="mdi mdi-key"></span> Identifiants de passerelle
+    </h3>
+    {% include "core/_admin_credentials.html" %}
+</div>
 {% endblock %}

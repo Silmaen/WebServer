@@ -1,20 +1,11 @@
-"""Which targets this app is the authority for.
+"""Quelles cibles cette app supervise, et lesquelles elle laisse à gatus.
 
-The lab runs two availability engines on purpose, and the rule that keeps that from
-being a duplication is that each one owns a different set of targets:
-
-* **gatus** (`selene/monitoring` in the home-server-stacks repository) owns the
-  declared machines and the services. Its endpoints are YAML in git, reviewed in a
-  commit, and it is what alerts to the phone.
-* **this app** owns everything else the scanner finds on the LAN — phones, IoT,
-  cameras, printers. gatus does not watch those and should not: they come and go,
-  and a dashboard full of red squares for a sleeping phone is a dashboard nobody
-  reads.
-
-So a device whose address is in `_common/inventory.conf` gets no check here. The
-join is against `fleet.Machine`, which mirrors that file, rather than a list
-repeated in this repository — the same reason the fleet page reads the file instead
-of restating it.
+Le lab fait tourner deux moteurs de disponibilité : gatus possède les machines et
+les services déclarés (ses endpoints sont en YAML dans git et c'est lui qui alerte),
+cette app possède tout le reste de ce que le scanner trouve sur le LAN — téléphones,
+IoT, caméras, imprimantes. Une machine déclarée dans `_common/inventory.conf` n'a
+donc aucun check ici, et la jointure se fait sur `fleet.Machine`, qui reflète ce
+fichier, plutôt que sur une liste répétée dans ce dépôt.
 """
 
 import logging
@@ -23,7 +14,8 @@ logger = logging.getLogger("apps")
 
 
 def owned_by_gatus(ip_address):
-    """Is this address a declared machine, i.e. already watched by gatus?"""
+    """Cette adresse est-elle une machine déclarée, donc déjà surveillée par gatus ?"""
+    # Importé ici : évite un cycle entre `apps.monitoring` et `apps.fleet`.
     from apps.fleet.models import Machine
 
     if not ip_address:
@@ -32,9 +24,10 @@ def owned_by_gatus(ip_address):
 
 
 def ensure_default_check(device):
-    """Give a newly discovered device its default ICMP check, unless gatus owns it.
+    """Donne son check ICMP par défaut à un appareil, sauf si gatus le possède.
 
-    Returns the check, or `None` when the device is a declared machine.
+     :param device : L'appareil découvert.
+     :return : Le check, ou None quand l'appareil est une machine déclarée.
     """
     from apps.monitoring.models import MonitoringCheck
 

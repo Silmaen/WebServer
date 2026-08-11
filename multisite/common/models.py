@@ -13,9 +13,8 @@ nb_last_comments = 3  # Le nombre de commentaires à renvoyer en mode tronqué
 
 
 class SiteArticle(models.Model):
-    """
-    Objet de manipulation des articles
-    """
+    """Article de base : contenu markdown et quatre niveaux de visibilité."""
+
     titre = models.CharField(
         max_length=100,
         verbose_name="Titre de l'article")
@@ -49,7 +48,8 @@ class SiteArticle(models.Model):
         Rendu tronqué du contenu markdown.
          :return : La sortie html.
         """
-        return Truncator(markdownify(str(self.contenu))).chars(truncation, truncate='...', html=True)
+        return Truncator(markdownify(str(self.contenu))).chars(
+            truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -80,9 +80,7 @@ class SiteArticle(models.Model):
         return self.comments.filter(active=True).order_by("-date")
 
     def save(self, *args, **kwargs):
-        """
-        Surcharge de l’opérateur save pour bien définir le champ private.
-        """
+        """Aligne les drapeaux de visibilité : le plus restrictif implique les autres."""
         if self.staff or self.developper:
             self.private = True
             self.superprivate = True
@@ -91,10 +89,9 @@ class SiteArticle(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        """
-        Meta data
-        """
+        """Meta data"""
         verbose_name = "article"
+        verbose_name_plural = "articles"
         ordering = ['-date']
 
     def __str__(self):
@@ -102,9 +99,8 @@ class SiteArticle(models.Model):
 
 
 class SiteArticleComment(models.Model):
-    """
-    Objet de stockage des commentaires
-    """
+    """Commentaire d'article ; `active` reste faux jusqu'à modération."""
+
     article = models.ForeignKey(
         SiteArticle, on_delete=models.CASCADE,
         verbose_name="Article lié",
@@ -119,14 +115,16 @@ class SiteArticleComment(models.Model):
         default=timezone.now,
         verbose_name="Date de parution")
     active = models.BooleanField(
-        default=False)
+        default=False,
+        verbose_name="commentaire approuvé")
 
     def contenu_md(self):
         """
         Rendu tronqué du contenu markdown.
          :return : La sortie html.
         """
-        return Truncator(markdownify(str(self.contenu))).chars(comment_truncation, truncate='...', html=True)
+        return Truncator(markdownify(str(self.contenu))).chars(
+            comment_truncation, truncate='...', html=True)
 
     def contenu_all_md(self):
         """
@@ -136,10 +134,9 @@ class SiteArticleComment(models.Model):
         return markdownify(str(self.contenu))
 
     class Meta:
-        """
-        Meta data
-        """
-        verbose_name = "Commentaire d'article"
+        """Meta data"""
+        verbose_name = "commentaire d'article"
+        verbose_name_plural = "commentaires d'article"
         ordering = ['-date']
 
     def __str__(self):

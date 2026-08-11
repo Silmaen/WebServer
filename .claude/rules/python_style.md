@@ -55,6 +55,11 @@ def accueil(request):
 ## Type hints
 
 - Non utilisés dans le projet existant. Ne pas en ajouter sauf demande explicite.
+- **Exception** : les modules de la console (`multisite/apps/`) conservent les
+  annotations qu'ils portent déjà (surtout `apps/monitoring/checks.py` et
+  `apps/network/{discovery,gateway,tasks}.py`, ainsi que `apps/devices/tasks.py`), où
+  elles sont cohérentes ; les retirer serait une régression de lisibilité. Ne pas en
+  ajouter ailleurs.
 
 ## Formatage
 

@@ -2,6 +2,7 @@
 from django.forms import widgets
 
 
+# Sélection d'icônes MDI proposées dans le formulaire, groupées par thème.
 MDI_ICONS_CURATED = [
     # Code & développement
     ("code-tags", "Code"),
@@ -96,13 +97,15 @@ MDI_ICONS_CURATED = [
 
 
 class ColorPickerWidget(widgets.Input):
-    """Widget color picker avec swatch et champ texte hex synchronisés."""
+    """Sélecteur de couleur, avec pastille et champ hexadécimal synchronisés."""
+
     input_type = "color"
     template_name = "www/widgets/color_picker.html"
 
 
 class MdiIconPickerWidget(widgets.HiddenInput):
-    """Widget de sélection d'icône MDI avec grille, recherche et preview."""
+    """Sélection d'icône MDI : grille, recherche et aperçu."""
+
     template_name = "www/widgets/mdi_icon_picker.html"
 
     def get_context(self, name, value, attrs):

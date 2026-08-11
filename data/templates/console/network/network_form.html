@@ -1,12 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if object %}Modifier {{ object.name }}{% else %}Ajouter un r&eacute;seau{% endif %} - Network Monitor{% endblock %}
-
 {% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">{% if object %}Modifier {{ object.name }}{% else %}Ajouter un r&eacute;seau{% endif %}</h1>
-</div>
-
 <div class="row">
     <div class="col-md-8">
         <div class="card">
@@ -41,7 +35,7 @@
                         <a href="{% url 'network:list' %}" class="btn btn-outline-secondary">Annuler</a>
                         <span class="ms-auto">
                             <a href="{% url 'network:credential-list' %}" class="btn btn-sm btn-outline-info">
-                                <i class="mdi mdi-key me-1"></i> G&eacute;rer les credentials gateway
+                                <i class="mdi mdi-key me-1"></i> Gérer les credentials gateway
                             </a>
                         </span>
                     </div>
@@ -50,21 +44,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// Add Bootstrap classes to form widgets
-document.querySelectorAll('form input, form select, form textarea').forEach(el => {
-    if (el.type === 'checkbox') {
-        el.classList.add('form-check-input');
-    } else {
-        el.classList.add('form-control');
-    }
-    if (el.tagName === 'SELECT') {
-        el.classList.remove('form-control');
-        el.classList.add('form-select');
-    }
-});
-</script>
 {% endblock %}

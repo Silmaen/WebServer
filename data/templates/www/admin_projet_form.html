@@ -38,7 +38,7 @@
                             {% with img_field=form.icone_image %}
                             {% if img_field.value %}
                             <div class="icone-preview">
-                                <img src="{{ img_field.value.url }}" class="projet-icone-img" style="width: 48px; height: 48px;">
+                                <img src="{{ img_field.value.url }}" class="projet-icone-img">
                             </div>
                             {% endif %}
                             <label class="file-input-label" for="{{ img_field.id_for_label }}">
@@ -74,12 +74,9 @@
     var tabs = document.querySelectorAll(".icone-tab");
     var panels = document.querySelectorAll(".icone-panel");
 
-    // Détection du mode actif initial
+    // Mode actif à l'ouverture : une URL saisie, sinon une image déjà téléversée.
     var urlField = document.getElementById("{{ form.icone_url.id_for_label }}");
-    var uploadField = document.getElementById("{{ form.icone_image.id_for_label }}");
     var hasUrl = urlField && urlField.value;
-    var hasUpload = uploadField && uploadField.getAttribute("data-has-file") === "true";
-    // Vérifier aussi si une image existante est affichée
     var uploadPanel = document.getElementById("icone-panel-upload");
     var hasExistingImage = uploadPanel && uploadPanel.querySelector(".icone-preview");
 

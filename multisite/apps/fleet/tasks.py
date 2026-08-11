@@ -1,14 +1,9 @@
-"""Periodic upkeep for the fleet tables.
+"""Entretien périodique des tables de la flotte.
 
-There is exactly one task and it deletes things. That is deliberate: this database
-already learned what an unbounded history table costs — `monitoring_checkresult`
-reached 1.9 M rows and `core_backgroundtask` 113 k, together 92 % of a 650 MB
-database, for questions nobody asks about the past.
-
-It runs on the `maintenance` queue rather than the default one, for the reason
-`apps/monitoring/tasks.py` documents at length: a purge that shares a queue with a
-check firehose never gets a turn, and a purge that never runs looks exactly like a
-purge that is not configured.
+Une seule tâche, et elle supprime : cette base a déjà appris ce que coûte une table
+d'historique sans borne. Elle tourne sur la file `maintenance` et non la file par
+défaut, pour la raison qu'expose `apps/monitoring/tasks.py` — une purge qui partage
+la file du flot de checks n'a jamais son tour de parole.
 """
 
 import logging
@@ -24,10 +19,10 @@ logger = logging.getLogger("apps.fleet")
 
 @shared_task(queue="maintenance")
 def cleanup_old_reports():
-    """Drop reports older than `FLEET_REPORT_RETENTION_DAYS`.
+    """Supprime les rapports plus vieux que `FLEET_REPORT_RETENTION_DAYS`.
 
-    The retention is what decides how far back a disk-usage trend can be read, which
-    is the one thing the reports are kept for beyond the latest row.
+    La rétention décide de la profondeur des tendances d'occupation disque, seule
+    raison de garder les rapports au-delà du plus récent.
     """
     cutoff = timezone.now() - timezone.timedelta(days=settings.FLEET_REPORT_RETENTION_DAYS)
     deleted, _ = Report.objects.filter(at__lt=cutoff).delete()

@@ -1,41 +1,29 @@
 {% extends "www/base.html" %}
 {% load static %}
-{% comment %}
-La console sous le style du site.
+{% comment %} Les pages de la console sous le gabarit du site : elles en héritent en-tête,
+   navigation, pied de page et couleurs. Elles définissent `console_content` et non
+   `content`, déjà pris ici, et reçoivent titre et sous-navigation de
+   `ConsolePageMixin` comme les pages de www. {% endcomment %}
 
-Elle arrivait de network_monitor avec sa propre page complète : Bootstrap 5 et
-bootstrap-icons depuis un CDN, son thème sombre à elle, sa navbar et sa sidebar. Deux
-chartes graphiques dans une seule application, et quatre dépendances CDN pour des pages
-qui ne servent qu'à l'intérieur du lab.
-
-Ce gabarit ne fait plus qu'une chose : brancher les pages de la console sur
-`www/base.html`. Elles héritent donc de l'en-tête, de la navigation, du pied de page et
-des variables de couleur du site, et il ne reste que `console/css/console.css` — une
-poignée de règles pour les quelques classes de mise en page que les pages héritées
-utilisent encore (cartes, badges, boutons, grille).
-
-Les pages filles définissent `console_content` et non `content` : `content` est déjà
-pris par le gabarit du site, dans lequel celui-ci vient s'insérer.
-{% endcomment %}
-
-{% block title %}{% block console_title %}Console{% endblock %} - La crypte de Lachouette{% endblock %}
+{% block title %}{{ page_subtitle }} - La crypte de Lachouette{% endblock %}
 
 {% block additionnalhead %}
 <link href="{% static 'console/css/console.css' %}" rel="stylesheet">
 {% block extra_css %}{% endblock %}
 {% endblock %}
 
+{% comment %} Pas de bloc de messages ici : `www/base.html` les rend déjà, et la console avait
+   en plus ses propres toasts — soit deux affichages pour un même message. {% endcomment %}
 {% block content %}
-<div class="PageTitle">{{ page_subtitle|default:"Console" }}</div>
-<div class="console">
-    {% include "includes/toasts.html" %}
+<div class="static-page console">
+    <h2>{{ page_subtitle }}</h2>
+    {% block console_toolbar %}{% endblock %}
     {% block console_content %}{% endblock %}
 </div>
 {% endblock %}
 
 {% block additionnaljs %}
-{% comment %} htmx (3 pages) et chart.js (2 pages) sont chargés par ces pages-là dans
-   leur propre `extra_js`, pas ici : les autres n'ont pas à les payer. {% endcomment %}
-<script src="{% static 'console/js/main.js' %}" defer></script>
+{% comment %} htmx et chart.js ne sont chargés que par les pages qui en ont besoin, dans leur
+   propre `extra_js`. {% endcomment %}
 {% block extra_js %}{% endblock %}
 {% endblock %}

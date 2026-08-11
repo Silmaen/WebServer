@@ -1,12 +1,7 @@
 {% extends "base.html" %}
-
-{% block title %}Dashboard - Network Monitor{% endblock %}
+{% load static %}
 
 {% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Dashboard</h1>
-</div>
-
 <div class="row g-3">
     <div class="col-md-3">
         <div class="card text-bg-success">
@@ -46,7 +41,7 @@
 <div class="alert alert-info d-flex align-items-center mt-3">
     <i class="mdi mdi-help-rhombus me-2 fs-5"></i>
     <div>
-        <strong>{{ unknown_category_count }} appareil{{ unknown_category_count|pluralize:"s" }} non class&eacute;{{ unknown_category_count|pluralize:"s" }}</strong>
+        <strong>{{ unknown_category_count }} appareil{{ unknown_category_count|pluralize:"s" }} non classé{{ unknown_category_count|pluralize:"s" }}</strong>
         en attente de classification.
         <a href="{% url 'devices:list' %}?category=unknown" class="alert-link">Voir</a>
     </div>
@@ -92,7 +87,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1"></i> Par cat&eacute;gorie</h5>
+                <h5 class="mb-0"><i class="mdi mdi-chart-pie me-1"></i> Par catégorie</h5>
             </div>
             <div class="card-body">
                 <canvas id="categoryChart" height="250"></canvas>
@@ -111,7 +106,7 @@
                     <span class="badge text-bg-warning rounded-pill">{{ item.avg_ms|floatformat:0 }} ms</span>
                 </li>
                 {% empty %}
-                <li class="list-group-item text-center text-muted">Pas de donn&eacute;es</li>
+                <li class="list-group-item text-center text-muted">Pas de données</li>
                 {% endfor %}
             </ul>
         </div>
@@ -119,7 +114,7 @@
     <div class="col-md-4">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'&eacute;tat</h5>
+                <h5 class="mb-0"><i class="mdi mdi-shuffle-variant me-1"></i> Changements d'état</h5>
             </div>
             <ul class="list-group list-group-flush">
                 {% for change in recent_state_changes %}
@@ -137,7 +132,7 @@
                     </div>
                 </li>
                 {% empty %}
-                <li class="list-group-item text-center text-muted">Aucun changement r&eacute;cent</li>
+                <li class="list-group-item text-center text-muted">Aucun changement récent</li>
                 {% endfor %}
             </ul>
         </div>
@@ -148,18 +143,18 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Appareils r&eacute;cents</h5>
+                <h5 class="mb-0"><i class="mdi mdi-history me-1"></i> Appareils récents</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Hostname</th>
+                                <th>Nom d'hôte</th>
                                 <th>IP</th>
-                                <th>Cat&eacute;gorie</th>
+                                <th>Catégorie</th>
                                 <th>Statut</th>
-                                <th>Derni&egrave;re activit&eacute;</th>
+                                <th>Dernière activité</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -183,7 +178,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted py-3">Aucun appareil enregistr&eacute;</td>
+                                <td colspan="5" class="console-empty">Aucun appareil enregistré</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -196,36 +191,9 @@
 {% endblock %}
 
 {% block extra_js %}
+{% comment %} Les données passent par `json_script` : pas de valeurs Django interpolées dans des
+   littéraux JS, et le script vit dans son propre fichier. {% endcomment %}
+{{ category_chart_data|json_script:"category-data" }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script>
-const categoryData = [
-    {% for item in by_category %}
-    {label: "{{ item.category }}", count: {{ item.count }}},
-    {% endfor %}
-];
-if (categoryData.length > 0) {
-    const colors = {
-        server: "#198754", network: "#0d6efd", ap: "#6f42c1",
-        iot: "#fd7e14", printer: "#6c757d", workstation: "#20c997",
-        phone: "#0dcaf0", camera: "#e83e8c", other: "#adb5bd", unknown: "#495057"
-    };
-    new Chart(document.getElementById('categoryChart'), {
-        type: 'doughnut',
-        data: {
-            labels: categoryData.map(d => d.label),
-            datasets: [{
-                data: categoryData.map(d => d.count),
-                backgroundColor: categoryData.map(d => colors[d.label] || '#adb5bd'),
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {position: 'right', labels: {color: '#dee2e6', padding: 10}},
-            }
-        }
-    });
-}
-</script>
+<script src="{% static 'console/js/dashboard_chart.js' %}" defer></script>
 {% endblock %}

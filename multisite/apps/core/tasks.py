@@ -1,3 +1,5 @@
+"""Suivi des tâches Celery : journalisation et lancement tracé."""
+
 import logging
 
 from django.utils import timezone
@@ -8,13 +10,12 @@ logger = logging.getLogger("apps")
 
 
 class TaskLogger:
-    """Logger that writes to both Python logging and BackgroundTask.log.
+    """Écrit à la fois dans le logging Python et dans `BackgroundTask.log`.
 
-    Usage in a Celery task:
-        tlog = TaskLogger(self)   # self is the bound Celery task
-        tlog.info("Starting...")
-        tlog.warning("Something odd")
-        tlog.error("Failed!")
+    Usage dans une tâche Celery liée (`bind=True`) :
+        tlog = TaskLogger(self)
+        tlog.start()
+        tlog.info("...")
     """
 
     def __init__(self, celery_task_instance):
@@ -23,6 +24,7 @@ class TaskLogger:
 
     @property
     def bg_task(self):
+        """La ligne `BackgroundTask` de cette tâche, chargée à la demande."""
         if self._bg_task is None and self._task_id:
             task_id = self._task_id.id if hasattr(self._task_id, "id") else str(self._task_id)
             try:
@@ -32,21 +34,25 @@ class TaskLogger:
         return self._bg_task
 
     def _log(self, level, message):
+        """Écrit une ligne dans les deux journaux."""
         getattr(logger, level.lower(), logger.info)(message)
         if self.bg_task:
             self.bg_task.append_log(message, level)
 
     def info(self, msg, *args):
+        """Journalise un message d'information."""
         self._log("INFO", msg % args if args else msg)
 
     def warning(self, msg, *args):
+        """Journalise un avertissement."""
         self._log("WARNING", msg % args if args else msg)
 
     def error(self, msg, *args):
+        """Journalise une erreur."""
         self._log("ERROR", msg % args if args else msg)
 
     def start(self):
-        """Mark the task as running."""
+        """Marque la tâche comme en cours."""
         if self.bg_task:
             self.bg_task.status = BackgroundTask.Status.RUNNING
             self.bg_task.started_at = timezone.now()
@@ -54,7 +60,7 @@ class TaskLogger:
             self.info("Tâche démarrée")
 
     def success(self, result=None):
-        """Mark the task as succeeded."""
+        """Marque la tâche comme réussie et enregistre son résultat."""
         if self.bg_task:
             self.info("Tâche terminée avec succès")
             BackgroundTask.objects.filter(pk=self.bg_task.pk).update(
@@ -64,7 +70,7 @@ class TaskLogger:
             )
 
     def failure(self, error_msg):
-        """Mark the task as failed."""
+        """Marque la tâche comme échouée et enregistre l'erreur."""
         if self.bg_task:
             self.error("Tâche échouée: %s", error_msg)
             BackgroundTask.objects.filter(pk=self.bg_task.pk).update(
@@ -75,22 +81,20 @@ class TaskLogger:
 
 
 def dispatch_task(celery_task, args=None, kwargs=None, name="", user=None):
-    """Dispatch a Celery task and track it as a BackgroundTask.
+    """Lance une tâche Celery et la trace comme `BackgroundTask`.
 
-    Args:
-        user: The user who triggered the task. None means automatic trigger.
-
-    Returns the BackgroundTask instance.
+     :param celery_task : La tâche Celery à lancer.
+     :param name : Le libellé affiché dans la console.
+     :param user : L'utilisateur déclencheur ; None signifie automatique.
+     :return : La `BackgroundTask` créée.
     """
-    task_kwargs = kwargs or {}
     apply_kwargs = {}
-    # Respect queue defined on the task
+    # Respecte la file déclarée sur la tâche.
     if hasattr(celery_task, "queue"):
         apply_kwargs["queue"] = celery_task.queue
-    result = celery_task.apply_async(args=args or [], kwargs=task_kwargs, **apply_kwargs)
-    task = BackgroundTask.objects.create(
+    result = celery_task.apply_async(args=args or [], kwargs=kwargs or {}, **apply_kwargs)
+    return BackgroundTask.objects.create(
         celery_task_id=result.id,
         name=name or celery_task.name,
         triggered_by=user,
     )
-    return task

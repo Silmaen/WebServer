@@ -1,3 +1,1 @@
-from django.test import TestCase
-
-# Create your tests here.
+"""Tests de l'application `common` (aucun pour l'instant)."""

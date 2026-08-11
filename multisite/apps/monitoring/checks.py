@@ -1,8 +1,9 @@
-"""Monitoring check executors.
+"""Exécuteurs de checks de supervision.
 
-Pluggable architecture: BaseCheck with execute() -> CheckOutput.
-Registry maps check_type to concrete class.
+Architecture ouverte : chaque type dérive de `BaseCheck` et rend un `CheckOutput`.
+`CHECK_REGISTRY` associe le type déclaré sur le check à sa classe.
 """
+
 import logging
 import selectors
 import socket
@@ -17,6 +18,8 @@ logger = logging.getLogger("apps")
 
 @dataclass
 class CheckOutput:
+    """Le résultat d'un check : succès, temps de réponse, sortie ou erreur."""
+
     success: bool
     response_time_ms: float = 0.0
     output: str = ""
@@ -24,22 +27,28 @@ class CheckOutput:
 
     @property
     def status(self):
+        """L'état correspondant, tel que stocké dans `CheckResult`."""
         return "up" if self.success else "down"
 
 
 class BaseCheck:
+    """Contrat commun aux exécuteurs de checks."""
+
     def execute(self, ip: str, config: dict, timeout: int) -> CheckOutput:
+        """Exécute le check sur `ip` et rend son résultat."""
         raise NotImplementedError
 
 
 class ICMPCheck(BaseCheck):
-    """Ping check using fping, with TCP fallback on known ports."""
+    """Ping via fping, avec repli sur une connexion TCP."""
 
-    # Common ports to try if ICMP fails (includes Windows: 135/139/445)
+    # Ports tentés quand ICMP échoue : les plus courants, Windows compris
+    # (135/139/445), pour distinguer un appareil muet d'un appareil éteint.
     FALLBACK_PORTS = [80, 443, 22, 445, 139, 135, 8080, 8443, 53, 3389]
 
-    def _ping(self, ip: str, count: int, timeout: int) -> CheckOutput | None:
-        """Try ICMP ping. Returns CheckOutput on success, None on failure."""
+    @staticmethod
+    def _ping(ip: str, count: int, timeout: int, start: float) -> CheckOutput | None:
+        """Tente un ping ICMP. Rend un `CheckOutput` en cas de succès, sinon None."""
         try:
             result = subprocess.run(
                 ["fping", "-c", str(count), "-t", str(timeout * 1000), "-q", ip],
@@ -47,7 +56,7 @@ class ICMPCheck(BaseCheck):
                 text=True,
                 timeout=timeout + 5,
             )
-            elapsed_per = (time.time() - self._start) * 1000 / count
+            elapsed_per = (time.time() - start) * 1000 / count
             stderr = result.stderr.strip()
             if result.returncode == 0:
                 avg_ms = elapsed_per
@@ -64,22 +73,12 @@ class ICMPCheck(BaseCheck):
         return None
 
     def _tcp_probe(self, ip: str, ports: list[int], timeout: int) -> CheckOutput | None:
-        """Try TCP connect on the ports, all at once. First one to answer wins.
+        """Tente une connexion TCP sur tous les ports d'un coup ; le premier gagne.
 
-        This used to walk the list serially with a 3 s timeout each, and that was the
-        single most expensive thing in the lab's monitoring. Ten ports at three
-        seconds meant **thirty seconds of pure waiting for every device that does not
-        answer ICMP** -- and with 41 such devices on a 300 s interval, that one loop
-        accounted for ~1 230 s of work against 1 200 s of worker capacity. The queue
-        could only grow; it had reached 5 670 messages.
-
-        Concurrently it costs one budget instead of ten and concludes exactly the
-        same thing, because the ports are independent and only the first answer
-        matters. Measured on this lab: a down device went from ~27 s to a few
-        seconds.
-
-        Non-blocking connects plus one selector, rather than threads: ten sockets
-        waiting on a timeout need no parallelism, only no serialisation.
+        Les tenter en série coûtait un timeout par port, soit une trentaine de
+        secondes par appareil muet à ICMP — assez pour que la file de checks ne se
+        vide plus jamais. Concurremment cela coûte un seul budget et conclut la même
+        chose, les ports étant indépendants.
         """
         budget = min(timeout, 3)
         selector = selectors.DefaultSelector()
@@ -89,8 +88,8 @@ class ICMPCheck(BaseCheck):
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.setblocking(False)
                 try:
-                    # EINPROGRESS is the normal answer here; anything else (a RST,
-                    # an unreachable network) means this port is already decided.
+                    # EINPROGRESS est la réponse normale ; toute autre (RST, réseau
+                    # injoignable) signifie que ce port est déjà décidé.
                     sock.connect_ex((ip, port))
                     selector.register(sock, selectors.EVENT_WRITE)
                     pending[sock] = port
@@ -110,13 +109,13 @@ class ICMPCheck(BaseCheck):
                     sock = key.fileobj
                     port = pending.pop(sock, None)
                     selector.unregister(sock)
-                    # A writable socket means the connect finished -- successfully or
-                    # not. SO_ERROR is what tells the two apart.
+                    # Un socket inscriptible signifie que le connect est terminé, avec
+                    # ou sans succès : SO_ERROR distingue les deux.
                     if sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR) == 0:
                         return CheckOutput(
                             success=True,
                             response_time_ms=(time.time() - start) * 1000,
-                            output=f"ICMP failed, alive via TCP:{port}",
+                            output=f"ICMP muet, joignable via TCP:{port}",
                         )
         finally:
             for sock in list(pending):
@@ -129,41 +128,44 @@ class ICMPCheck(BaseCheck):
         return None
 
     def execute(self, ip: str, config: dict, timeout: int) -> CheckOutput:
+        """Ping, puis repli TCP sur les ports connus, puis les ports courants."""
         count = config.get("count", 3)
-        self._start = time.time()
+        start = time.time()
 
-        # 1. Try ICMP
-        result = self._ping(ip, count, timeout)
+        result = self._ping(ip, count, timeout, start)
         if result:
             return result
 
-        # 2. ICMP failed — try TCP fallback on known ports from device, then common ports
-        fallback_ports = list(config.get("fallback_ports", []))
-        if not fallback_ports:
-            # Try to get known open ports from the device
-            try:
-                from apps.devices.models import Device
-                device = Device.objects.filter(ip_address=ip).first()
-                if device and device.open_ports:
-                    fallback_ports = [p["port"] for p in device.open_ports[:5]]
-            except Exception:
-                pass
-        if not fallback_ports:
-            fallback_ports = self.FALLBACK_PORTS
-
-        result = self._tcp_probe(ip, fallback_ports, timeout)
+        result = self._tcp_probe(ip, self._ports_de_repli(ip, config), timeout)
         if result:
             return result
 
-        # 3. Everything failed
-        elapsed = (time.time() - self._start) * 1000
-        return CheckOutput(success=False, response_time_ms=elapsed, error="ICMP + TCP fallback failed")
+        elapsed = (time.time() - start) * 1000
+        return CheckOutput(
+            success=False, response_time_ms=elapsed,
+            error="ICMP et repli TCP tous deux sans réponse",
+        )
+
+    def _ports_de_repli(self, ip: str, config: dict) -> list[int]:
+        """Ports à tenter en TCP : ceux du check, ceux de l'appareil, puis les courants."""
+        ports = list(config.get("fallback_ports", []))
+        if ports:
+            return ports
+        try:
+            from apps.devices.models import Device
+            device = Device.objects.filter(ip_address=ip).first()
+            if device and device.open_ports:
+                ports = [p["port"] for p in device.open_ports[:5]]
+        except Exception:
+            pass
+        return ports or self.FALLBACK_PORTS
 
 
 class TCPCheck(BaseCheck):
-    """TCP port connectivity check."""
+    """Vérification de l'ouverture d'un port TCP."""
 
     def execute(self, ip: str, config: dict, timeout: int) -> CheckOutput:
+        """Tente une connexion sur le port configuré (80 par défaut)."""
         port = config.get("port", 80)
         start = time.time()
         try:
@@ -173,20 +175,28 @@ class TCPCheck(BaseCheck):
             elapsed = (time.time() - start) * 1000
             sock.close()
             if result == 0:
-                return CheckOutput(success=True, response_time_ms=elapsed, output=f"Port {port} open")
-            return CheckOutput(success=False, response_time_ms=elapsed, error=f"Port {port} closed (errno={result})")
-        except socket.timeout:
+                return CheckOutput(
+                    success=True, response_time_ms=elapsed, output=f"Port {port} ouvert",
+                )
+            return CheckOutput(
+                success=False, response_time_ms=elapsed,
+                error=f"Port {port} fermé (errno={result})",
+            )
+        except TimeoutError:
             elapsed = (time.time() - start) * 1000
-            return CheckOutput(success=False, response_time_ms=elapsed, error=f"Port {port} timeout")
+            return CheckOutput(
+                success=False, response_time_ms=elapsed, error=f"Port {port} : délai dépassé",
+            )
         except OSError as e:
             elapsed = (time.time() - start) * 1000
             return CheckOutput(success=False, response_time_ms=elapsed, error=str(e))
 
 
 class HTTPCheck(BaseCheck):
-    """HTTP/HTTPS endpoint check."""
+    """Vérification d'un endpoint HTTP(S)."""
 
     def execute(self, ip: str, config: dict, timeout: int) -> CheckOutput:
+        """Appelle l'URL configurée et compare le code au code attendu."""
         url = config.get("url", "")
         if not url:
             scheme = config.get("scheme", "http")
@@ -198,25 +208,35 @@ class HTTPCheck(BaseCheck):
         verify_ssl = config.get("verify_ssl", False)
         start = time.time()
         try:
-            resp = requests.request(method, url, timeout=timeout, verify=verify_ssl, allow_redirects=True)
+            resp = requests.request(
+                method, url, timeout=timeout, verify=verify_ssl, allow_redirects=True,
+            )
             elapsed = (time.time() - start) * 1000
-            success = resp.status_code == expected_status
-            output = f"HTTP {resp.status_code} ({elapsed:.0f}ms)"
-            if not success:
-                return CheckOutput(success=False, response_time_ms=elapsed, error=f"Expected {expected_status}, got {resp.status_code}")
-            return CheckOutput(success=True, response_time_ms=elapsed, output=output)
+            if resp.status_code != expected_status:
+                return CheckOutput(
+                    success=False, response_time_ms=elapsed,
+                    error=f"Code {expected_status} attendu, {resp.status_code} reçu",
+                )
+            return CheckOutput(
+                success=True, response_time_ms=elapsed,
+                output=f"HTTP {resp.status_code} ({elapsed:.0f} ms)",
+            )
         except requests.exceptions.Timeout:
             elapsed = (time.time() - start) * 1000
-            return CheckOutput(success=False, response_time_ms=elapsed, error="HTTP timeout")
+            return CheckOutput(
+                success=False, response_time_ms=elapsed, error="HTTP : délai dépassé",
+            )
         except requests.exceptions.RequestException as e:
             elapsed = (time.time() - start) * 1000
             return CheckOutput(success=False, response_time_ms=elapsed, error=str(e))
 
 
 class DNSCheck(BaseCheck):
-    """DNS resolution check."""
+    """Vérification d'un résolveur DNS."""
 
     def execute(self, ip: str, config: dict, timeout: int) -> CheckOutput:
+        """Interroge le résolveur sur un nom connu et rend les enregistrements."""
+        # Importé ici : dnspython n'est utile qu'à ce check.
         import dns.resolver
 
         query_name = config.get("query", "google.com")
@@ -230,13 +250,15 @@ class DNSCheck(BaseCheck):
             answers = resolver.resolve(query_name, record_type)
             elapsed = (time.time() - start) * 1000
             records = [str(r) for r in answers]
-            return CheckOutput(success=True, response_time_ms=elapsed, output=f"{record_type} {query_name}: {', '.join(records)}")
+            return CheckOutput(
+                success=True, response_time_ms=elapsed,
+                output=f"{record_type} {query_name} : {', '.join(records)}",
+            )
         except Exception as e:
             elapsed = (time.time() - start) * 1000
             return CheckOutput(success=False, response_time_ms=elapsed, error=str(e))
 
 
-# Registry
 CHECK_REGISTRY = {
     "icmp": ICMPCheck(),
     "tcp": TCPCheck(),
@@ -246,8 +268,8 @@ CHECK_REGISTRY = {
 
 
 def run_check(check_type: str, ip: str, config: dict, timeout: int = 10) -> CheckOutput:
-    """Run a check by type. Returns CheckOutput."""
+    """Exécute le check du type demandé et rend son `CheckOutput`."""
     executor = CHECK_REGISTRY.get(check_type)
     if not executor:
-        return CheckOutput(success=False, error=f"Unknown check type: {check_type}")
+        return CheckOutput(success=False, error=f"Type de check inconnu : {check_type}")
     return executor.execute(ip, config, timeout)

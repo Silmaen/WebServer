@@ -7,6 +7,8 @@
 
 ## Variables CSS (palette)
 
+La palette de référence est celle de `:root` dans `data/static/css/default_www.css` :
+
 ```css
 :root {
     --bg-body: #181818;
@@ -23,14 +25,23 @@
     --blue-hover: #6aaad8;
     --bg-button: #303030;
     --bg-button-hover: #3a3a3a;
-    --red: #c0392b;
-    --red-hover: #e74c3c;
-    --green: #27ae60;
-    --yellow: #f39c12;
+    --red: #e05555;
+    --red-hover: #c94040;      /* aplat plus soutenu, sous du texte blanc */
+    --green: #44cc44;
+    --yellow: #d4a843;
+    --white: #ffffff;          /* texte sur aplat saturé (bleu, rouge) */
+    --text-on-accent: #101010; /* texte sur aplat clair (vert, jaune, bleu clair) */
+    --blue-shadow: rgba(80, 144, 193, .4);
+    --shadow: rgba(0, 0, 0, .4);
+    --field-height: 2.55em;    /* hauteur d'un champ, pour aligner les boutons */
 }
 ```
 
 Toujours utiliser `var(--nom-variable)` au lieu de valeurs de couleur en dur.
+
+`--green`, `--yellow`, `--red`, `--text`, `--text-secondary`, `--bg-surface` et `--border`
+doivent rester des **hexadécimaux à 6 chiffres** : le script du tableau de bord de
+supervision les lit via `getComputedStyle` et leur concatène un suffixe d'opacité.
 
 ## Nommage des classes
 

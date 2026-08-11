@@ -1,62 +1,57 @@
 {% extends "base.html" %}
 
-{% block title %}Appareils - Network Monitor{% endblock %}
-
-{% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Appareils</h1>
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-info">{{ paginator.count }} appareil{{ paginator.count|pluralize }}</span>
     {% if user.is_staff %}
-    <a href="{% url 'devices:create' %}" class="btn btn-primary">
-        <i class="mdi mdi-plus me-1"></i> Ajouter un appareil
-    </a>
+    <span class="console-toolbar-actions">
+        <a href="{% url 'devices:create' %}" class="btn btn-primary">
+            <i class="mdi mdi-plus"></i> Ajouter un appareil
+        </a>
+    </span>
     {% endif %}
 </div>
+{% endblock %}
 
-<!-- Filtres -->
-<div class="card mb-3">
-    <div class="card-body">
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-3">
-                <label for="category" class="form-label">Cat&eacute;gorie</label>
-                <select name="category" id="category" class="form-select">
-                    <option value="">Toutes</option>
-                    {% for value, label in categories %}
-                    <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-3">
-                <label for="status" class="form-label">Statut</label>
-                <select name="status" id="status" class="form-select">
-                    <option value="">Tous</option>
-                    {% for value, label in statuses %}
-                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <label for="q" class="form-label">Recherche</label>
-                <input type="text" name="q" id="q" class="form-control" placeholder="Hostname ou IP..." value="{{ current_search }}">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-outline-primary w-100">
-                    <i class="mdi mdi-magnify me-1"></i> Filtrer
-                </button>
-            </div>
-        </form>
+{% block console_content %}
+<form method="get" class="console-filters">
+    <div class="form-group">
+        <label for="category" class="form-label">Catégorie</label>
+        <select name="category" id="category" class="form-select">
+            <option value="">Toutes</option>
+            {% for value, label in categories %}
+            <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
     </div>
-</div>
+    <div class="form-group">
+        <label for="status" class="form-label">Statut</label>
+        <select name="status" id="status" class="form-select">
+            <option value="">Tous</option>
+            {% for value, label in statuses %}
+            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="q" class="form-label">Recherche</label>
+        <input type="text" name="q" id="q" class="form-control" placeholder="Nom d'hôte ou IP..." value="{{ current_search }}">
+    </div>
+    <button type="submit" class="btn btn-primary">
+        <i class="mdi mdi-magnify"></i> Filtrer
+    </button>
+</form>
 
 <!-- Tableau -->
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Hostname</th>
+                <th>Nom d'hôte</th>
                 <th>IP</th>
-                <th>Cat&eacute;gorie</th>
+                <th>Catégorie</th>
                 <th>Statut</th>
-                <th>R&eacute;seau</th>
+                <th>Réseau</th>
                 <th>Fabricant</th>
                 <th>Actions</th>
             </tr>
@@ -81,58 +76,31 @@
                 <td>{{ device.network|default:"-" }}</td>
                 <td>{{ device.manufacturer|default:"-" }}</td>
                 <td>
-                    <a href="{% url 'devices:detail' device.pk %}" class="btn btn-sm btn-outline-info" title="Voir">
-                        <i class="mdi mdi-eye"></i>
-                    </a>
-                    {% if user.is_staff %}
-                    <a href="{% url 'devices:update' device.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
-                        <i class="mdi mdi-pencil"></i>
-                    </a>
-                    <a href="{% url 'devices:delete' device.pk %}" class="btn btn-sm btn-outline-danger" title="Supprimer">
-                        <i class="mdi mdi-delete"></i>
-                    </a>
-                    {% endif %}
+                    <div class="btn-group btn-group-sm">
+                        <a href="{% url 'devices:detail' device.pk %}" class="btn btn-outline-info" title="Voir">
+                            <i class="mdi mdi-eye"></i>
+                        </a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'devices:update' device.pk %}" class="btn btn-outline-warning" title="Modifier">
+                            <i class="mdi mdi-pencil"></i>
+                        </a>
+                        <a href="{% url 'devices:delete' device.pk %}" class="btn btn-outline-danger" title="Supprimer">
+                            <i class="mdi mdi-delete"></i>
+                        </a>
+                        {% endif %}
+                    </div>
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center text-muted py-3">Aucun appareil trouv&eacute;</td>
+                <td colspan="7" class="console-empty">Aucun appareil trouvé</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-<!-- Pagination -->
 {% if is_paginated %}
-<nav aria-label="Pagination">
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_search %}&q={{ current_search }}{% endif %}">
-                <i class="mdi mdi-chevron-left"></i>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-left"></i></span></li>
-        {% endif %}
-
-        {% for num in page_obj.paginator.page_range %}
-        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
-            <a class="page-link" href="?page={{ num }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_search %}&q={{ current_search }}{% endif %}">{{ num }}</a>
-        </li>
-        {% endfor %}
-
-        {% if page_obj.has_next %}
-        <li class="page-item">
-            <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if current_category %}&category={{ current_category }}{% endif %}{% if current_status %}&status={{ current_status }}{% endif %}{% if current_search %}&q={{ current_search }}{% endif %}">
-                <i class="mdi mdi-chevron-right"></i>
-            </a>
-        </li>
-        {% else %}
-        <li class="page-item disabled"><span class="page-link"><i class="mdi mdi-chevron-right"></i></span></li>
-        {% endif %}
-    </ul>
-</nav>
+{% include "includes/pagination.html" %}
 {% endif %}
 {% endblock %}

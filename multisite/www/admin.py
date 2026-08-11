@@ -1,4 +1,4 @@
-"""Fichier admin.py exemple de profil user"""
+"""Admin Django du site www (debug uniquement)."""
 from django.contrib import admin
 
 from common.admin import SiteArticleAdmin, SiteArticleCommentAdmin
@@ -10,15 +10,12 @@ from .models import (
 
 
 class ArticleAdmin(SiteArticleAdmin):
-    """
-    Admin page for articles
-    """
+    """Admin des articles, avec leur catégorie et leur sous-catégorie."""
+
     list_display = SiteArticleAdmin.list_display + ('categorie', 'sous_categorie',)
     list_filter = SiteArticleAdmin.list_filter + ('categorie', 'sous_categorie',)
     ordering = ('categorie', 'date', 'sous_categorie',)
-    # Configuration du formulaire d'édition
     fieldsets = (
-        # Fieldset 1 : meta-info (titre, auteur…)
         ('Categorie', {
             'fields': ('categorie', 'sous_categorie'),
         }),
@@ -45,7 +42,9 @@ class ProjetAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ("titre",)}
     fieldsets = (
         ("Général", {
-            "fields": ("titre", "slug", "categorie", "date_creation", "actif", "visibilite", "ordre"),
+            "fields": (
+                "titre", "slug", "categorie", "date_creation", "actif", "visibilite", "ordre",
+            ),
         }),
         ("Apparence", {
             "fields": ("mdi_icon_name", "icone_image", "icone_url", "couleur", "lien_externe"),
@@ -79,14 +78,19 @@ class MachineAdmin(admin.ModelAdmin):
     """Admin pour les machines réseau."""
     list_display = ("nom", "categorie", "adresse_ip", "en_ligne")
     list_filter = ("categorie", "en_ligne")
-    readonly_fields = ("adresse_ip", "alerte_ip", "en_ligne", "derniere_verification", "derniere_vue_en_ligne", "ports_ouverts")
+    readonly_fields = (
+        "adresse_ip", "alerte_ip", "en_ligne", "derniere_verification",
+        "derniere_vue_en_ligne", "ports_ouverts",
+    )
 
 
 class ServeurAdmin(admin.ModelAdmin):
     """Admin pour les serveurs."""
     list_display = ("titre", "categorie", "url", "en_ligne")
     list_filter = ("categorie", "en_ligne")
-    readonly_fields = ("en_ligne", "reverse_proxy_ok", "derniere_verification", "derniere_vue_en_ligne")
+    readonly_fields = (
+        "en_ligne", "reverse_proxy_ok", "derniere_verification", "derniere_vue_en_ligne",
+    )
     fieldsets = (
         ("Général", {
             "fields": ("titre", "categorie", "url", "adresse", "port"),
@@ -95,7 +99,9 @@ class ServeurAdmin(admin.ModelAdmin):
             "fields": ("mdi_icon_name", "icone_image", "icone_url"),
         }),
         ("Statut", {
-            "fields": ("en_ligne", "reverse_proxy_ok", "derniere_verification", "derniere_vue_en_ligne"),
+            "fields": (
+                "en_ligne", "reverse_proxy_ok", "derniere_verification", "derniere_vue_en_ligne",
+            ),
         }),
     )
 

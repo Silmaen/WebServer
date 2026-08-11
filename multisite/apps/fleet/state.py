@@ -1,17 +1,12 @@
-"""Assemble the fleet view from its four independent sources.
+"""Assemble la vue de la flotte depuis ses quatre sources indépendantes.
 
-Each source is asked the question it is the authority on, and none of them is
-reimplemented here:
-
-| Source                  | Answers                                      |
-|-------------------------|----------------------------------------------|
-| `Report` (the machines) | still reporting? updates? drift? disk?       |
-| `Stack` (the machines)  | what is deployed, from which checkout        |
-| wud                     | which running images have a newer tag        |
-| `_common/inventory.conf`| which machines are supposed to exist at all  |
-
-The last one is why a machine that has *never* reported still appears: that is the
-interesting case, and a page built only from what reported cannot show it.
+Chaque source est interrogée sur ce dont elle est l'autorité, et aucune n'est
+réimplémentée ici : `Report` dit qui rapporte encore et ce qui a dérivé, `Stack` ce
+qui est déployé, wud quelles images ont un tag plus récent, et
+`_common/inventory.conf` quelles machines sont censées exister. Cette dernière est
+la raison pour laquelle une machine qui n'a **jamais** rapporté apparaît quand même :
+c'est le cas intéressant, et une page bâtie sur les seuls rapports ne peut pas le
+montrer.
 """
 
 from django.utils import timezone
@@ -23,7 +18,7 @@ from .models import Machine, Report, Stack
 
 
 def _latest_reports(machines):
-    """One report per machine, newest first — in two queries rather than N."""
+    """Un rapport par machine, le plus récent — en deux requêtes plutôt que N."""
     latest = {}
     reports = (
         Report.objects.filter(machine__in=machines)
@@ -36,6 +31,7 @@ def _latest_reports(machines):
 
 
 def _stacks_by_machine(machines):
+    """Les stacks déployées, groupées par machine."""
     grouped = {}
     for stack in Stack.objects.filter(machine__in=machines).select_related("machine"):
         grouped.setdefault(stack.machine_id, []).append(stack)
@@ -43,7 +39,11 @@ def _stacks_by_machine(machines):
 
 
 def build_state(sync=True):
-    """The whole fleet, as plain data. Used by the page and by `/api/fleet/state/`."""
+    """La flotte entière, en données brutes. Utilisé par la page et par l'API.
+
+     :param sync : Faux pour sauter la relecture de l'inventaire.
+     :return : Un dict avec la date, l'erreur wud éventuelle et les lignes machines.
+    """
     if sync:
         inventory.sync()
 
@@ -53,63 +53,62 @@ def build_state(sync=True):
     containers, wud_error = wud.containers()
     images = wud.by_machine(containers)
 
-    # The observed side, joined on the address. A Device is what the scanner found;
-    # matching it to a declared machine is the whole point of keeping the two
-    # tables apart.
+    # Le côté observé, joint sur l'adresse : rapprocher un Device d'une machine
+    # déclarée est tout l'intérêt de garder les deux tables séparées.
     observed = {d.ip_address: d for d in Device.objects.exclude(ip_address=None)}
 
-    rows = []
-    for machine in machines:
-        report = reports.get(machine.id)
-        device = observed.get(machine.ip) if machine.ip else None
-        disk_percent, disk_mount = report.worst_disk if report else (0, "")
-        machine_stacks = stacks.get(machine.id, [])
-
-        rows.append(
-            {
-                "name": machine.name,
-                "ip": machine.ip,
-                "role": machine.role,
-                "os_family": machine.os_family,
-                "wake_order": machine.wake_order,
-                # `never reported` rather than a blank: "I have no idea" and
-                # "nothing to report" are different answers, and conflating them is
-                # how a broken agent reads as a healthy machine for weeks.
-                "state": report.state if report else "never reported",
-                "age": report.age_seconds if report else None,
-                "at": report.at if report else None,
-                "facts": report.facts if report else {},
-                "drift": {
-                    "status": report.drift_status if report else "unknown",
-                    "count": report.drift_count if report else 0,
-                    "changes": report.drift_changes if report else [],
-                },
-                "disk": {"percent": disk_percent, "mount": disk_mount},
-                "images": images.get(machine.name, {"total": 0, "behind": []}),
-                "stacks": machine_stacks,
-                "stack_alerts": [s for s in machine_stacks if s.severity == "danger"],
-                "observed": (
-                    {"status": device.status, "last_seen": device.last_seen, "hostname": device.hostname}
-                    if device
-                    else None
-                ),
-            }
-        )
+    rows = [_ligne(machine, reports, stacks, images, observed) for machine in machines]
 
     return {
         "generated": timezone.now(),
         "wud_error": wud_error,
         "machines": rows,
-        # Context for the discovery side, as a count and not a list: on a home LAN
-        # most observed devices are phones and IoT and are *supposed* to be
-        # undeclared. The devices page is where one browses them.
+        # Le côté découverte en compteur et non en liste : sur un LAN domestique la
+        # plupart des appareils observés sont *censés* être non déclarés.
         "observed_total": len(observed),
         "observed_declared": sum(1 for r in rows if r["observed"]),
     }
 
 
+def _ligne(machine, reports, stacks, images, observed):
+    """Une machine déclarée, augmentée de ce que les quatre sources en savent."""
+    report = reports.get(machine.id)
+    device = observed.get(machine.ip) if machine.ip else None
+    disk_percent, disk_mount = report.worst_disk if report else (0, "")
+    machine_stacks = stacks.get(machine.id, [])
+
+    return {
+        "name": machine.name,
+        "ip": machine.ip,
+        "role": machine.role,
+        "os_family": machine.os_family,
+        "wake_order": machine.wake_order,
+        # `never reported` plutôt qu'un blanc : « aucune idée » et « rien à signaler »
+        # sont deux réponses différentes, et les confondre fait passer un agent cassé
+        # pour une machine en bonne santé pendant des semaines.
+        "state": report.state if report else "never reported",
+        "age": report.age_seconds if report else None,
+        "at": report.at if report else None,
+        "facts": report.facts if report else {},
+        "drift": {
+            "status": report.drift_status if report else "unknown",
+            "count": report.drift_count if report else 0,
+            "changes": report.drift_changes if report else [],
+        },
+        "disk": {"percent": disk_percent, "mount": disk_mount},
+        "images": images.get(machine.name, {"total": 0, "behind": []}),
+        "stacks": machine_stacks,
+        "stack_alerts": [s for s in machine_stacks if s.severity == "danger"],
+        "observed": (
+            {"status": device.status, "last_seen": device.last_seen, "hostname": device.hostname}
+            if device
+            else None
+        ),
+    }
+
+
 def _stack_json(stack):
-    """A `Stack` as plain data, including the properties the model computes."""
+    """Une `Stack` en données brutes, propriétés calculées comprises."""
     return {
         "project": stack.project,
         "path": stack.path,
@@ -127,13 +126,11 @@ def _stack_json(stack):
 
 
 def as_json(state):
-    """`build_state()` for a JSON consumer.
+    """`build_state()` pour un consommateur JSON.
 
-    The page needs model instances — it calls `get_compose_display` and the
-    `repo`/`foreign`/`severity` properties — and those are not serialisable. So the
-    conversion lives here rather than in `build_state()`: one shape of the answer,
-    one place that flattens it, and the severity rules stay on the model instead of
-    being duplicated by every consumer.
+    La page a besoin des instances de modèles (elle appelle leurs propriétés), qui ne
+    sont pas sérialisables : la conversion vit donc ici, et les règles de gravité
+    restent sur le modèle au lieu d'être dupliquées par chaque consommateur.
     """
     return {
         **state,

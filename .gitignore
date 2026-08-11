@@ -4,3 +4,6 @@ __pycache__/
 .env
 docker_data/
 data/db
+# Sortie de collectstatic (STATIC_ROOT)
+staticfiles/
+.ruff_cache/

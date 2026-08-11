@@ -1,4 +1,4 @@
-"""model.py exemple de profile user"""
+"""Modèles du site www : articles, projets, bricolage, machines et serveurs."""
 import ipaddress
 import socket
 
@@ -14,6 +14,30 @@ from markdownx.utils import markdownify
 from common.models import SiteArticle, SiteArticleComment
 
 
+class IconeMixin:
+    """Icône à trois modes exclusifs : nom MDI, image envoyée ou URL distante.
+
+    Une simple classe Python et non un modèle abstrait : elle n'ajoute aucun champ,
+    donc elle ne demande aucune migration. `ICONE_CSS_CLASS` est la seule chose qui
+    diffère entre un projet et un serveur.
+    """
+
+    ICONE_CSS_CLASS = ""
+
+    def has_icone(self):
+        """Vérifie la présence d'une icône, quel que soit le mode."""
+        return bool(self.mdi_icon_name or self.icone_image or self.icone_url)
+
+    def icone_html(self):
+        """Retourne le HTML de l'icône selon le mode actif."""
+        for source in (self.icone_image.url if self.icone_image else "", self.icone_url):
+            if source:
+                return mark_safe(f'<img src="{escape(source)}" class="{self.ICONE_CSS_CLASS}">')
+        if self.mdi_icon_name:
+            return mark_safe(f'<span class="mdi mdi-{escape(self.mdi_icon_name)}"></span>')
+        return ""
+
+
 VISIBILITE_CHOICES = [
     (-1, "Public"),
     (0, "Enregistré"),
@@ -24,9 +48,7 @@ VISIBILITE_CHOICES = [
 
 
 class Category(models.Model):
-    """
-    Category for articles
-    """
+    """Catégorie d'article."""
     nom = models.CharField(max_length=30)
     mdi_icon_name = models.CharField(max_length=30, blank=True)
 
@@ -39,9 +61,7 @@ class Category(models.Model):
 
 
 class SubCategory(models.Model):
-    """
-    Sub Category for articles
-    """
+    """Sous-catégorie d'article."""
     nom = models.CharField(max_length=30)
     mdi_icon_name = models.CharField(max_length=30, blank=True)
 
@@ -54,9 +74,7 @@ class SubCategory(models.Model):
 
 
 class Article(SiteArticle):
-    """
-    Juste une classe basique d'article qui est relié à un `User`
-    """
+    """Article du site, rattaché à une catégorie et une sous-catégorie."""
     categorie = models.ForeignKey(
             Category, on_delete=models.CASCADE,
             verbose_name="La catégorie de l'article")
@@ -65,21 +83,15 @@ class Article(SiteArticle):
             verbose_name="La sous-catégorie")
 
     class Meta:
-        """
-        Meta data for articles
-        """
+        """Meta data"""
         verbose_name = "www article"
         ordering = ['-date']
 
 
 class ArticleComment(SiteArticleComment):
-    """
-    Classe pour les commentaires d’article
-    """
+    """Commentaire d’article, soumis à modération."""
     class Meta:
-        """
-        Meta data
-        """
+        """Meta data"""
         verbose_name = "Commentaire d’article"
         ordering = ['-date']
 
@@ -101,8 +113,11 @@ class ProjetCategorie(models.Model):
         return self.nom
 
 
-class Projet(models.Model):
-    """Projet personnel."""
+class Projet(IconeMixin, models.Model):
+    """Projet personnel, avec son icône et sa visibilité minimum."""
+
+    ICONE_CSS_CLASS = "projet-icone-img"
+
     titre = models.CharField(max_length=100)
     slug = models.SlugField(max_length=100, unique=True)
     categorie = models.ForeignKey(
@@ -112,7 +127,8 @@ class Projet(models.Model):
     contenu = MarkdownxField(blank=True, verbose_name="Contenu")
     lien_externe = models.URLField(blank=True, verbose_name="Lien externe")
     mdi_icon_name = models.CharField(max_length=30, blank=True)
-    icone_image = models.ImageField(blank=True, upload_to="projet_icones", verbose_name="Icône (image)")
+    icone_image = models.ImageField(
+        blank=True, upload_to="projet_icones", verbose_name="Icône (image)")
     icone_url = models.URLField(blank=True, verbose_name="Icône (URL)")
     couleur = models.CharField(max_length=7, default="#5090C1", verbose_name="Couleur")
     date_creation = models.DateField(verbose_name="Date de création")
@@ -130,20 +146,6 @@ class Projet(models.Model):
 
     def __str__(self):
         return self.titre
-
-    def has_icone(self):
-        """Vérifie si le projet possède une icône (quel que soit le mode)."""
-        return bool(self.mdi_icon_name or self.icone_image or self.icone_url)
-
-    def icone_html(self):
-        """Retourne le HTML de l'icône selon le mode actif."""
-        if self.icone_image:
-            return mark_safe(f'<img src="{escape(self.icone_image.url)}" class="projet-icone-img">')
-        if self.icone_url:
-            return mark_safe(f'<img src="{escape(self.icone_url)}" class="projet-icone-img">')
-        if self.mdi_icon_name:
-            return mark_safe(f'<span class="mdi mdi-{escape(self.mdi_icon_name)}"></span>')
-        return ""
 
     def contenu_md(self):
         """Retourne le contenu converti en HTML."""
@@ -226,7 +228,8 @@ class Machine(models.Model):
     derniere_verification = models.DateTimeField(null=True, blank=True)
     derniere_vue_en_ligne = models.DateTimeField(null=True, blank=True)
     ports_ouverts = models.JSONField(default=list, blank=True, verbose_name="Ports ouverts")
-    dernier_scan_ports = models.DateTimeField(null=True, blank=True, verbose_name="Dernier scan ports")
+    dernier_scan_ports = models.DateTimeField(
+        null=True, blank=True, verbose_name="Dernier scan ports")
 
     class Meta:
         """Meta data"""
@@ -269,7 +272,10 @@ class Machine(models.Model):
 
         # Vérifier la cohérence avec ip_statique
         if self.ip_statique and ip_resolue != self.ip_statique:
-            alerte = f"IP résolue ({ip_resolue}) différente de l'IP statique attendue ({self.ip_statique})"
+            alerte = (
+                f"IP résolue ({ip_resolue}) différente de l'IP statique attendue "
+                f"({self.ip_statique})"
+            )
 
         return ip_resolue, alerte
 
@@ -283,12 +289,15 @@ class Machine(models.Model):
                     raise ValidationError({
                         "ip_statique": "L'adresse doit être dans un réseau local autorisé."
                     })
-            except ValueError:
-                raise ValidationError({"ip_statique": "Adresse IP invalide."})
+            except ValueError as exc:
+                raise ValidationError({"ip_statique": "Adresse IP invalide."}) from exc
 
 
-class Serveur(models.Model):
-    """Serveur web à monitorer."""
+class Serveur(IconeMixin, models.Model):
+    """Serveur web à monitorer, joignable par URL ou par adresse + port."""
+
+    ICONE_CSS_CLASS = "service-icone-img"
+
     titre = models.CharField(max_length=100)
     categorie = models.ForeignKey(
         ServiceCategorie, on_delete=models.CASCADE,
@@ -315,20 +324,6 @@ class Serveur(models.Model):
 
     def __str__(self):
         return self.titre
-
-    def has_icone(self):
-        """Vérifie si le serveur possède une icône."""
-        return bool(self.mdi_icon_name or self.icone_image or self.icone_url)
-
-    def icone_html(self):
-        """Retourne le HTML de l'icône selon le mode actif."""
-        if self.icone_image:
-            return mark_safe(f'<img src="{escape(self.icone_image.url)}" class="service-icone-img">')
-        if self.icone_url:
-            return mark_safe(f'<img src="{escape(self.icone_url)}" class="service-icone-img">')
-        if self.mdi_icon_name:
-            return mark_safe(f'<span class="mdi mdi-{escape(self.mdi_icon_name)}"></span>')
-        return ""
 
     def lien(self):
         """Retourne l'URL principale pour accéder au serveur."""

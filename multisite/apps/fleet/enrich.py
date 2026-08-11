@@ -1,19 +1,10 @@
 """Joindre les machines saisies dans `www` à ce que la flotte sait d'elles.
 
-La page de monitoring du site garde sa structure — les `ServiceCategorie`, avec leurs
-machines et leurs serveurs, telles que tu les as saisies. Ce module lui ajoute ce que
-les machines rapportent d'elles-mêmes et qu'aucune saisie ne pourrait tenir à jour :
-uptime, mises à jour en attente, dérive ansible, images en retard, stacks déployées.
-
-Deux principes, pour éviter les doublons que cette fusion est censée supprimer :
-
-* **on ne réassemble rien.** `apps.fleet.state.build_state()` sait déjà agréger les
-  rapports, wud et l'inventaire ; on lui demande le résultat et on le raccroche. Un
-  assembleur, deux consommateurs.
-* **l'état en ligne est dérivé, pas stocké.** `www.Machine.en_ligne` était écrit par
-  `www.tasks.verifier_machines`, c'est-à-dire par le second moteur de checks. Le lire
-  ici depuis le rapport et le scanner évite d'avoir deux écrivains pour un même fait —
-  et c'est ce qui permet de débrancher ce moteur sans figer la page.
+La page de monitoring du site garde sa structure ; ce module lui ajoute ce que les
+machines rapportent d'elles-mêmes et qu'aucune saisie ne tiendrait à jour : uptime,
+mises à jour, dérive ansible, images en retard, stacks déployées. Rien n'est
+réassemblé ici — `apps.fleet.state.build_state()` est le seul assembleur — et l'état
+en ligne est dérivé plutôt que stocké, ce qui évite deux écrivains pour un même fait.
 
 L'appariement se fait sur l'adresse d'abord, sur le nom ensuite : `inventory.conf` est
 la référence pour les adresses, alors que les noms saisis varient (`hermes` contre

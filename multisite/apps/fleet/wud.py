@@ -1,8 +1,8 @@
-"""What wud knows about newer image tags.
+"""Ce que wud sait des tags d'images plus récents.
 
-Not reimplemented here on purpose: asking a registry whether a newer tag exists is
-a solved problem with real edge cases (tag patterns, digests, private registries),
-and wud already runs next to this app on selene.
+Volontairement non réimplémenté : interroger un registre est un problème résolu, avec
+de vrais cas limites (motifs de tags, digests, registres privés), et wud tourne déjà
+à côté de cette app.
 """
 
 import logging
@@ -14,10 +14,10 @@ logger = logging.getLogger("apps.fleet")
 
 
 def containers():
-    """Ask wud what it watches. Returns `(list, error)`.
+    """Demande à wud ce qu'il surveille. Rend `(liste, erreur)`.
 
-    A wud that is down must never take the page with it: the fleet table is most
-    wanted precisely when something is broken.
+    Un wud en panne ne doit jamais emporter la page : le tableau de la flotte est
+    justement le plus attendu quand quelque chose est cassé.
     """
     url = f"{settings.FLEET_WUD_URL.rstrip('/')}/api/containers"
     try:
@@ -30,12 +30,11 @@ def containers():
 
 
 def by_machine(raw):
-    """Group wud's view per machine.
+    """Groupe la vue de wud par machine.
 
-    wud names its local watcher `local`; every other watcher is named after the
-    machine it points at, through the read-only docker proxy that
-    `_common/monitoring_agent` runs on port 2378. So the watcher name *is* the
-    machine name, except for the one looking at its own socket.
+    wud nomme son watcher local `local` ; tous les autres portent le nom de la machine
+    qu'ils visent. Le nom du watcher *est* donc le nom de la machine, sauf pour celui
+    qui regarde sa propre socket.
     """
     grouped = {}
     for container in raw:

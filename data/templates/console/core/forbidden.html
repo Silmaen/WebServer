@@ -1,33 +1,27 @@
-{% comment %}
-Le 403 de la console, rendu par `apps.core.middleware.InactiveUserMiddleware` quand un
-utilisateur connecté n'a pas de groupe autorisé.
-
-C'était une page complète avec son propre Bootstrap et un fond en dégradé ; elle est
-maintenant dans le site, comme le reste de la console. Le message dit surtout ce qu'il
-faut faire, parce que la cause est presque toujours la même : le compte existe dans
-authentik mais n'est ni dans `admin domain` ni dans `user home`.
-{% endcomment %}
-{% extends "console/base.html" %}
-
-{% block console_title %}Accès refusé{% endblock %}
+{% extends "base.html" %}
+{% comment %} 403 de la console (apps.core.middleware). La cause est presque toujours la même :
+   compte authentik hors de `admin domain` et de `user home`. {% endcomment %}
 
 {% block console_content %}
 <div class="card">
     <div class="card-body">
-        <h3 class="card-title">Accès refusé</h3>
         <p class="card-text">
             Ton compte est bien authentifié, mais il n'appartient à aucun groupe autorisé
             à voir le lab. Le reste du site t'est ouvert normalement.
         </p>
         <p class="card-text small">
             Pour y accéder, le compte doit être dans le groupe
-            <code>{{ oidc_admin_group|default:"admin domain" }}</code> (administration) ou
-            <code>{{ oidc_viewer_group|default:"user home" }}</code> (lecture seule).
+            <code>{{ oidc_admin_group }}</code> (administration) ou
+            <code>{{ oidc_viewer_group }}</code> (lecture seule).
         </p>
-        <p>
-            <a class="btn" href="/">Retour au site</a>
-            <a class="btn" href="{% if oidc_enabled %}{% url 'oidc_logout' %}{% else %}{% url 'logout' %}{% endif %}">Se déconnecter</a>
-        </p>
+        <div class="console-toolbar-actions">
+            <a class="btn" href="{% url 'accueil' %}">Retour au site</a>
+            {% comment %} POST comme dans l'en-tête du site : la déconnexion n'est pas un GET. {% endcomment %}
+            <form method="post" action="{% if oidc_enabled %}{% url 'oidc_logout' %}{% else %}{% url 'logout' %}{% endif %}">
+                {% csrf_token %}
+                <button type="submit" class="btn">Se déconnecter</button>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,27 +1,33 @@
-"""The fleet page, and the one button that can affect a machine."""
+"""Les pages de la flotte, et le seul bouton qui peut agir sur une machine."""
 
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.views import View
 from django.views.generic import TemplateView
 
-from apps.core.mixins import StaffRequiredMixin, ViewerRequiredMixin
+from apps.core.mixins import ConsolePageMixin, StaffRequiredMixin, ViewerRequiredMixin
+from www.render_utils import fleet_subpages
 
 from . import ntfy
 from .models import Stack
 from .state import build_state
 
 
-class FleetView(ViewerRequiredMixin, TemplateView):
-    template_name = "fleet/index.html"
+class FleetBaseView(ViewerRequiredMixin, ConsolePageMixin, TemplateView):
+    """Socle des deux pages de la flotte : l'état complet et la sous-navigation.
+
+    Les machines et les stacks se lisent dans le même état assemblé, mais tiennent
+    chacune une page : deux grands tableaux à la suite ne se comparaient pas.
+    """
+
+    nav_page = "fleet:index"
+    subpages = fleet_subpages
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         ctx.update(build_state())
-        ctx["verbs"] = ntfy.VERB_LABELS
-        # The two stack states nothing else in the lab can see, hoisted out of the
-        # per-machine rows so the page can lead with them: gatus sees healthy
-        # containers and wud sees a fine image, so neither says a word.
+        # Les deux états qu'aucun autre contrôle du lab ne voit : gatus voit des
+        # conteneurs sains et wud une image à jour, donc ce sont ces pages ou rien.
         ctx["stack_alerts"] = [
             stack
             for row in ctx["machines"]
@@ -31,11 +37,39 @@ class FleetView(ViewerRequiredMixin, TemplateView):
         return ctx
 
 
-class ApproveView(StaffRequiredMixin, View):
-    """Publish one approval for a machine.
+class FleetView(FleetBaseView):
+    """Les machines déclarées : état rapporté, mises à jour, disque, dérive, images."""
 
-    Reaching this endpoint gives no ability to run a command: it writes a message
-    naming one of four verbs to an ntfy topic. See `apps/fleet/ntfy.py`.
+    template_name = "fleet/index.html"
+    page_title = "Flotte"
+    subpage_title = "Machines"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["verbs"] = ntfy.VERB_LABELS
+        return ctx
+
+
+class StacksView(FleetBaseView):
+    """Les stacks compose déployées, machine par machine."""
+
+    template_name = "fleet/stacks.html"
+    page_title = "Stacks déployées"
+    subpage_title = "Stacks"
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        # Ne garder que les machines qui rapportent au moins une stack, pour que la
+        # page puisse dire « aucune » sans lister des machines vides.
+        ctx["machines"] = [row for row in ctx["machines"] if row["stacks"]]
+        return ctx
+
+
+class ApproveView(StaffRequiredMixin, View):
+    """Publie une approbation pour une machine.
+
+    Atteindre cet endpoint ne permet pas d'exécuter une commande : il écrit un
+    message nommant l'un des quatre verbes sur un sujet ntfy. Voir `apps/fleet/ntfy.py`.
     """
 
     def post(self, request, machine, verb):
@@ -45,6 +79,6 @@ class ApproveView(StaffRequiredMixin, View):
         else:
             messages.success(request, f"« {verb} » publié pour {machine}")
         response = redirect("fleet:index")
-        # 303, so refreshing the page the browser lands on does not repeat the POST.
+        # 303, pour qu'un rafraîchissement de la page d'arrivée ne rejoue pas le POST.
         response.status_code = 303
         return response

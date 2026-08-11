@@ -16,7 +16,7 @@
         </button>
         {% endfor %}
     </div>
-    <div class="icon-picker-dynamic-grid" style="display: none;"></div>
+    <div class="icon-picker-dynamic-grid is-hidden"></div>
     <div class="icon-picker-status"></div>
     <input type="hidden" name="{{ widget.name }}" value="{{ widget.value|default:'' }}"{% include "django/forms/widgets/attrs.html" %}>
 </div>
@@ -109,22 +109,24 @@
         statusEl.className = "icon-picker-status icon-picker-status-loading";
     }
 
+    // Une classe plutôt que `style.display` : le style reste dans la feuille CSS.
     function showCurated() {
-        curatedGrid.style.display = "";
-        dynamicGrid.style.display = "none";
+        curatedGrid.classList.remove("is-hidden");
+        dynamicGrid.classList.add("is-hidden");
         setStatus("", "");
     }
 
     function showDynamic() {
-        curatedGrid.style.display = "none";
-        dynamicGrid.style.display = "";
+        curatedGrid.classList.add("is-hidden");
+        dynamicGrid.classList.remove("is-hidden");
     }
 
     function filterCurated(q) {
         for (var i = 0; i < curatedItems.length; i++) {
             var name = curatedItems[i].getAttribute("data-icon").toLowerCase();
             var label = curatedItems[i].getAttribute("data-label").toLowerCase();
-            curatedItems[i].style.display = (name.indexOf(q) !== -1 || label.indexOf(q) !== -1) ? "" : "none";
+            var trouve = name.indexOf(q) !== -1 || label.indexOf(q) !== -1;
+            curatedItems[i].classList.toggle("is-hidden", !trouve);
         }
     }
 

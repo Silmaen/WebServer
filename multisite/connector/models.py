@@ -1,16 +1,18 @@
-"""Fichier UserProfile.models.py pour les mod\u00e8les d'utilisateurs"""
-from django.db import models
+"""Profil utilisateur du site : avatar, date de naissance et niveau d'accès."""
 from django.contrib.auth.models import User
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from common.user_utils import ENREGISTRE, ADMINISTRATEUR, USER_LEVEL_CHOICES
+from common.user_utils import ADMINISTRATEUR, ENREGISTRE, USER_LEVEL_CHOICES
 
 
 class UserProfile(models.Model):
-    """Profil utilisateur avec niveau d'acc\u00e8s"""
+    """Profil utilisateur, créé automatiquement pour chaque `User`."""
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
-    avatar = models.ImageField(blank=True, null=True, verbose_name="avatar", upload_to='user_avatar')
+    avatar = models.ImageField(
+        blank=True, null=True, verbose_name="avatar", upload_to='user_avatar')
     birthDate = models.DateField(blank=True, null=True, verbose_name="date de naissance")
     user_level = models.IntegerField(
         choices=USER_LEVEL_CHOICES,
@@ -18,19 +20,22 @@ class UserProfile(models.Model):
         verbose_name="niveau utilisateur",
     )
 
+    class Meta:
+        """Meta data"""
+        verbose_name = "profil utilisateur"
+        verbose_name_plural = "profils utilisateurs"
+
+    def __str__(self):
+        """Nom d'utilisateur et niveau d'accès."""
+        return f"{self.user.username} ({self.get_user_level_display()})"
+
     def save(self, *args, **kwargs):
-        """Enregistre le profil, puis derive `User.is_staff` de son niveau.
+        """Enregistre le profil, puis dérive `User.is_staff` de son niveau.
 
-        Le niveau est la source de verite, `is_staff` en est deduit : une seule
-        direction, et c'est ce qui rend le resultat previsible.
-
-        Ce n'etait pas le cas avant. Un second recepteur `post_save` sur `User`
-        appelait `instance.userprofile.save()`, donc enregistrer un profil sauvait
-        l'utilisateur, ce qui reenregistrait le profil -- parfois une instance
-        perimee, chargee avant la modification, qui reecrivait alors l'ancien niveau.
-        Symptome observe : poser `user_level = 3`, sauver, relire 0, avec `is_staff`
-        pourtant passe a True. Le recepteur ne fait plus que garantir l'existence du
-        profil, il ne le reenregistre jamais.
+        Le niveau est la source de vérité et `is_staff` en est déduit : une seule
+        direction, ce qui rend le résultat prévisible. Le sens inverse formait une
+        boucle avec le récepteur `post_save`, qui pouvait réécrire l'ancien niveau
+        depuis une instance périmée.
         """
         if not self.user_id:
             super().save(*args, **kwargs)
@@ -46,16 +51,11 @@ class UserProfile(models.Model):
 
 @receiver(post_save, sender=User)
 def ensure_user_profile(sender, instance, created, **kwargs):
-    """Garantit qu'un `User` a un profil, sans jamais reenregistrer celui qui existe.
+    """Garantit qu'un `User` a un profil, sans jamais réenregistrer celui qui existe.
 
-    Remplace les deux recepteurs precedents. Celui qui reenregistrait le profil a
-    chaque sauvegarde d'utilisateur formait une boucle avec `UserProfile.save()` --
-    voir l'explication la-bas. Creer ce qui manque suffit : un niveau n'a pas besoin
-    d'etre reecrit pour rester ce qu'il est.
-
-    La branche sans `created` couvre les comptes importes, anterieurs a l'obligation
-    de profil : sans elle, le context processor de navigation leve une exception sur
-    chacune de leurs pages.
+    Réenregistrer le profil formerait une boucle avec `UserProfile.save()`. La branche
+    sans `created` couvre les comptes importés, antérieurs à l'obligation de profil :
+    sans elle, le context processor de navigation lève une exception sur leurs pages.
     """
     if created or not UserProfile.objects.filter(user=instance).exists():
         UserProfile.objects.get_or_create(user=instance)

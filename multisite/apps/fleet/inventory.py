@@ -1,12 +1,12 @@
-"""Read `_common/inventory.conf` and mirror it into `Machine` rows.
+"""Lit `_common/inventory.conf` et le reflète dans les lignes `Machine`.
 
-The file is the single machine list of the whole lab: `homelab-wake` parses it on
-the router with busybox awk, ansible's dynamic inventory translates it, and
-`homelab-status.sh` walks it. So this module only ever reads it — a machine is
-never created here, and a row that no longer matches the file is reconciled, not
-kept.
+Ce fichier est la liste de machines unique de tout le lab (le routeur le lit en
+busybox awk, ansible en dérive son inventaire), donc ce module ne fait que le lire :
+une machine n'est jamais créée ici, et une ligne qui ne correspond plus au fichier
+est réconciliée.
 
-Format (whitespace separated, `#` starts a comment, `-` means not applicable):
+Format (séparé par des espaces, `#` commence un commentaire, `-` signifie
+« sans objet »)  :
 
     name  ip  mac  role  os  ac  wol  order  ssh
 """
@@ -22,8 +22,8 @@ logger = logging.getLogger("apps.fleet")
 
 COLUMNS = ("name", "ip", "mac", "role", "os", "ac", "wol", "order", "ssh")
 
-# The fields `sync()` writes, mapped from the file's column names. Kept as data so
-# the comparison below cannot drift from the assignment.
+# Les champs que `sync()` écrit, depuis les noms de colonnes du fichier. Gardés comme
+# données pour que la comparaison ne puisse pas s'écarter de l'affectation.
 FIELDS = {
     "ip": "ip",
     "mac": "mac",
@@ -37,7 +37,7 @@ FIELDS = {
 
 
 def _clean(column, value):
-    """`-` means "not applicable" in this file, not the literal string."""
+    """`-` signifie « sans objet » dans ce fichier, pas la chaîne littérale."""
     if column == "ip":
         return None if value == "-" else value
     if column == "order":
@@ -49,11 +49,11 @@ def _clean(column, value):
 
 
 def parse(path=None):
-    """The machines the console is about, in file order.
+    """Les machines dont la console parle, dans l'ordre du fichier.
 
-    Machines with no ssh login are skipped, exactly as the Flask console skipped
-    them: nothing reports for the printer or the ISP box, so a row for them would
-    sit at `never reported` for ever and teach you to ignore the column.
+    Les machines sans compte ssh sont ignorées : rien ne rapporte pour l'imprimante
+    ou la box, donc leur ligne resterait à « never reported » pour toujours et
+    apprendrait à ignorer la colonne.
     """
     path = Path(path or settings.FLEET_INVENTORY)
     if not path.is_file():
@@ -76,17 +76,16 @@ def parse(path=None):
 
 
 def sync(path=None):
-    """Reconcile `Machine` with the file. Returns what it did.
+    """Réconcilie `Machine` avec le fichier. Rend le compte de ce qui a été fait.
 
-    Only writes rows that actually differ. This is called on every report POST and
-    on every page render — reading ten lines of text is cheaper than any staleness
-    bug — so a no-op has to really be a no-op, or the table's `updated_at` becomes
-    meaningless and every run looks like a change.
+    N'écrit que les lignes qui diffèrent réellement : appelée à chaque rapport et à
+    chaque affichage de page, une opération nulle doit vraiment être nulle, sinon
+    `updated_at` ne veut plus rien dire.
     """
     rows = parse(path)
     if not rows:
-        # An unreadable or empty file must not retire the whole fleet. A missing
-        # mount is a deployment error, not a decision to forget every machine.
+        # Un fichier illisible ou vide ne doit pas retirer toute la flotte : un montage
+        # manquant est une erreur de déploiement, pas une décision.
         return {"created": 0, "updated": 0, "retired": 0, "seen": 0}
 
     seen, created, updated = set(), 0, 0
@@ -109,5 +108,8 @@ def sync(path=None):
 
     retired = Machine.objects.filter(retired=False).exclude(name__in=seen).update(retired=True)
     if created or updated or retired:
-        logger.info("inventaire synchronisé : %d créés, %d mis à jour, %d retirés", created, updated, retired)
+        logger.info(
+            "inventaire synchronisé : %d créés, %d mis à jour, %d retirés",
+            created, updated, retired,
+        )
     return {"created": created, "updated": updated, "retired": retired, "seen": len(seen)}

@@ -1,55 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}{{ network.name }} - Network Monitor{% endblock %}
-
-{% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">{{ network.name }}</h1>
-    <div>
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-info">{{ network.cidr }}{% if not network.is_active %} &middot; désactivé{% endif %}</span>
+    <span class="console-toolbar-actions">
         {% if user.is_staff %}
         {% if network.can_query_gateway %}
-        <form method="post" action="{% url 'network:scan' network.pk %}" class="d-inline">
+        <form method="post" action="{% url 'network:scan' network.pk %}">
             {% csrf_token %}
             <input type="hidden" name="mode" value="gateway">
-            <button type="submit" class="btn btn-success" {% if not network.is_active %}disabled{% endif %} title="Interroge la gateway OpenWrt (rapide)">
-                <i class="mdi mdi-router-network me-1"></i> Gateway
+            <button type="submit" class="btn" {% if not network.is_active %}disabled{% endif %} title="Interroge la passerelle OpenWrt (rapide)">
+                <i class="mdi mdi-router-network"></i> Passerelle
             </button>
         </form>
         {% endif %}
-        <form method="post" action="{% url 'network:scan' network.pk %}" class="d-inline">
+        <form method="post" action="{% url 'network:scan' network.pk %}">
             {% csrf_token %}
             <input type="hidden" name="mode" value="quick">
-            <button type="submit" class="btn btn-outline-success" {% if not network.is_active %}disabled{% endif %} title="ARP + ping">
-                <i class="mdi mdi-radar me-1"></i> Scan rapide
+            <button type="submit" class="btn" {% if not network.is_active %}disabled{% endif %} title="ARP + ping">
+                <i class="mdi mdi-radar"></i> Scan rapide
             </button>
         </form>
-        <form method="post" action="{% url 'network:scan' network.pk %}" class="d-inline">
+        <form method="post" action="{% url 'network:scan' network.pk %}">
             {% csrf_token %}
             <input type="hidden" name="mode" value="full">
-            <button type="submit" class="btn btn-outline-secondary" {% if not network.is_active %}disabled{% endif %} title="Ports + OS (lent)">
-                <i class="mdi mdi-magnify me-1"></i> Scan complet
+            <button type="submit" class="btn" {% if not network.is_active %}disabled{% endif %} title="Ports + OS (lent)">
+                <i class="mdi mdi-magnify"></i> Scan complet
             </button>
         </form>
-        <a href="{% url 'network:update' network.pk %}" class="btn btn-warning">
-            <i class="mdi mdi-pencil me-1"></i> Modifier
+        <a href="{% url 'network:update' network.pk %}" class="btn btn-primary">
+            <i class="mdi mdi-pencil"></i> Modifier
         </a>
         <a href="{% url 'network:delete' network.pk %}" class="btn btn-danger">
-            <i class="mdi mdi-delete me-1"></i> Supprimer
+            <i class="mdi mdi-delete"></i> Supprimer
         </a>
         {% endif %}
-        <a href="{% url 'network:list' %}" class="btn btn-outline-secondary">
-            <i class="mdi mdi-arrow-left me-1"></i> Retour
+        <a href="{% url 'network:list' %}" class="btn">
+            <i class="mdi mdi-arrow-left"></i> Retour
         </a>
-    </div>
+    </span>
 </div>
+{% endblock %}
+
+{% block console_content %}
 
 {% if unknown_count > 0 %}
 <div class="alert alert-info d-flex align-items-center mb-3">
     <i class="mdi mdi-help-rhombus me-2 fs-5"></i>
     <div>
-        <strong>{{ unknown_count }} appareil{{ unknown_count|pluralize:"s" }} non class&eacute;{{ unknown_count|pluralize:"s" }}</strong>
-        n&eacute;cessite{{ unknown_count|pluralize:"nt" }} votre attention.
-        <a href="{% url 'devices:list' %}?category=unknown" class="alert-link">Voir les appareils non class&eacute;s</a>
+        <strong>{{ unknown_count }} appareil{{ unknown_count|pluralize:"s" }} non classé{{ unknown_count|pluralize:"s" }}</strong>
+        nécessite{{ unknown_count|pluralize:"nt" }} votre attention.
+        <a href="{% url 'devices:list' %}?category=unknown" class="alert-link">Voir les appareils non classés</a>
     </div>
 </div>
 {% endif %}
@@ -61,9 +62,9 @@
                 <h5 class="mb-0"><i class="mdi mdi-sitemap me-1"></i> Informations du réseau</h5>
             </div>
             <div class="card-body">
-                <table class="table table-borderless mb-0">
+                <table class="table console-info-table">
                     <tr>
-                        <th class="text-muted" style="width:40%">Nom</th>
+                        <th class="text-muted">Nom</th>
                         <td>{{ network.name }}</td>
                     </tr>
                     <tr>
@@ -124,7 +125,7 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Hostname</th>
+                    <th>Nom d'hôte</th>
                     <th>IP</th>
                     <th>MAC</th>
                     <th>Catégorie</th>
@@ -163,19 +164,21 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{% url 'devices:detail' device.pk %}" class="btn btn-sm btn-outline-info" title="Voir">
-                            <i class="mdi mdi-eye"></i>
-                        </a>
-                        {% if user.is_staff %}
-                        <a href="{% url 'devices:update' device.pk %}" class="btn btn-sm btn-outline-warning" title="Modifier">
-                            <i class="mdi mdi-pencil"></i>
-                        </a>
-                        {% endif %}
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'devices:detail' device.pk %}" class="btn btn-outline-info" title="Voir">
+                                <i class="mdi mdi-eye"></i>
+                            </a>
+                            {% if user.is_staff %}
+                            <a href="{% url 'devices:update' device.pk %}" class="btn btn-outline-warning" title="Modifier">
+                                <i class="mdi mdi-pencil"></i>
+                            </a>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-3">Aucun appareil dans ce réseau. Lancez un scan pour découvrir les appareils.</td>
+                    <td colspan="8" class="console-empty">Aucun appareil dans ce réseau. Lancez un scan pour découvrir les appareils.</td>
                 </tr>
                 {% endfor %}
             </tbody>

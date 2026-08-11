@@ -1,12 +1,13 @@
-"""DRF permission classes matching the view mixins."""
+"""Permissions DRF, alignées sur les mixins de vues."""
 
 from rest_framework.permissions import BasePermission
 
 
 class IsViewer(BasePermission):
-    """Authenticated user in 'viewers' or 'admins' group (or superuser/staff)."""
+    """Utilisateur connecté du groupe "viewers" ou "admins" (ou superuser/staff)."""
 
     def has_permission(self, request, view):
+        """Autorise la lecture aux membres des groupes de la console."""
         user = request.user
         if not user or not user.is_authenticated:
             return False
@@ -16,9 +17,10 @@ class IsViewer(BasePermission):
 
 
 class IsAdmin(BasePermission):
-    """Staff user (admin group or superuser)."""
+    """Utilisateur staff : groupe "admins" ou superuser."""
 
     def has_permission(self, request, view):
+        """Autorise l'écriture au staff uniquement."""
         user = request.user
         if not user or not user.is_authenticated:
             return False

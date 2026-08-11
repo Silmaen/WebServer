@@ -1,23 +1,19 @@
-"""Fichier UserProfile.users.forms.py les formulaires utilisateur"""
+"""Formulaires de compte et de profil utilisateur."""
 from django import forms
-from django.contrib.auth.forms import UserCreationForm, UserChangeForm
+from django.contrib.auth.forms import UserChangeForm, UserCreationForm
+
 from .models import UserProfile
 
 
 class CustomUserCreationForm(UserCreationForm):
-    """
-    Formulaire pour la création d’un utilisateur.
-    """
+    """Formulaire de création d’un utilisateur, avec nom et adresse."""
+
     class Meta(UserCreationForm.Meta):
-        """
-        Meta informations
-        """
+        """Meta informations"""
         fields = UserCreationForm.Meta.fields + ("first_name", "last_name", "email")
 
     def save(self, commit=True):
-        """
-        Fonction de sauvegarde
-        """
+        """Reporte nom, prénom et adresse sur l'utilisateur créé."""
         user = super().save(commit=False)
         user.first_name = self.cleaned_data['first_name']
         user.last_name = self.cleaned_data['last_name']
@@ -28,23 +24,17 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class ProfileForm(forms.ModelForm):
-    """
-    Formulaire d’affichage des informations de profil
-    """
+    """Formulaire des informations de profil : avatar et date de naissance."""
+
     class Meta:
-        """
-        Meta informations
-        """
+        """Meta informations"""
         model = UserProfile
         fields = ('avatar', 'birthDate')
 
 
 class CustomUserChangeForm(UserChangeForm):
-    """
-    Formulaire pour la modification de user
-    """
+    """Formulaire de modification des informations de compte."""
+
     class Meta(UserChangeForm.Meta):
-        """
-        Meta informations
-        """
+        """Meta informations"""
         fields = ('first_name', 'last_name', 'email')

@@ -1,12 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Tâches - Network Monitor{% endblock %}
-
 {% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Tâches en arrière-plan</h1>
-</div>
-
 <div class="table-responsive">
     <table class="table table-hover">
         <thead>
@@ -67,19 +61,21 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if user.is_staff %}{% if task.status == "pending" or task.status == "running" %}
-                    <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
-                            <i class="mdi mdi-close-circle me-1"></i>Annuler
-                        </button>
-                    </form>
-                    {% endif %}{% endif %}
+                    {% if user.is_staff and task.status == "pending" or user.is_staff and task.status == "running" %}
+                    <div class="btn-group btn-group-sm">
+                        <form method="post" action="{% url 'core:task-revoke' task.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger" title="Annuler">
+                                <i class="mdi mdi-close-circle"></i> Annuler
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center text-muted py-3">Aucune tâche</td>
+                <td colspan="7" class="console-empty">Aucune tâche</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -87,22 +83,6 @@
 </div>
 
 {% if is_paginated %}
-<nav>
-    <ul class="pagination justify-content-center">
-        {% if page_obj.has_previous %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}"><i class="mdi mdi-chevron-left"></i></a></li>
-        {% endif %}
-        {% for num in page_obj.paginator.page_range %}
-        <li class="page-item {% if page_obj.number == num %}active{% endif %}"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-        {% endfor %}
-        {% if page_obj.has_next %}
-        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}"><i class="mdi mdi-chevron-right"></i></a></li>
-        {% endif %}
-    </ul>
-</nav>
+{% include "includes/pagination.html" %}
 {% endif %}
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://unpkg.com/htmx.org@2.0.4"></script>
 {% endblock %}

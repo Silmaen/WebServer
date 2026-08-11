@@ -4,12 +4,9 @@ from .models import SiteArticleComment
 
 
 class SiteArticleCommentForm(forms.ModelForm):
-    """
-    Form for comment creation
-    """
+    """Formulaire de création d'un commentaire d'article."""
+
     class Meta:
-        """
-        Meta informations
-        """
+        """Meta informations"""
         model = SiteArticleComment
         fields = ('contenu',)

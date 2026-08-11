@@ -3,19 +3,19 @@
 {% block mainsection %}
 <div class="reg-card">
     <div class="reg-card-title">
-        <h4>Login</h4>
+        <h4>Connexion</h4>
     </div>
     <div class="reg-card-body">
         <p>Afin de pouvoir accéder au contenu du site, veuillez entrer vos identifiants:</p>
         <form method="post">
             {% csrf_token %}
             {{ form.as_p }}
-            <button id="submit" class="userbtn mdi mdi-login">Login</button>
+            <button id="submit" class="userbtn mdi mdi-login">Se connecter</button>
         </form>
         <p>Vous avez perdu vos identifiants?
-        <a class="userbtn mdi mdi-account-reactivate-outline" href="{% url 'password_reset' %}">Reset</a></p>
+        <a class="userbtn mdi mdi-account-reactivate-outline" href="{% url 'password_reset' %}">Mot de passe oublié</a></p>
         <p>Vous n'avez pas d'identifiants?
-        <a class="userbtn mdi mdi-account-plus-outline" href="{% url 'register' %}">Register</a></p>
+        <a class="userbtn mdi mdi-account-plus-outline" href="{% url 'register' %}">S'inscrire</a></p>
     </div>
     <div class="reg-card-footer">
     <a class="userbtn mdi mdi-arrow-left-circle-outline" href="{% url 'accueil' %}">Retour</a>

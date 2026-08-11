@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Django 5.2 web application for **argawaen.net**. Single-site architecture serving articles with categories, personal projects, DIY (bricolage) articles, network monitoring, user authentication and Markdown content. The project language (UI, comments, templates) is **French**. Timezone: Europe/Paris.
 
+The repository is the result of a merge between the personal site (`www`, `common`, `connector`) and a homelab network-monitoring application, now **la console**, living under `multisite/apps/` and served under `/console/`. The two halves share one look: console pages extend `www/base.html` and get their title and inline sub-navigation from `apps.core.mixins.ConsolePageMixin`, exactly as `www` pages get theirs from `www.render_utils.get_page_data`. There is no second theme and no Bootstrap bundle — `data/static/console/css/console.css` only maps the Bootstrap class names inherited templates still use onto the site's CSS variables.
+
 ## Common Commands
 
 ### Développement local (sans Docker)
@@ -56,35 +58,40 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
 
 ### Dépendances
 
-- Django>=5.2,<5.3
-- Pillow>=11.0
-- django-markdownx>=4.0
-- html5lib-truncation>=0.1
-- gunicorn>=23.0
-- celery[redis]>=5.4
-- python-nmap>=0.7
-- psycopg[binary]>=3.1
-- Pygments>=2.17
-- pymdown-extensions>=10.0
+Site: `Django>=5.2,<5.3`, `Pillow`, `django-markdownx`, `html5lib-truncation`, `gunicorn`, `celery[redis]`, `python-nmap`, `psycopg[binary]`, `Pygments`, `pymdown-extensions`.
+
+Arrived with the console: `djangorestframework`, `django-filter`, `django-htmx`, `django-celery-beat`, `mozilla-django-oidc`, `scapy`, `dnspython`, `requests`, `redis`.
+
+Front-end: no framework. **Bootstrap is not loaded** (neither CSS nor JS) — see "Console styling" below. Material Design Icons comes from a CDN in `www/base.html`; Chart.js and htmx are loaded only by the pages that need them, in their own `extra_js`.
 
 ## Architecture
 
 ### URL Routing
 
 `ROOT_URLCONF` is `multisite.urls`, which combines:
+- `/` — **dispatches** through `www.views_home.home` rather than serving a single page: a guest gets `a_propos`, an `administrateur` session gets `monitoring` (called, not redirected, so the address stays `/`), a `viewers`/`admins` group member is redirected to `fleet:index`. `path('', home)` sits **before** `www_patterns`, so it wins at `''` and the `accueil` view is only reachable by name through `reverse('accueil')`.
 - `www.urls` — app-specific routes:
-  - `/` — accueil (homepage, public)
   - `/a-propos/` — about page (public), with sub-pages `cv/` and `publications/`
   - `/mes-projets/` — projects (public, filtered by visibility level), with sub-routes `categorie/<slug>/` and `projet/<slug>/`
   - `/archives/` — archives main, `news/`, `research/` (requires `avance` level)
   - `/bricolage/` — DIY section (requires `avance` level), with detail `<slug>/`
-  - `/monitoring/` — network monitoring (requires `administrateur` level), with sub-routes `machine/<id>/`, `machine/<id>/ping/` (SSE), `machine/<id>/ports/` (SSE), `serveur/<id>/`, `serveur/<id>/check/` (SSE)
+  - `/monitoring/` — machine monitoring (requires `administrateur` level). **Machines and services are two pages**, joined by the inline sub-navigation: `/monitoring/` (machines) and `/monitoring/services/` (web services). Detail and SSE sub-routes: `machine/<id>/`, `machine/<id>/ping/` (SSE), `machine/<id>/ports/` (SSE), `serveur/<id>/`, `serveur/<id>/check/` (SSE)
   - `/administration/` — admin panel (requires `administrateur` level), sub-routes:
     - `utilisateurs/` — user management
     - `projets/` — CRUD for projects and categories
     - `bricolages/` — CRUD for DIY articles
     - `services/` — CRUD for machines, servers and service categories
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
+- `/console/` — la console (see below), from `multisite/apps/`:
+  - `/console/` — dashboard (`apps.dashboard`)
+  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state
+  - `/console/devices/` — devices observed by the scanner, with `add/`, `<uuid>/`, `<uuid>/edit/`, `<uuid>/delete/`, `<uuid>/probe/`
+  - `/console/networks/` — monitored networks and gateway credentials
+  - `/console/monitoring/` — supervision history (time series + state transitions)
+  - `/console/admin-panel/`, `/console/tasks/`, `/console/tasks/<uuid>/` — console administration and background-task tracking
+- `/api/fleet/` — bearer-token endpoints the machines POST reports to (outside the DRF session defaults: a shell script on a timer cannot follow an SSO redirect)
+- `/api/` — internal JSON API (`apps.api`): health check, monitoring time series, device list
+- `/oidc/` — SSO through authentik, plus `/oidc/silent/` for the silent-auth middleware
 - `admin/` — Django admin
 - `markdownx/` — Markdown editor support
 
@@ -95,17 +102,28 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
   - **`connector/`** — User auth & profiles (login, register, password reset)
   - **`common/`** — Base models (`SiteArticle`, `SiteArticleComment`), utilities, management commands
   - **`www/`** — Main website (articles, projects, bricolage, monitoring, custom widgets, template tags, context processors, Celery tasks)
+  - **`apps/`** — la console. The `apps.` prefix is deliberate: it preserves the migration app labels, so the existing database carries over instead of being rebuilt.
+    - **`apps/core/`** — cross-cutting: `TimeStampedModel`, `BackgroundTask`, access mixins, `ConsolePageMixin`, OIDC backend (`auth.py`), silent SSO (`sso.py`), console-scoped 403 middleware, task logger
+    - **`apps/fleet/`** — declared machines (mirror of `_common/inventory.conf`), their reports, deployed stacks, wud image lag, ntfy approvals, and `enrich.py` which grafts all of it onto `www`'s monitoring page
+    - **`apps/devices/`** — devices observed on the network, port scans, OS probes
+    - **`apps/network/`** — monitored networks, OpenWrt gateway credentials and ubus queries, discovery tasks
+    - **`apps/monitoring/`** — availability checks and their results, `history.py` (state transitions), `policy.py` (which targets belong to gatus rather than here)
+    - **`apps/dashboard/`** — console overview page
+    - **`apps/api/`** — internal JSON API (views in `views.py`, routes only in `urls.py`)
 - **`data/`** — Static files, media uploads, and templates
-  - **`data/templates/common/`** — Shared base templates and registration templates
+  - **`data/templates/common/`** — Shared registration templates
   - **`data/templates/www/`** — WWW app templates (including `widgets/` for custom form widgets)
-  - **`data/static/`** — CSS, JS, images, fonts
+  - **`data/templates/console/`** — Console templates. `base.html` plugs them into `www/base.html`; `includes/pagination.html` is the single paginator used by every console list
+  - **`data/static/`** — CSS, JS, images, fonts (`console/css/console.css`, `console/js/` for the two extracted scripts)
   - **`data/media/`** — User uploads (avatars, article images, project icons, service icons)
 - **`docker_data/`** — Docker runtime data (db, media — not versioned)
+
+`TEMPLATES["DIRS"]` lists `data/templates/console` as a root, so console templates reference each other without a prefix (`base.html`, `fleet/index.html`).
 
 ### Docker
 
 - **`Dockerfile`** — Image Python 3.12 avec nginx, gunicorn, nmap, iputils-ping, libpq-dev et curl
-- **`docker-compose.yml`** — Services `db` (PostgreSQL 16), `redis` (broker Celery) et `web` avec volumes pour media et données PostgreSQL. Healthchecks sur les 3 services (`pg_isready`, `redis-cli ping`, `curl`). Le service `web` attend `db` et `redis` via `condition: service_healthy`
+- **`docker-compose.yml`** — Services `db` (PostgreSQL 16), `redis` (broker Celery), `web`, et `celery_scanner` — le seul service privilégié : scanner le LAN demande `network_mode: host` et `NET_RAW`, ce qui n'a rien à faire dans le conteneur qui sert le site public. Il ne consomme que la file `network`. `db` et `redis` sont exposés sur la loopback parce que, depuis le namespace réseau de l'hôte, le nom `db` ne résout pas. `web` monte aussi `_common/inventory.conf` en lecture seule (`INVENTORY_FILE`) : `apps.fleet` le reflète sans jamais l'écrire
 - **`entrypoint.sh`** — Lance migrate, collectstatic, nginx, celery worker, celery beat, puis gunicorn
 - **`nginx.conf`** — Reverse proxy (static/media servis directement, le reste vers gunicorn sur 127.0.0.1:8001)
 - **`.env`** — Secrets et configuration (non versionné, copier `.env.example`)
@@ -126,7 +144,16 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
 - `Machine` — network machine to monitor (`nom`/hostname, `categorie` FK, `adresse_ip`, `ip_statique`, `alerte_ip`, `ports_supplementaires`, `en_ligne`, `derniere_verification`, `derniere_vue_en_ligne`, `ports_ouverts` JSON, `dernier_scan_ports`). Validates IP in `RESEAUX_LOCAUX` (10.10.0.0/16 principal, 10.8.0.0/16 guest, 10.9.0.0/16 IoT, 10.0.0.0/24 routeur↔box) via `ip_dans_reseaux_locaux()`. Methods: `hostname_complet()`, `resoudre_ip()`, `clean()`
 - `Serveur` — web service to monitor (`titre`, `categorie` FK, `description`, `url`, `hostname`, `adresse`, `port`, `en_ligne`, `reverse_proxy_ok`, `derniere_verification`, `derniere_vue_en_ligne`). Multi-mode icon system like `Projet`. Methods: `has_icone()`, `icone_html()`, `lien()`, `adresse_effective()`, `clean()`. Requires at least `url` or `(adresse|hostname)+port`
 
-`connector/models.py` defines `UserProfile` (OneToOne with `User`, auto-created via `post_save` signal) with `avatar`, `birthDate`, and `user_level`.
+`connector/models.py` defines `UserProfile` (OneToOne with `User`, auto-created via `post_save` signal) with `avatar`, `birthDate`, and `user_level`. `UserProfile.save()` derives `User.is_staff` from `user_level` — one direction only, so a test that needs a staff user must set `user_level`, not `is_staff`.
+
+Console models (`multisite/apps/*/models.py`):
+- `apps.core` — `TimeStampedModel` (abstract: UUID pk + timestamps), `BackgroundTask` (Celery task tracking with log, result, `triggered_by`)
+- `apps.fleet` — `Machine` (**declared**, mirror of `_common/inventory.conf`), `Report` (a `homelab-report` document, kept as history), `Stack` (a deployed compose project as the Docker daemon reports it, with a `severity` for missing/untracked compose files)
+- `apps.devices` — `Device` (**observed** by the scanner), `DevicePort`, `ConnectionLog`
+- `apps.network` — `Network` (CIDR, scan interval), `GatewayCredential` (OpenWrt ubus access)
+- `apps.monitoring` — `MonitoringCheck` (ICMP/TCP/HTTP/DNS on a device), `CheckResult`
+
+`fleet.Machine` and `devices.Device` are deliberately **not** merged: one is declared, the other observed, and the gap between them is the interesting signal. Same for the two check engines — gatus owns declared machines and services, `apps.monitoring` owns everything else the scanner finds (`apps/monitoring/policy.py`).
 
 ### User Levels & Access Control
 
@@ -141,6 +168,10 @@ Database: PostgreSQL (service `db` dans Docker, bind mount `docker_data/db` pour
 Helpers in `common/user_utils.py`: `get_user_level()`, `user_is_autorise()`, `user_is_avance()`, `user_is_administrateur()`. Legacy aliases `user_is_validated`, `user_is_developper`, `user_is_moderator` still exist.
 
 Custom decorators in `www/views.py`: `@avance_required` (level >= 2), `@admin_required` (level >= 3).
+
+The console uses a **second, independent** scale: Django groups. `apps/core/mixins.py` provides `ViewerRequiredMixin` (group `viewers` or `admins`, or staff) for read pages and `StaffRequiredMixin` (`is_staff`) for write pages. `apps/core/auth.py` maps authentik's groups (`OIDC_ADMIN_GROUP`, `OIDC_VIEWER_GROUP`) onto those Django groups **and** onto `userprofile.user_level`, so one authentik account satisfies both scales.
+
+`apps/core/middleware.py` `InactiveUserMiddleware` renders the honest 403 page (`console/core/forbidden.html`) instead of redirecting to a login already passed. It is **scoped to `/console/` on purpose**: an unscoped version locked every ordinary logged-in member out of the public site, including their own profile.
 
 ### Article Visibility
 
@@ -163,14 +194,18 @@ Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering i
 
 ### Forms & Widgets
 
-`www/forms.py`:
+`www/forms.py` — two mixins carry what was duplicated between forms: `AutoSlugOrdreMixin` (auto-slug + auto-ordre) and `IconeModeMixin` (validates a single active icon mode, cleans the unused icon fields).
 - `ArticleCommentForm` — comment creation (field: `contenu`)
-- `ProjetCategorieForm` — project category (auto-slug, auto-ordre)
-- `ProjetForm` — project (auto-slug, auto-ordre, validates single icon mode, cleans unused icon fields)
+- `ProjetCategorieForm` — project category (`AutoSlugOrdreMixin`)
+- `ProjetForm` — project (`AutoSlugOrdreMixin` + `IconeModeMixin`)
 - `BricolageArticleForm` — DIY article (auto-slug)
-- `ServiceCategorieForm` — service category (auto-slug, auto-ordre)
+- `ServiceCategorieForm` — service category (`AutoSlugOrdreMixin`)
 - `MachineForm` — network machine (fields: `nom`, `categorie`, `ip_statique`, `ports_supplementaires`)
-- `ServeurForm` — web service (validates single icon mode, validates url or address+port requirement, cleans unused icon fields)
+- `ServeurForm` — web service (`IconeModeMixin`, plus validates url or address+port)
+
+`www/models.py` `IconeMixin` (plain Python class, `ICONE_CSS_CLASS` attribute) carries `has_icone()` / `icone_html()` for both `Projet` and `Serveur`.
+
+The 6 families of admin views (`admin_projet_*`, `admin_projet_categorie_*`, `admin_bricolage_*`, `admin_machine_*`, `admin_serveur_*`, `admin_service_categorie_*`) all go through two helpers in `www/views.py`: `_rendre_formulaire()` and `_supprimer()`. The individual view names are unchanged — URLs and tests reference them.
 
 `www/widgets.py`:
 - `ColorPickerWidget` — HTML5 color picker with hex input (template: `www/widgets/color_picker.html`)
@@ -180,9 +215,9 @@ Choices defined in `VISIBILITE_CHOICES` constant in `www/models.py`. Filtering i
 
 `multisite/celery.py` — Celery app configuration with Django settings integration and auto-discovery of tasks.
 
-`www/tasks.py` — Background monitoring tasks:
-- `verifier_machines()` — shared task (runs every 300s): checks all machines via DNS resolution + ping, updates state
-- `verifier_serveurs()` — shared task (runs every 300s): checks all servers via HTTP + TCP, updates state
+`www/tasks.py` — Background monitoring tasks. `verifier_machines()` and `verifier_serveurs()` are **no longer scheduled** (one check engine only: `apps.monitoring`); the functions stay because the module also carries the SSE generators the views call on demand.
+- `verifier_machines()` — shared task: checks all machines via DNS resolution + ping, updates state
+- `verifier_serveurs()` — shared task: checks all servers via HTTP + TCP, updates state
 - `scanner_ping(machine_id)` — SSE generator: resolves IP, pings machine, yields events
 - `scanner_ports(machine_id)` — SSE generator: scans ports using nmap in chunks of 50, yields progress events
 - `scanner_serveur(serveur_id)` — SSE generator: checks HTTP and TCP connectivity, yields status
@@ -191,16 +226,11 @@ Helper functions: `_ping()`, `_resoudre_et_mettre_a_jour()`, `_expand_ports()`, 
 
 Default ports scanned: 27 common ports (21, 22, 23, 25, 53, 80, ...) + machine-specific `ports_supplementaires` field. Nmap timeout: 60s per chunk, 90s subprocess timeout.
 
-Settings in `multisite/settings.py`:
-```python
-CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL
-CELERY_BEAT_SCHEDULE = {
-    "verifier-machines": {"task": "www.tasks.verifier_machines", "schedule": 300.0},
-    "verifier-serveurs": {"task": "www.tasks.verifier_serveurs", "schedule": 300.0},
-}
-MONITORING_DOMAINE_DEFAUT = os.environ.get("MONITORING_DOMAINE_DEFAUT", "")
-```
+Console tasks: `apps.monitoring.tasks` (`schedule_due_checks` every 15s, `execute_check`, `cleanup_old_results`), `apps.network.tasks` (`schedule_due_scans`, `gateway_scan_task`, `quick_scan_task`, `discover_network_task` — all three built on the same `_traiter_hotes` helpers), `apps.devices.tasks` (`schedule_device_probes`, `quick_probe_task`, `deep_probe_task`), `apps.fleet.tasks` (`cleanup_old_reports`).
+
+Two queues: `network` for anything needing the host network namespace and `NET_RAW` (its own privileged `celery_scanner` service in compose), and `maintenance` consumed alongside `celery` so a purge always gets its turn.
+
+Settings in `multisite/settings.py`: `CELERY_BROKER_URL`, `CELERY_RESULT_BACKEND`, `CELERY_TASK_ROUTES` (routes `apps.network.*` and `apps.devices.tasks.*` to the `network` queue), `CELERY_BEAT_SCHEDULE`, `MONITORING_DOMAINE_DEFAUT`, and the `OIDC_*` block (`OIDC_ENABLED` is simply "`OIDC_RP_CLIENT_ID` is set").
 
 ### Markdown Rendering
 
@@ -211,10 +241,43 @@ Markdown is rendered via `django-markdownx` using `markdownify()` from `markdown
 
 CSS: all markdown output containers use the `.markdown-body` class (added in templates), which restores standard HTML styling (headings bold with margins, list bullets, blockquote borders, code blocks, tables). Pygments monokai theme colors are scoped under `.markdown-body .codehilite`. Task list checkboxes styled under `.markdown-body .task-list-control`.
 
+### Page layout & console styling
+
+One layout for the whole application. Every content page — `www` and console alike — renders:
+
+```django
+{% block content %}
+<div class="static-page">      {# la console ajoute la classe `console` #}
+    <h2>Titre de la page</h2>
+    …
+</div>
+{% endblock %}
+```
+
+The `.PageTitle` banner is only used by the article pages (`baseWithArticles.html`), which do not override `content`. Console pages never write their own `<h1>`: `console/base.html` renders `<h2>{{ page_subtitle }}</h2>`, and `page_subtitle` comes from `ConsolePageMixin`. A console page therefore declares `page_title`, `nav_page`, `subpage_title` and `subpages` on its view, never a title in the template.
+
+Shared building blocks, all defined in CSS and never inline:
+- `.console-toolbar` / `-info` / `-actions` — the row under a page title: context on the left, buttons on the right. `www/machine_detail.html` and `serveur_detail.html` use `.machine-scan-header` / `.machine-scan-actions`, which share the same rules.
+- `.console-filters` — filter row above a table; the submit button lines up with the fields via `--field-height`.
+- `.console-empty` — the muted centred message of an empty table.
+- `.console-info-table` — key/value tables; the label column width is on the class, not on each `<th>`.
+- `.pagination` / `.page-item` / `.page-link` — horizontal, via the single `console/includes/pagination.html` partial. It uses `{% querystring %}` (Django 5.1+) so the current filters survive a page change.
+- `.btn-group.btn-group-sm` — wraps the buttons of an "Actions" cell; `> form { display: contents }` keeps a `<form>`-wrapped button aligned with an `<a>`.
+- `.is-hidden` — the generic "hidden" state class that JavaScript toggles. **Never** assign `element.style.display` from JS.
+
+**Bootstrap is gone but its class names remain** in templates inherited from network_monitor. `console.css` maps the ones actually used onto the site's CSS variables. Consequences worth knowing before touching those pages:
+- No Bootstrap JS. Dropdowns are native `<details>`/`<summary>` (`.console-dropdown`), and there are no tabs left — the console admin page is three stacked `.monitoring-section` blocks. Never reintroduce `data-bs-*`.
+- No colour literals outside `:root`, and no `style="..."` for static styling. The one tolerated exception is a dynamic custom property (`style="--progress: 87%"`).
+- Chart colours are read from the theme with `getComputedStyle`, so `--green`, `--yellow`, `--red`, `--text`, `--text-secondary`, `--bg-surface` and `--border` must stay 6-digit hex.
+- Messages are rendered once, by `www/base.html`. Do not add a message block to a console page.
+
 ### Key Utilities
 
-- **`www/render_utils.py`** — Page metadata, navigation structure, article filtering and pagination (10 articles/page). Navigation includes pages for accueil, à propos, mes projets, archives, bricolage (AVANCE), monitoring (ADMINISTRATEUR), administration (ADMINISTRATEUR). Admin subpages: utilisateurs, projets, bricolages, services
+- **`www/render_utils.py`** — Page metadata, navigation structure, article filtering and pagination (10 articles/page). **It is the single place that describes every menu in the application**, console entries included: accueil, à propos, mes projets, archives (AVANCE), bricolage (AVANCE), monitoring (ADMINISTRATEUR), flotte (AUTORISE), appareils (AUTORISE), réseaux (ADMINISTRATEUR), administration (ADMINISTRATEUR). Inline sub-navigations: `a_propos_subpages`, `archives_subpages`, `monitoring_subpages` (Machines / Services), `fleet_subpages` (Machines / Stacks), `admin_subpages`
 - **`www/context_processors.py`** — `navigation()` context processor adds `pages_left`, `pages_right`, `extpages`, `is_admin`, `user_level`, `user_level_display`, `user_is_avance` to all templates
+- **`apps/core/context_processors.py`** — `sso()` adds `oidc_enabled`, `oidc_admin_group`, `oidc_viewer_group`
+- **`apps/core/mixins.py`** — `ConsolePageMixin` supplies `page_subtitle`, `page`, `subpage`, `subpages` to console pages; override `get_page_title()` when the title depends on the object
+- **`apps/monitoring/history.py`** — `transitions()` / `transitions_par_appareil()`, the single implementation of state-change detection (used by the API, the device detail page and the dashboard)
 - **`www/templatetags/template_extra.py`** — `pageSpecificBtn` filter for active navigation highlighting
 
 ### Tests
@@ -245,3 +308,13 @@ CSS: all markdown output containers use the `.markdown-body` class (added in tem
 - `MachineHostnameTest` — hostname_complet(), DNS resolution, alerts for divergence and out-of-network IPs
 - `MachineResolutionDnsTest` — DNS resolution in scanner_ping tasks
 - `CeleryTasksTest` — verifier_machines and verifier_serveurs shared tasks (with mocked dependencies)
+- `MonitoringServicesAccessTest` — the services page, split off from the machines page: access control, template, active sub-page
+- `TemplatesTest` also asserts what `/` dispatches to (guest → `a_propos`, admin → `monitoring`)
+
+`apps/core/tests.py` covers the console:
+- `ConsoleAccessTest` — the three cases on a console page (anonymous→302, logged-in without group→403, viewer→200), plus viewer refused on a staff-only page
+- `ConsoleMiddlewareScopeTest` — the regression that matters: a member without a console group keeps the public site and their own profile, and only `/console/` answers 403
+- `ConsolePageMixinTest` — title, active nav entry and sub-navigation; object-dependent titles; and that no page falls back to a generic "Console" title
+- `FleetStacksPageTest` — the stacks page: template, active sub-page, and machines without a stack excluded
+
+Run them in Docker: `docker compose exec web python /app/multisite/manage.py test`. Tests need PostgreSQL, so bring `db` up first. Use a distinct `DB_NAME` if another test run may be in flight (the test database is `test_<DB_NAME>`).

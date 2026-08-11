@@ -1,4 +1,4 @@
-"""La page de view.py"""
+"""Vues du site www : pages publiques, archives, bricolage, monitoring, administration."""
 from functools import wraps
 
 from django.contrib import messages
@@ -6,19 +6,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db import models
 from django.http import HttpResponseForbidden, StreamingHttpResponse
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 
+from apps.fleet.enrich import annotate
 from common.user_utils import (
-    get_user_level, user_is_moderator, user_is_avance, user_is_administrateur,
-    USER_LEVEL_CHOICES, ADMINISTRATEUR,
+    USER_LEVEL_CHOICES, get_user_level, user_is_administrateur,
+    user_is_avance, user_is_moderator,
 )
+
 from . import settings
-from .models import ProjetCategorie, Projet, BricolageArticle, ServiceCategorie, Machine, Serveur
-from .render_utils import get_page_data, get_articles, get_article, get_news_articles
 from .forms import (
-    ArticleCommentForm, ProjetCategorieForm, ProjetForm, BricolageArticleForm,
-    ServiceCategorieForm, MachineForm, ServeurForm,
+    ArticleCommentForm, BricolageArticleForm, MachineForm, ProjetCategorieForm,
+    ProjetForm, ServeurForm, ServiceCategorieForm,
 )
+from .models import (
+    BricolageArticle, Machine, Projet, ProjetCategorie, Serveur, ServiceCategorie,
+)
+from .render_utils import get_article, get_articles, get_news_articles, get_page_data
 
 
 def avance_required(view_func):
@@ -43,10 +47,59 @@ def admin_required(view_func):
     return _wrapped
 
 
+def _rendre_formulaire(request, form_class, template, *, subpage, titre, retour,
+                       instance=None, succes, fichiers=False):
+    """Squelette commun aux formulaires d'administration.
+
+    Les six familles de vues d'administration partagent exactement cette
+    mécanique : instancier, valider, enregistrer, rediriger.
+
+     :param form_class : Le formulaire à utiliser.
+     :param template : Le gabarit du formulaire.
+     :param subpage : La sous-page à surligner dans la navigation.
+     :param titre : Le titre affiché au-dessus du formulaire.
+     :param retour : Le nom d'URL de la liste, où rediriger après succès.
+     :param instance : L'objet à modifier, ou None pour un ajout.
+     :param succes : Le message de succès.
+     :param fichiers : Vrai si le formulaire accepte des fichiers envoyés.
+     :return : La page rendue ou une redirection.
+    """
+    data = get_page_data(request.user, "administration")
+    if request.method == "POST":
+        args = (request.POST, request.FILES) if fichiers else (request.POST,)
+        form = form_class(*args, instance=instance)
+        if form.is_valid():
+            form.save()
+            messages.success(request, succes)
+            return redirect(retour)
+    else:
+        form = form_class(instance=instance)
+    return render(request, template, {
+        **settings.base_info, **data,
+        "subpage": subpage,
+        "form": form,
+        "form_title": titre,
+    })
+
+
+def _supprimer(request, objet, retour, succes):
+    """Squelette commun aux suppressions : n'agit que sur un POST.
+
+     :param objet : L'objet à supprimer.
+     :param retour : Le nom d'URL de la liste, où rediriger.
+     :param succes : Le message de succès.
+     :return : Une redirection vers la liste.
+    """
+    if request.method == "POST":
+        messages.success(request, succes)
+        objet.delete()
+    return redirect(retour)
+
+
 def accueil(request):
     """
     Page d'accueil du site.
-     :param request : La requ\u00eate du client.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "accueil")
@@ -155,13 +208,11 @@ def admin_projets(request):
      :return : La page rendue.
     """
     data = get_page_data(request.user, "administration")
-    projets = Projet.objects.select_related("categorie")
-    categories = ProjetCategorie.objects.all()
     return render(request, "www/admin_projets.html", {
         **settings.base_info, **data,
         "subpage": "Projets",
-        "projets": projets,
-        "categories": categories,
+        "projets": Projet.objects.select_related("categorie"),
+        "categories": ProjetCategorie.objects.all(),
     })
 
 
@@ -172,21 +223,11 @@ def admin_projet_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ProjetForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Projet ajouté avec succès.")
-            return redirect("admin_projets")
-    else:
-        form = ProjetForm()
-    return render(request, "www/admin_projet_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Projets",
-        "form": form,
-        "form_title": "Ajouter un projet",
-    })
+    return _rendre_formulaire(
+        request, ProjetForm, "www/admin_projet_form.html",
+        subpage="Projets", titre="Ajouter un projet", retour="admin_projets",
+        succes="Projet ajouté avec succès.", fichiers=True,
+    )
 
 
 @admin_required
@@ -198,21 +239,12 @@ def admin_projet_modifier(request, projet_id):
      :return : La page rendue ou redirection.
     """
     projet = get_object_or_404(Projet, pk=projet_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ProjetForm(request.POST, request.FILES, instance=projet)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Projet « {projet.titre} » modifié avec succès.")
-            return redirect("admin_projets")
-    else:
-        form = ProjetForm(instance=projet)
-    return render(request, "www/admin_projet_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Projets",
-        "form": form,
-        "form_title": f"Modifier : {projet.titre}",
-    })
+    return _rendre_formulaire(
+        request, ProjetForm, "www/admin_projet_form.html",
+        subpage="Projets", titre=f"Modifier : {projet.titre}", retour="admin_projets",
+        instance=projet, succes=f"Projet « {projet.titre} » modifié avec succès.",
+        fichiers=True,
+    )
 
 
 @admin_required
@@ -224,10 +256,7 @@ def admin_projet_supprimer(request, projet_id):
      :return : Redirection vers la liste.
     """
     projet = get_object_or_404(Projet, pk=projet_id)
-    if request.method == "POST":
-        messages.success(request, f"Projet « {projet.titre} » supprimé.")
-        projet.delete()
-    return redirect("admin_projets")
+    return _supprimer(request, projet, "admin_projets", f"Projet « {projet.titre} » supprimé.")
 
 
 @admin_required
@@ -237,21 +266,11 @@ def admin_projet_categorie_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ProjetCategorieForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Catégorie ajoutée avec succès.")
-            return redirect("admin_projets")
-    else:
-        form = ProjetCategorieForm()
-    return render(request, "www/admin_projet_categorie_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Projets",
-        "form": form,
-        "form_title": "Ajouter une catégorie",
-    })
+    return _rendre_formulaire(
+        request, ProjetCategorieForm, "www/admin_projet_categorie_form.html",
+        subpage="Projets", titre="Ajouter une catégorie", retour="admin_projets",
+        succes="Catégorie ajoutée avec succès.",
+    )
 
 
 @admin_required
@@ -263,21 +282,11 @@ def admin_projet_categorie_modifier(request, categorie_id):
      :return : La page rendue ou redirection.
     """
     categorie = get_object_or_404(ProjetCategorie, pk=categorie_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ProjetCategorieForm(request.POST, instance=categorie)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Catégorie « {categorie.nom} » modifiée avec succès.")
-            return redirect("admin_projets")
-    else:
-        form = ProjetCategorieForm(instance=categorie)
-    return render(request, "www/admin_projet_categorie_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Projets",
-        "form": form,
-        "form_title": f"Modifier : {categorie.nom}",
-    })
+    return _rendre_formulaire(
+        request, ProjetCategorieForm, "www/admin_projet_categorie_form.html",
+        subpage="Projets", titre=f"Modifier : {categorie.nom}", retour="admin_projets",
+        instance=categorie, succes=f"Catégorie « {categorie.nom} » modifiée avec succès.",
+    )
 
 
 @admin_required
@@ -289,17 +298,16 @@ def admin_projet_categorie_supprimer(request, categorie_id):
      :return : Redirection vers la liste.
     """
     categorie = get_object_or_404(ProjetCategorie, pk=categorie_id)
-    if request.method == "POST":
-        messages.success(request, f"Catégorie « {categorie.nom} » supprimée.")
-        categorie.delete()
-    return redirect("admin_projets")
+    return _supprimer(
+        request, categorie, "admin_projets", f"Catégorie « {categorie.nom} » supprimée.",
+    )
 
 
 @avance_required
 def archives(request):
     """
     Page d'archives principale.
-     :param request : La requ\u00eate du client.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "archives")
@@ -311,8 +319,8 @@ def archives(request):
 @avance_required
 def news(request):
     """
-    Page d'archives des news (premi\u00e8re page).
-     :param request : La requ\u00eate du client.
+    Page d'archives des news (première page).
+     :param request : La requête du client.
      :return : La page rendue.
     """
     return news_page(request, 1)
@@ -321,57 +329,53 @@ def news(request):
 @avance_required
 def news_page(request, n_page):
     """
-    D\u00e9finition de la page principale.
-     :param request : La requ\u00eate du client.
-     :param n_page : Le num\u00e9ro de la page.
+    Une page de la liste des news.
+     :param request : La requête du client.
+     :param n_page : Le numéro de la page.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "archives")
     articles, n_pages = get_news_articles(request.user, n_page)
     return render(request, "www/baseWithArticles.html", {
         **settings.base_info, **data,
-        'subpage': 'News',
-        'derniers_articles': articles,
-        'news_page': n_page,
-        'news_pages': n_pages,
+        "subpage": "News",
+        "derniers_articles": articles,
+        "news_page": n_page,
+        "news_pages": n_pages,
     })
 
 
 @avance_required
 def detailed_news(request, article_id):
     """
-    :param request:
-    :param article_id:
-    :return:
+    Page détaillée d'un article, avec son formulaire de commentaire.
+     :param request : La requête du client.
+     :param article_id : L'identifiant de l'article.
+     :return : La page rendue ou une redirection si l'article n'est pas visible.
     """
     article = get_article(request.user, article_id)
     if not article:
         return redirect("archives_news")
     data = get_page_data(request.user, "archives")
     new_comment = None
-    # comment posted
     if request.method == "POST":
         comment_form = ArticleCommentForm(data=request.POST)
         if comment_form.is_valid():
-            # create an object but don't save to database yet
             new_comment = comment_form.save(commit=False)
-            # assign the comment to the current Article
             new_comment.article = article
-            # assign the current user to the comment
             new_comment.auteur = request.user
-            # mark it as active if the user is in Moderateurs group
+            # Un modérateur publie sans passer par la file de modération.
             if user_is_moderator(request.user):
                 new_comment.active = True
-            # save it to database
             new_comment.save()
     else:
         comment_form = ArticleCommentForm()
     return render(request, "www/DetailedArticles.html", {
         **settings.base_info, **data,
-        'subpage': 'News',
-        'article'     : article,
-        "new_comment" : new_comment,
-        "comment_form": comment_form
+        "subpage": "News",
+        "article": article,
+        "new_comment": new_comment,
+        "comment_form": comment_form,
     })
 
 
@@ -383,10 +387,9 @@ def bricolage(request):
      :return : La page rendue.
     """
     data = get_page_data(request.user, "bricolage")
-    articles = BricolageArticle.objects.all()
     return render(request, "www/bricolage.html", {
         **settings.base_info, **data,
-        "articles": articles,
+        "articles": BricolageArticle.objects.all(),
     })
 
 
@@ -410,7 +413,7 @@ def bricolage_detail(request, slug):
 def administration(request):
     """
     Page administration.
-     :param request : La requ\u00eate du client.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "administration")
@@ -423,25 +426,25 @@ def administration(request):
 def admin_users(request):
     """
     Page de gestion des utilisateurs.
-     :param request : La requ\u00eate du client.
-     :return : La page rendue.
+     :param request : La requête du client.
+     :return : La page rendue ou une redirection après changement de niveau.
     """
     if request.method == "POST":
         user_id = request.POST.get("user_id")
         new_level = request.POST.get("user_level")
         if user_id and new_level is not None:
             target = User.objects.get(pk=user_id)
+            # Un superutilisateur ne peut pas être rétrogradé depuis cette page.
             if not target.is_superuser:
                 target.userprofile.user_level = int(new_level)
                 target.userprofile.save()
         return redirect("admin_users")
 
-    users = User.objects.select_related("userprofile").order_by("username")
     data = get_page_data(request.user, "administration")
     return render(request, "www/admin_users.html", {
         **settings.base_info, **data,
         "subpage": "Utilisateurs",
-        "users": users,
+        "users": User.objects.select_related("userprofile").order_by("username"),
         "level_choices": USER_LEVEL_CHOICES,
     })
 
@@ -454,11 +457,10 @@ def admin_bricolages(request):
      :return : La page rendue.
     """
     data = get_page_data(request.user, "administration")
-    articles = BricolageArticle.objects.all()
     return render(request, "www/admin_bricolages.html", {
         **settings.base_info, **data,
         "subpage": "Bricolages",
-        "articles": articles,
+        "articles": BricolageArticle.objects.all(),
     })
 
 
@@ -469,21 +471,11 @@ def admin_bricolage_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = BricolageArticleForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Article de bricolage ajouté avec succès.")
-            return redirect("admin_bricolages")
-    else:
-        form = BricolageArticleForm()
-    return render(request, "www/admin_bricolage_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Bricolages",
-        "form": form,
-        "form_title": "Ajouter un article de bricolage",
-    })
+    return _rendre_formulaire(
+        request, BricolageArticleForm, "www/admin_bricolage_form.html",
+        subpage="Bricolages", titre="Ajouter un article de bricolage",
+        retour="admin_bricolages", succes="Article de bricolage ajouté avec succès.",
+    )
 
 
 @admin_required
@@ -495,21 +487,12 @@ def admin_bricolage_modifier(request, article_id):
      :return : La page rendue ou redirection.
     """
     article = get_object_or_404(BricolageArticle, pk=article_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = BricolageArticleForm(request.POST, instance=article)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Article « {article.titre} » modifié avec succès.")
-            return redirect("admin_bricolages")
-    else:
-        form = BricolageArticleForm(instance=article)
-    return render(request, "www/admin_bricolage_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Bricolages",
-        "form": form,
-        "form_title": f"Modifier : {article.titre}",
-    })
+    return _rendre_formulaire(
+        request, BricolageArticleForm, "www/admin_bricolage_form.html",
+        subpage="Bricolages", titre=f"Modifier : {article.titre}",
+        retour="admin_bricolages", instance=article,
+        succes=f"Article « {article.titre} » modifié avec succès.",
+    )
 
 
 @admin_required
@@ -521,29 +504,42 @@ def admin_bricolage_supprimer(request, article_id):
      :return : Redirection vers la liste.
     """
     article = get_object_or_404(BricolageArticle, pk=article_id)
-    if request.method == "POST":
-        messages.success(request, f"Article « {article.titre} » supprimé.")
-        article.delete()
-    return redirect("admin_bricolages")
+    return _supprimer(
+        request, article, "admin_bricolages", f"Article « {article.titre} » supprimé.",
+    )
 
 
 @admin_required
 def monitoring(request):
     """
-    Page de monitoring des machines et serveurs.
+    Page de monitoring des machines.
      :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "monitoring")
-    categories = ServiceCategorie.objects.prefetch_related("machines", "serveurs")
-    # Chaque machine gagne un attribut `.flotte` : ce que la machine rapporte
-    # d'elle-même (uptime, MAJ, dérive, images en retard, stacks). La structure reste
-    # la tienne, l'enrichissement vient de apps.fleet -- un seul assembleur.
-    from apps.fleet.enrich import annotate
+    categories = ServiceCategorie.objects.prefetch_related("machines")
+    # Chaque machine gagne un attribut `.flotte` : ce qu'elle rapporte d'elle-même
+    # (uptime, MAJ, dérive, images, stacks), assemblé par apps.fleet.
     categories = annotate(list(categories))
     return render(request, "www/monitoring.html", {
         **settings.base_info, **data,
+        "subpage": "Machines",
         "categories": categories,
+    })
+
+
+@admin_required
+def monitoring_services(request):
+    """
+    Page de monitoring des services web.
+     :param request : La requête du client.
+     :return : La page rendue.
+    """
+    data = get_page_data(request.user, "monitoring")
+    return render(request, "www/monitoring_services.html", {
+        **settings.base_info, **data,
+        "subpage": "Services",
+        "categories": ServiceCategorie.objects.prefetch_related("serveurs"),
     })
 
 
@@ -559,15 +555,14 @@ def monitoring_machine_detail(request, machine_id):
     data = get_page_data(request.user, "monitoring")
     return render(request, "www/machine_detail.html", {
         **settings.base_info, **data,
-        "subpage": machine.nom,
+        "subpage": "Machines",
         "machine": machine,
     })
 
 
 def _sse_response(generateur):
     """Crée une StreamingHttpResponse SSE à partir d'un générateur."""
-    response = StreamingHttpResponse(
-        generateur, content_type="text/event-stream")
+    response = StreamingHttpResponse(generateur, content_type="text/event-stream")
     response["Cache-Control"] = "no-cache"
     response["X-Accel-Buffering"] = "no"
     return response
@@ -581,6 +576,7 @@ def machine_ping_sse(request, machine_id):
      :param machine_id : L'identifiant de la machine.
      :return : Réponse SSE streaming.
     """
+    # Importé ici : www.tasks charge nmap, absent hors de l'image Docker.
     from .tasks import scanner_ping
     get_object_or_404(Machine, pk=machine_id)
     return _sse_response(scanner_ping(machine_id))
@@ -599,7 +595,6 @@ def machine_ports_sse(request, machine_id):
     return _sse_response(scanner_ports(machine_id))
 
 
-
 @admin_required
 def monitoring_serveur_detail(request, serveur_id):
     """
@@ -612,7 +607,7 @@ def monitoring_serveur_detail(request, serveur_id):
     data = get_page_data(request.user, "monitoring")
     return render(request, "www/serveur_detail.html", {
         **settings.base_info, **data,
-        "subpage": serveur.titre,
+        "subpage": "Services",
         "serveur": serveur,
     })
 
@@ -638,15 +633,12 @@ def admin_services(request):
      :return : La page rendue.
     """
     data = get_page_data(request.user, "administration")
-    machines = Machine.objects.select_related("categorie")
-    serveurs = Serveur.objects.select_related("categorie")
-    categories = ServiceCategorie.objects.all()
     return render(request, "www/admin_services.html", {
         **settings.base_info, **data,
         "subpage": "Services",
-        "machines": machines,
-        "serveurs": serveurs,
-        "categories": categories,
+        "machines": Machine.objects.select_related("categorie"),
+        "serveurs": Serveur.objects.select_related("categorie"),
+        "categories": ServiceCategorie.objects.all(),
     })
 
 
@@ -657,21 +649,11 @@ def admin_machine_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = MachineForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Machine ajoutée avec succès.")
-            return redirect("admin_services")
-    else:
-        form = MachineForm()
-    return render(request, "www/admin_machine_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": "Ajouter une machine",
-    })
+    return _rendre_formulaire(
+        request, MachineForm, "www/admin_machine_form.html",
+        subpage="Services", titre="Ajouter une machine", retour="admin_services",
+        succes="Machine ajoutée avec succès.",
+    )
 
 
 @admin_required
@@ -683,21 +665,11 @@ def admin_machine_modifier(request, machine_id):
      :return : La page rendue ou redirection.
     """
     machine = get_object_or_404(Machine, pk=machine_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = MachineForm(request.POST, instance=machine)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Machine « {machine.nom} » modifiée avec succès.")
-            return redirect("admin_services")
-    else:
-        form = MachineForm(instance=machine)
-    return render(request, "www/admin_machine_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": f"Modifier : {machine.nom}",
-    })
+    return _rendre_formulaire(
+        request, MachineForm, "www/admin_machine_form.html",
+        subpage="Services", titre=f"Modifier : {machine.nom}", retour="admin_services",
+        instance=machine, succes=f"Machine « {machine.nom} » modifiée avec succès.",
+    )
 
 
 @admin_required
@@ -709,10 +681,9 @@ def admin_machine_supprimer(request, machine_id):
      :return : Redirection vers la liste.
     """
     machine = get_object_or_404(Machine, pk=machine_id)
-    if request.method == "POST":
-        messages.success(request, f"Machine « {machine.nom} » supprimée.")
-        machine.delete()
-    return redirect("admin_services")
+    return _supprimer(
+        request, machine, "admin_services", f"Machine « {machine.nom} » supprimée.",
+    )
 
 
 @admin_required
@@ -722,21 +693,11 @@ def admin_serveur_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ServeurForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Serveur ajouté avec succès.")
-            return redirect("admin_services")
-    else:
-        form = ServeurForm()
-    return render(request, "www/admin_service_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": "Ajouter un serveur",
-    })
+    return _rendre_formulaire(
+        request, ServeurForm, "www/admin_service_form.html",
+        subpage="Services", titre="Ajouter un serveur", retour="admin_services",
+        succes="Serveur ajouté avec succès.", fichiers=True,
+    )
 
 
 @admin_required
@@ -748,21 +709,12 @@ def admin_serveur_modifier(request, serveur_id):
      :return : La page rendue ou redirection.
     """
     serveur = get_object_or_404(Serveur, pk=serveur_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ServeurForm(request.POST, request.FILES, instance=serveur)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Serveur « {serveur.titre} » modifié avec succès.")
-            return redirect("admin_services")
-    else:
-        form = ServeurForm(instance=serveur)
-    return render(request, "www/admin_service_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": f"Modifier : {serveur.titre}",
-    })
+    return _rendre_formulaire(
+        request, ServeurForm, "www/admin_service_form.html",
+        subpage="Services", titre=f"Modifier : {serveur.titre}", retour="admin_services",
+        instance=serveur, succes=f"Serveur « {serveur.titre} » modifié avec succès.",
+        fichiers=True,
+    )
 
 
 @admin_required
@@ -774,10 +726,9 @@ def admin_serveur_supprimer(request, serveur_id):
      :return : Redirection vers la liste.
     """
     serveur = get_object_or_404(Serveur, pk=serveur_id)
-    if request.method == "POST":
-        messages.success(request, f"Serveur « {serveur.titre} » supprimé.")
-        serveur.delete()
-    return redirect("admin_services")
+    return _supprimer(
+        request, serveur, "admin_services", f"Serveur « {serveur.titre} » supprimé.",
+    )
 
 
 @admin_required
@@ -787,21 +738,11 @@ def admin_service_categorie_ajouter(request):
      :param request : La requête du client.
      :return : La page rendue ou redirection.
     """
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ServiceCategorieForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Catégorie ajoutée avec succès.")
-            return redirect("admin_services")
-    else:
-        form = ServiceCategorieForm()
-    return render(request, "www/admin_service_categorie_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": "Ajouter une catégorie",
-    })
+    return _rendre_formulaire(
+        request, ServiceCategorieForm, "www/admin_service_categorie_form.html",
+        subpage="Services", titre="Ajouter une catégorie", retour="admin_services",
+        succes="Catégorie ajoutée avec succès.",
+    )
 
 
 @admin_required
@@ -813,21 +754,11 @@ def admin_service_categorie_modifier(request, categorie_id):
      :return : La page rendue ou redirection.
     """
     categorie = get_object_or_404(ServiceCategorie, pk=categorie_id)
-    data = get_page_data(request.user, "administration")
-    if request.method == "POST":
-        form = ServiceCategorieForm(request.POST, instance=categorie)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Catégorie « {categorie.nom} » modifiée avec succès.")
-            return redirect("admin_services")
-    else:
-        form = ServiceCategorieForm(instance=categorie)
-    return render(request, "www/admin_service_categorie_form.html", {
-        **settings.base_info, **data,
-        "subpage": "Services",
-        "form": form,
-        "form_title": f"Modifier : {categorie.nom}",
-    })
+    return _rendre_formulaire(
+        request, ServiceCategorieForm, "www/admin_service_categorie_form.html",
+        subpage="Services", titre=f"Modifier : {categorie.nom}", retour="admin_services",
+        instance=categorie, succes=f"Catégorie « {categorie.nom} » modifiée avec succès.",
+    )
 
 
 @admin_required
@@ -839,10 +770,9 @@ def admin_service_categorie_supprimer(request, categorie_id):
      :return : Redirection vers la liste.
     """
     categorie = get_object_or_404(ServiceCategorie, pk=categorie_id)
-    if request.method == "POST":
-        messages.success(request, f"Catégorie « {categorie.nom} » supprimée.")
-        categorie.delete()
-    return redirect("admin_services")
+    return _supprimer(
+        request, categorie, "admin_services", f"Catégorie « {categorie.nom} » supprimée.",
+    )
 
 
 def _deplacer_ordre(model_class, pk, direction):
@@ -945,13 +875,13 @@ def admin_service_categorie_descendre(request, categorie_id):
 def research(request):
     """
     Page de recherche.
-     :param request : La requ\u00eate du client.
+     :param request : La requête du client.
      :return : La page rendue.
     """
     data = get_page_data(request.user, "archives")
     articles = get_articles(request.user, 2)
     return render(request, "www/baseWithArticles.html", {
         **settings.base_info, **data,
-        'subpage': 'Recherche',
-        'derniers_articles': articles
+        "subpage": "Recherche",
+        "derniers_articles": articles,
     })

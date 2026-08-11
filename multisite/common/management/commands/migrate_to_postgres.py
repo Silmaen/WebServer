@@ -1,3 +1,4 @@
+"""Exporte les données de la base courante pour un chargement dans PostgreSQL."""
 import os
 import subprocess
 import sys
@@ -6,12 +7,7 @@ from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):
-    """
-    Commande pour faciliter la migration de SQLite vers PostgreSQL.
-
-    Exporte les données de la base actuelle via dumpdata (JSON)
-    et affiche les instructions pour charger dans PostgreSQL.
-    """
+    """Exporte la base courante via `dumpdata`, puis affiche la suite à faire."""
 
     help = "Exporte les données pour migration vers PostgreSQL"
 
@@ -51,6 +47,6 @@ class Command(BaseCommand):
         self.stdout.write("Étapes suivantes :")
         self.stdout.write("  1. Configurer les variables PostgreSQL dans .env")
         self.stdout.write("  2. Lancer les migrations :")
-        self.stdout.write(f"       python manage.py migrate")
+        self.stdout.write("       python manage.py migrate")
         self.stdout.write("  3. Charger les données :")
         self.stdout.write(f"       python manage.py loaddata {output}")

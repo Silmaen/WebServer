@@ -1,8 +1,7 @@
-"""Turn one posted `homelab-report` document into rows.
+"""Transforme un document `homelab-report` posté en lignes de base.
 
-Kept apart from the view so the shape of the document is described in one place,
-and so a document can be replayed (a machine keeps its own copy in
-`/var/lib/homelab/report.json`, which the Flask console had no way to backfill).
+Séparé de la vue pour que la forme du document soit décrite en un seul endroit, et
+pour qu'un document puisse être rejoué : chaque machine garde sa propre copie.
 """
 
 import logging
@@ -17,11 +16,11 @@ logger = logging.getLogger("apps.fleet")
 
 
 class InvalidReportError(ValueError):
-    """The payload is not a homelab-report document."""
+    """La charge reçue n'est pas un document homelab-report."""
 
 
 def _parse_at(value):
-    """`homelab-report` writes `date -u '+%Y-%m-%dT%H:%M:%SZ'`."""
+    """`homelab-report` écrit `date -u '+%Y-%m-%dT%H:%M:%SZ'`."""
     parsed = parse_datetime(value) if isinstance(value, str) else None
     if parsed is None:
         try:
@@ -34,7 +33,7 @@ def _parse_at(value):
 
 
 def _behind(value):
-    """The probe writes `-` when it cannot tell, which is not zero."""
+    """La sonde écrit `-` quand elle ne peut pas savoir, ce qui n'est pas zéro."""
     try:
         return int(value)
     except (TypeError, ValueError):
@@ -42,7 +41,12 @@ def _behind(value):
 
 
 def store(machine, payload):
-    """Store a report and reconcile the machine's stacks. Returns the `Report`."""
+    """Enregistre un rapport et réconcilie les stacks de la machine.
+
+     :param machine : La machine déclarée qui a posté le document.
+     :param payload : Le document décodé.
+     :return : Le `Report` créé ou mis à jour.
+    """
     if not isinstance(payload, dict) or "facts" not in payload:
         raise InvalidReportError("document homelab-report attendu")
 
@@ -52,8 +56,8 @@ def store(machine, payload):
     drift = payload.get("drift") or {}
 
     at = _parse_at(payload.get("at"))
-    # update_or_create, so re-posting the same document is idempotent: the timer and
-    # a manual `homelab-report` run can both land without creating a duplicate.
+    # update_or_create : reposter le même document est idempotent, le timer et un appel
+    # manuel pouvant tous deux arriver.
     report, _ = Report.objects.update_or_create(
         machine=machine,
         at=at,
@@ -71,11 +75,11 @@ def store(machine, payload):
 
 
 def _store_stacks(machine, stacks):
-    """Upsert the machine's deployed stacks.
+    """Crée ou met à jour les stacks déployées de la machine.
 
-    Nothing is deleted. A stack that stops being reported keeps its row and its
-    `last_seen` goes stale, which is the honest answer — "this used to be deployed
-    here" is information, and a row silently disappearing is not.
+    Rien n'est supprimé : une stack qui cesse d'être rapportée garde sa ligne et son
+    `last_seen` vieillit, ce qui est la réponse honnête — « ceci était déployé ici »
+    est une information, une ligne qui disparaît en silence non.
     """
     now = timezone.now()
     for entry in stacks:

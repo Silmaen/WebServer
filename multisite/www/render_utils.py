@@ -1,16 +1,14 @@
-"""
-gathering functions to render pages
-"""
+"""Métadonnées de page, navigation et filtrage des articles par niveau."""
 import math
 
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 
-from .models import Article, ProjetCategorie
 from common.user_utils import (
-    get_user_level, user_is_autorise, user_is_avance, user_is_administrateur,
-    ENREGISTRE, AUTORISE, AVANCE, ADMINISTRATEUR,
+    ADMINISTRATEUR, AUTORISE, AVANCE, ENREGISTRE, get_user_level,
 )
+
+from .models import Article, ProjetCategorie
 
 articles_per_page = 10
 
@@ -21,7 +19,7 @@ page_info = {
         "Title": "Bienvenue",
     },
     "a_propos": {
-        "Title": "\u00c0 propos",
+        "Title": "À propos",
     },
     "mes_projets": {
         "Title": "Mes projets",
@@ -50,6 +48,18 @@ a_propos_subpages = [
     {"name": "Publications", "url": "a_propos_publications", "icon": "mdi-book-open-variant"},
 ]
 
+monitoring_subpages = [
+    {"name": "Machines", "url": "monitoring", "icon": "mdi-server-network"},
+    {"name": "Services", "url": "monitoring_services", "icon": "mdi-web"},
+]
+
+# Sous-navigation de la console. Déclarée ici avec le reste de la navigation, pour
+# n'avoir qu'un seul endroit qui décrit les menus du site.
+fleet_subpages = [
+    {"name": "Machines", "url": "fleet:index", "icon": "mdi-server"},
+    {"name": "Stacks", "url": "fleet:stacks", "icon": "mdi-layers-triple"},
+]
+
 admin_subpages = [
     {"name": "Utilisateurs", "url": "admin_users", "icon": "mdi-account-group"},
     {"name": "Projets", "url": "admin_projets", "icon": "mdi-pickaxe"},
@@ -68,7 +78,7 @@ internal_pages = [
         "MinLevel": -1,
     },
     {
-        "name": "\u00c0 propos",
+        "name": "À propos",
         "url": "a_propos",
         "icon": "mdi-account",
         "group": "left",
@@ -107,10 +117,8 @@ internal_pages = [
         "Active": True,
         "MinLevel": ADMINISTRATEUR,
     },
-    # La console de la flotte, arrivée avec network_monitor. Déclarée ici plutôt
-    # qu'écrite en dur dans le gabarit : c'est ce qui la fait apparaître dans la
-    # navigation du site, filtrée par niveau comme le reste. Sans ces entrées la
-    # console n'était atteignable qu'en tapant /console/ à la main.
+    # La console, déclarée ici plutôt qu'écrite en dur dans le gabarit : c'est ce qui
+    # la fait apparaître dans la navigation, filtrée par niveau comme le reste.
     {
         "name": "Flotte",
         "url": "fleet:index",
@@ -166,7 +174,10 @@ def _get_projet_subpages():
 
 def get_articles(user, category):
     """
-    Permet de r\u00e9cup\u00e9rer les articles de la cat\u00e9gorie en fonction des privil\u00e8ges de l'utilisateur.
+    Articles d'une catégorie, filtrés selon les privilèges de l'utilisateur.
+     :param user : L'utilisateur courant.
+     :param category : L'identifiant de la catégorie.
+     :return : Le queryset filtré.
     """
     level = get_user_level(user)
     qs = Article.objects.filter(categorie=category)
@@ -183,7 +194,10 @@ def get_articles(user, category):
 
 def get_news_articles(user, page):
     """
-    Permet de r\u00e9cup\u00e9rer les articles de la cat\u00e9gorie en fonction des privil\u00e8ges de l'utilisateur.
+    Une page de news, et la liste des numéros de page.
+     :param user : L'utilisateur courant.
+     :param page : Le numéro de page demandé.
+     :return : Tuple (articles de la page, liste des numéros de page).
     """
     articles = get_articles(user, 1)
     total = articles.count()
@@ -194,7 +208,10 @@ def get_news_articles(user, page):
 
 def get_article(user, article_id):
     """
-    Permet de r\u00e9cup\u00e9rer un article en fonction des privil\u00e8ges de l'utilisateur.
+    Un article, ou None si l'utilisateur n'a pas le droit de le voir.
+     :param user : L'utilisateur courant.
+     :param article_id : L'identifiant de l'article.
+     :return : L'article, ou None.
     """
     article = get_object_or_404(Article, pk=article_id)
     level = get_user_level(user)
@@ -210,24 +227,24 @@ def get_article(user, article_id):
 
 
 def get_ext_pages(user):
-    """
-    Renvoie la liste de pages externe que l'user a le droit de voir.
-    """
+    """Les pages externes que l'utilisateur a le droit de voir."""
     return _filter_pages(ExternPages, get_user_level(user))
 
 
 def get_int_pages(user):
-    """
-    Renvoie la liste de pages interne que l'user a le droit de voir.
-    """
+    """Les pages internes que l'utilisateur a le droit de voir."""
     return _filter_pages(internal_pages, get_user_level(user))
 
 
 def get_page_data(user, page_name):
     """
-    Permet de r\u00e9cup\u00e9rer les infos li\u00e9es \u00e0 la page courante pour l'user.
-    Les donn\u00e9es de navigation (pages_left, pages_right, extpages) sont
-    fournies par le context processor www.context_processors.navigation.
+    Le contexte de base d'une page : titre, repère de navigation, sous-pages.
+
+    Les données de navigation elles-mêmes viennent du context processor
+    `www.context_processors.navigation`.
+     :param user : L'utilisateur courant.
+     :param page_name : La clé de la page dans `page_info`.
+     :return : Le dict de contexte, vide si la page est inconnue.
     """
     if page_name not in page_info:
         return {}
@@ -242,7 +259,7 @@ def get_page_data(user, page_name):
     elif page_name == "archives":
         data["subpages"] = archives_subpages
     elif page_name == "monitoring":
-        data["subpages"] = []
+        data["subpages"] = monitoring_subpages
     elif page_name == "administration":
         data["subpages"] = admin_subpages
     return data

@@ -1,38 +1,35 @@
-"""Query OpenWrt gateways via the ubus JSON-RPC API.
+"""Interrogation des gateways OpenWrt via l'API JSON-RPC ubus.
 
-Reads DHCP leases, host hints (ARP+DHCP+wifi aggregated), and wifi clients
-from the router to build a fast, complete picture of the network.
-
-Requires on the router:
-  - rpcd + uhttpd-mod-ubus (pre-installed with LuCI)
-  - rpcd-mod-luci (for getDHCPLeases / getHostHints)
-  - rpcd-mod-iwinfo (optional, for wifi client details)
-  - A restricted 'monitor' user with read-only ACL
+Lit les baux DHCP, les « host hints » (agrégat ARP + DHCP + wifi) et les clients
+wifi du routeur, ce qui donne une vue du réseau plus rapide et plus complète qu'un
+scan. Nécessite sur le routeur rpcd, uhttpd-mod-ubus, rpcd-mod-luci (et
+rpcd-mod-iwinfo pour le wifi), avec un utilisateur « monitor » en lecture seule.
 """
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 import requests
 
 logger = logging.getLogger("apps")
 
-# Null session used only for login
+# Session nulle, utilisée uniquement pour se connecter.
 _NULL_SESSION = "00000000000000000000000000000000"
 
 
 @dataclass
 class GatewayHost:
-    """A host discovered via the gateway."""
+    """Un hôte vu par la gateway."""
+
     ip: str
     mac: str = ""
     hostname: str = ""
     is_wifi: bool = False
-    source: str = ""  # "dhcp", "arp", "both"
+    source: str = ""  # "dhcp", "arp" ou "both"
 
 
 class UbusClient:
-    """Minimal ubus JSON-RPC client for OpenWrt."""
+    """Client JSON-RPC ubus minimal pour OpenWrt."""
 
     def __init__(self, gateway_ip: str, credential, timeout: int = 15):
         scheme = "https" if credential.use_https else "http"
@@ -44,11 +41,12 @@ class UbusClient:
         self._req_id = 0
 
     def _next_id(self):
+        """Numéro de requête suivant, exigé par JSON-RPC."""
         self._req_id += 1
         return self._req_id
 
     def _call(self, session: str, obj: str, method: str, params: dict | None = None) -> dict:
-        """Make a ubus JSON-RPC call."""
+        """Effectue un appel JSON-RPC ubus et rend son résultat."""
         payload = {
             "jsonrpc": "2.0",
             "id": self._next_id(),
@@ -59,121 +57,126 @@ class UbusClient:
         resp.raise_for_status()
         data = resp.json()
         if "error" in data:
-            raise RuntimeError(f"ubus error: {data['error']}")
+            raise RuntimeError(f"erreur ubus : {data['error']}")
         result = data.get("result")
         if not result:
-            raise RuntimeError(f"ubus empty result for {obj}.{method}")
-        # ubus result format: [status_code, {data}]
+            raise RuntimeError(f"résultat ubus vide pour {obj}.{method}")
+        # Format de réponse ubus : [code_de_statut, {données}].
         if isinstance(result, list):
             if result[0] != 0:
-                raise RuntimeError(f"ubus {obj}.{method} returned status {result[0]}")
+                raise RuntimeError(f"ubus {obj}.{method} a répondu le statut {result[0]}")
             return result[1] if len(result) > 1 else {}
         return result
 
     def login(self):
-        """Authenticate and store session token."""
+        """S'authentifie et retient le jeton de session."""
         result = self._call(
             _NULL_SESSION, "session", "login",
             {"username": self.credential.username, "password": self.credential.password},
         )
         self._session_token = result.get("ubus_rpc_session")
         if not self._session_token:
-            raise RuntimeError("Login failed: no session token returned")
-        logger.debug("ubus login OK, session=%s...", self._session_token[:8])
+            raise RuntimeError("Connexion refusée : aucun jeton de session renvoyé")
+        logger.debug("connexion ubus OK, session=%s...", self._session_token[:8])
 
     @property
     def token(self):
+        """Le jeton de session, en se connectant à la première demande."""
         if not self._session_token:
             self.login()
         return self._session_token
 
     def get_dhcp_leases(self) -> list[dict]:
-        """Get DHCP leases via luci-rpc."""
+        """Les baux DHCP, via luci-rpc."""
         result = self._call(self.token, "luci-rpc", "getDHCPLeases", {})
         return result.get("dhcp_leases", [])
 
     def get_host_hints(self) -> dict:
-        """Get aggregated host info (ARP + DHCP + wifi).
-
-        Returns a dict keyed by MAC address with ipaddrs, ip6addrs, name.
-        """
+        """Les hôtes agrégés (ARP + DHCP + wifi), indexés par adresse MAC."""
         return self._call(self.token, "luci-rpc", "getHostHints", {})
 
     def get_wifi_clients(self) -> dict:
-        """Get wireless device info including associations."""
+        """Les radios wifi et leurs associations, ou {} si rpcd-mod-iwinfo manque."""
         try:
             return self._call(self.token, "luci-rpc", "getWirelessDevices", {})
         except Exception as e:
-            logger.debug("getWirelessDevices not available: %s", e)
+            logger.debug("getWirelessDevices indisponible : %s", e)
             return {}
 
 
-def query_gateway(gateway_ip: str, credential) -> list[GatewayHost]:
-    """Query an OpenWrt gateway for connected devices.
+def _ajouter_baux(client, gateway_ip, hosts):
+    """Les baux DHCP : la source la plus fiable pour nom + MAC + IP."""
+    try:
+        leases = client.get_dhcp_leases()
+    except Exception as e:
+        logger.warning("baux DHCP illisibles sur %s : %s", gateway_ip, e)
+        return
+    for lease in leases:
+        ip = lease.get("ipaddr", "")
+        if ip:
+            hosts[ip] = GatewayHost(
+                ip=ip,
+                mac=lease.get("macaddr", "").lower(),
+                hostname=lease.get("hostname", ""),
+                source="dhcp",
+            )
+    logger.info("Gateway %s : %d baux DHCP", gateway_ip, len(leases))
 
-    Combines DHCP leases and host hints (ARP table aggregation).
-    Returns a merged list of GatewayHost objects.
-    """
+
+def _ajouter_hints(client, gateway_ip, hosts):
+    """Les « host hints » complètent les baux avec ce que l'ARP a vu."""
+    try:
+        hints = client.get_host_hints()
+    except Exception as e:
+        logger.warning("host hints illisibles sur %s : %s", gateway_ip, e)
+        return
+    hint_count = 0
+    for mac, info in hints.items():
+        mac = mac.lower()
+        name = info.get("name", "")
+        for ip in info.get("ipaddrs", []):
+            hint_count += 1
+            known = hosts.get(ip)
+            if known is None:
+                hosts[ip] = GatewayHost(ip=ip, mac=mac, hostname=name, source="arp")
+                continue
+            known.source = "both"
+            known.hostname = known.hostname or name
+            known.mac = known.mac or mac
+    logger.info("Gateway %s : %d host hints", gateway_ip, hint_count)
+
+
+def _marquer_wifi(client, gateway_ip, hosts):
+    """Marque les hôtes associés à une radio wifi."""
+    try:
+        wifi_data = client.get_wifi_clients()
+    except Exception as e:
+        logger.debug("clients wifi illisibles sur %s : %s", gateway_ip, e)
+        return
+    wifi_macs = set()
+    for radio_info in wifi_data.values():
+        for iface in radio_info.get("interfaces", []):
+            for mac_addr in iface.get("assoclist", {}):
+                wifi_macs.add(mac_addr.lower())
+    for host in hosts.values():
+        if host.mac in wifi_macs:
+            host.is_wifi = True
+    if wifi_macs:
+        logger.info("Gateway %s : %d clients wifi", gateway_ip, len(wifi_macs))
+
+
+def query_gateway(gateway_ip: str, credential) -> list[GatewayHost]:
+    """Interroge une gateway OpenWrt et rend ses hôtes connectés, triés par adresse."""
     client = UbusClient(gateway_ip, credential)
     client.login()
 
     hosts: dict[str, GatewayHost] = {}
-
-    # 1. DHCP leases — most reliable source for hostname + MAC + IP
-    try:
-        leases = client.get_dhcp_leases()
-        for lease in leases:
-            ip = lease.get("ipaddr", "")
-            mac = lease.get("macaddr", "").lower()
-            hostname = lease.get("hostname", "")
-            if ip:
-                hosts[ip] = GatewayHost(ip=ip, mac=mac, hostname=hostname, source="dhcp")
-        logger.info("Gateway %s: %d DHCP leases", gateway_ip, len(leases))
-    except Exception as e:
-        logger.warning("Failed to get DHCP leases from %s: %s", gateway_ip, e)
-
-    # 2. Host hints — aggregated from ARP + DHCP + wireless, keyed by MAC
-    try:
-        hints = client.get_host_hints()
-        hint_count = 0
-        for mac, info in hints.items():
-            mac = mac.lower()
-            ipaddrs = info.get("ipaddrs", [])
-            name = info.get("name", "")
-            for ip in ipaddrs:
-                hint_count += 1
-                if ip in hosts:
-                    hosts[ip].source = "both"
-                    if not hosts[ip].hostname and name:
-                        hosts[ip].hostname = name
-                    if not hosts[ip].mac:
-                        hosts[ip].mac = mac
-                else:
-                    hosts[ip] = GatewayHost(ip=ip, mac=mac, hostname=name, source="arp")
-        logger.info("Gateway %s: %d host hints", gateway_ip, hint_count)
-    except Exception as e:
-        logger.warning("Failed to get host hints from %s: %s", gateway_ip, e)
-
-    # 3. Wifi clients — mark which hosts are connected via wifi
-    try:
-        wifi_data = client.get_wifi_clients()
-        wifi_macs = set()
-        for radio_name, radio_info in wifi_data.items():
-            interfaces = radio_info.get("interfaces", [])
-            for iface in interfaces:
-                assoclist = iface.get("assoclist", {})
-                for mac_addr in assoclist:
-                    wifi_macs.add(mac_addr.lower())
-        for host in hosts.values():
-            if host.mac in wifi_macs:
-                host.is_wifi = True
-        if wifi_macs:
-            logger.info("Gateway %s: %d wifi clients", gateway_ip, len(wifi_macs))
-    except Exception as e:
-        logger.debug("Failed to get wifi clients from %s: %s", gateway_ip, e)
+    _ajouter_baux(client, gateway_ip, hosts)
+    _ajouter_hints(client, gateway_ip, hosts)
+    _marquer_wifi(client, gateway_ip, hosts)
 
     if not hosts:
-        raise RuntimeError(f"No data retrieved from gateway {gateway_ip}")
+        raise RuntimeError(f"aucune donnée obtenue de la gateway {gateway_ip}")
 
-    logger.info("Gateway %s: %d unique hosts total", gateway_ip, len(hosts))
+    logger.info("Gateway %s : %d hôtes uniques au total", gateway_ip, len(hosts))
     return sorted(hosts.values(), key=lambda h: tuple(int(p) for p in h.ip.split(".")))

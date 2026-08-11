@@ -3,11 +3,11 @@
         <thead>
             <tr>
                 <th>Nom</th>
-                <th>D&eacute;clench&eacute;e par</th>
+                <th>Déclenchée par</th>
                 <th>Statut</th>
-                <th>Cr&eacute;&eacute;e</th>
-                <th>Dur&eacute;e</th>
-                <th>R&eacute;sultat</th>
+                <th>Créée</th>
+                <th>Durée</th>
+                <th>Résultat</th>
                 <th></th>
             </tr>
         </thead>
@@ -45,7 +45,7 @@
                     {% if task.status == "success" and task.result %}
                         <small class="text-muted">
                             {% if task.result.hosts_found is not None %}
-                                {{ task.result.hosts_found }} h&ocirc;tes
+                                {{ task.result.hosts_found }} hôtes
                             {% else %}
                                 OK
                             {% endif %}
@@ -58,18 +58,20 @@
                 </td>
                 <td>
                     {% if task.status == "pending" or task.status == "running" %}
-                    <form method="post" action="{% url 'core:task-revoke' task.pk %}" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Annuler">
-                            <i class="mdi mdi-close-circle"></i>
-                        </button>
-                    </form>
+                    <div class="btn-group btn-group-sm">
+                        <form method="post" action="{% url 'core:task-revoke' task.pk %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger" title="Annuler">
+                                <i class="mdi mdi-close-circle"></i>
+                            </button>
+                        </form>
+                    </div>
                     {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="7" class="text-center text-muted py-3">Aucune t&acirc;che</td>
+                <td colspan="7" class="console-empty">Aucune tâche</td>
             </tr>
             {% endfor %}
         </tbody>

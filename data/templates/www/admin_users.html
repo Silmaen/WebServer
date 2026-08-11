@@ -23,7 +23,7 @@
                     <td>{{ u.email }}</td>
                     <td>
                         {% if u.is_superuser %}
-                            <span class="admin-badge">Superuser</span>
+                            <span class="admin-badge">Super-administrateur</span>
                         {% else %}
                             <form method="post" class="level-form">
                                 {% csrf_token %}

@@ -1,152 +1,643 @@
-/* Console — le pont entre les classes héritées de Bootstrap et le style du site.
- *
- * Les pages de la console viennent de network_monitor, où elles étaient écrites pour
- * Bootstrap 5. Plutôt que de réécrire dix-sept gabarits, ce fichier redonne un sens aux
- * quelques classes qu'ils utilisent réellement — cartes, badges, boutons, grille,
- * tableaux — en s'appuyant sur les variables de couleur de `default_www.css`. Aucune
- * couleur n'est redéfinie ici : si le thème du site change, la console suit.
- *
- * Tout le reste (en-tête, navigation, pied de page, typographie) vient du site, parce
- * que ces pages étendent maintenant `www/base.html`.
+/* Console — mapping des classes héritées de Bootstrap vers le style du site.
+ * Bootstrap n'est plus chargé : ce fichier redonne un sens aux classes que les gabarits
+ * utilisent encore. Boutons, tableaux, cartes et champs viennent de default_www.css.
  */
 
+/* ========== Conteneur ========== */
 .console {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    /* Interface de données : aligné à gauche, et interligne resserré par rapport à
+       .static-page, que ces pages portent aussi. */
+    text-align: left;
+    line-height: 1.6;
 }
 
-/* --- grille : ce que row/col-* faisaient ------------------------------------ */
+/* Les gabarits comptaient sur les tailles de titre de Bootstrap. */
+.console h1,
+.console h2,
+.console h3,
+.console h4,
+.console h5,
+.console h6 {
+    font-weight: 600;
+}
+/* Le titre de page vient de .static-page > h2 : l'écart sous lui est déjà donné par le
+   gap du conteneur. */
+.console > h2 { margin-bottom: 0; }
+
+/* Sections empilées : le gap du conteneur suffit à les séparer. */
+.console .monitoring-section { margin-bottom: 0; }
+
+/* ========== Grille : ce que row/col-* faisaient ========== */
 .console .row {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
 }
+.console .row.g-2 { gap: .5rem; }
+.console .row.g-3 { gap: 1rem; }
 
 .console .row > [class*="col"] {
-    flex: 1 1 18rem;
+    flex: 1 1 0;
     min-width: 0;
 }
+.console .col { flex: 1 1 8rem; }
+.console .col-12 { flex: 1 1 100%; }
+/* Bases proportionnelles, gouttière déduite pour tenir sur une ligne. */
+.console .col-md-3 { flex: 1 1 calc(25% - 1rem); min-width: 11rem; }
+.console .col-md-4 { flex: 1 1 calc(33.33% - 1rem); min-width: 13rem; }
+.console .col-md-6 { flex: 1 1 calc(50% - 1rem); min-width: 15rem; }
+.console .col-md-8 { flex: 1 1 calc(66.66% - 1rem); min-width: 17rem; }
 
-.console .col-12 { flex-basis: 100%; }
-
-/* --- cartes ---------------------------------------------------------------- */
-.console .card {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
+/* ========== Barre d'outils de page ========== */
+/* La mise en page est partagée avec .machine-scan-header du site (default_www.css) ;
+   il ne reste ici que ce qui est propre à la console. */
+/* Actions seules : elles restent à droite. */
+.console-toolbar > .console-toolbar-actions:only-child {
+    margin-left: auto;
+}
+/* min-width: 0 pour qu'un texte long se replie au lieu d'élargir la ligne. */
+.console-toolbar-info {
+    min-width: 0;
+    color: var(--text-secondary);
+    font-size: .9em;
 }
 
+/* ========== Cartes ========== */
+.console .card {
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
 .console .card-header {
     background: var(--bg-elevated);
     border-bottom: 1px solid var(--separator);
-    padding: .5rem .75rem;
+    padding: .5rem .8rem;
     font-weight: 600;
 }
-
-.console .card-body { padding: .75rem; }
-
+/* En-tête à deux blocs : intitulé à gauche, information à droite. */
+.console-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .3rem .8rem;
+}
+.console .card-body { padding: .8rem 1rem; }
 .console .card-title {
-    margin: 0 0 .35rem;
-    font-size: 1rem;
+    margin: 0 0 .35em;
+    font-size: 1.05em;
     color: var(--text);
 }
-
 .console .card-text { margin: 0; color: var(--text-secondary); }
 
-/* --- tableaux : même rendu que .admin-table du site ------------------------ */
-.console .table-responsive { overflow-x: auto; }
+/* ========== Tableaux ========== */
+/* La base est partagée avec .admin-table (default_www.css). */
+/* Tableau posé dans une carte : ce sont les coins de la carte qui arrondissent, et la
+   dernière ligne n'a pas à poser un filet sur le bord. */
+.console .card .table { border-radius: 0; }
+.console .card .table tbody tr:last-child td { border-bottom: none; }
 
-.console .table {
-    width: 100%;
-    border-collapse: collapse;
-    background: var(--bg-surface);
+.console .table-sm th,
+.console .table-sm td {
+    padding: .3em .6em;
+    font-size: .9em;
 }
-
-.console .table th,
-.console .table td {
-    padding: .4rem .6rem;
-    border-bottom: 1px solid var(--separator);
-    text-align: left;
-    vertical-align: middle;
+/* Tableaux clé / valeur des fiches : pas de filets, et pas d'en-tête de colonne à imiter
+   — le <th> d'une ligne n'est qu'un intitulé, de largeur fixe pour aligner les valeurs. */
+.console .table-borderless th,
+.console .table-borderless td,
+.console .console-info-table th,
+.console .console-info-table td {
+    border-bottom: none;
+    padding: .3em .6em;
 }
-
-.console .table th {
-    background: var(--bg-elevated);
+.console .table-borderless th,
+.console .console-info-table th {
+    background: transparent;
     color: var(--text-secondary);
-    font-weight: 600;
-    white-space: nowrap;
+    font-size: .95em;
+    font-weight: normal;
+    text-transform: none;
+    letter-spacing: normal;
+    white-space: normal;
+}
+.console .console-info-table th { width: 38%; }
+/* Première ligne collée au haut de la carte, dernière au bas : pas de demi-marge. */
+.console .console-info-table { margin: 0; }
+
+/* Zone de tableau à hauteur limitée (journaux, historiques). */
+.console .console-scroll {
+    max-height: 400px;
+    overflow-y: auto;
 }
 
-.console .table-hover tbody tr:hover { background: var(--bg-elevated); }
-.console .table-sm th, .console .table-sm td { padding: .25rem .5rem; font-size: .9em; }
-
-/* Les lignes que la page de la flotte colore selon la gravité. */
+/* Lignes colorées selon la gravité. */
 .console .table-danger  { background: color-mix(in srgb, var(--red) 18%, transparent); }
 .console .table-warning { background: color-mix(in srgb, var(--yellow) 18%, transparent); }
+.console .table-info    { background: color-mix(in srgb, var(--blue) 18%, transparent); }
 
-/* --- badges ---------------------------------------------------------------- */
+/* Cellules d'actions : boutons alignés, hauteur identique, sans rupture de ligne. */
+.console .table td:has(> .btn),
+.console .table td:has(> .btn-group),
+.console .table td:has(> form > .btn) {
+    white-space: nowrap;
+}
+.console .table td > .btn,
+.console .table td > form {
+    margin-right: .15rem;
+}
+.console .table td > .btn:last-child,
+.console .table td > form:last-child {
+    margin-right: 0;
+}
+/* Dans une cellule, le groupe reste sur une ligne : c'est le tableau qui défile. */
+.console .table td > .btn-group { flex-wrap: nowrap; }
+
+/* Tableau vide : message centré et discret. */
+.console-empty,
+.console .table td.console-empty {
+    padding: 1.4em .6em;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* ========== Badges ========== */
 .console .badge {
-    display: inline-block;
-    padding: .15em .5em;
+    display: inline-flex;
+    align-items: center;
+    gap: .3em;
+    padding: .15em .6em;
     border-radius: 4px;
     font-size: .82em;
     font-weight: 600;
     background: var(--bg-button);
     color: var(--text);
     white-space: nowrap;
+    vertical-align: middle;
+}
+/* Variantes text-bg-* sur la palette du site. */
+.console .text-bg-success   { background: var(--green);      color: var(--text-on-accent); }
+.console .text-bg-warning   { background: var(--yellow);     color: var(--text-on-accent); }
+.console .text-bg-danger    { background: var(--red);        color: var(--white); }
+.console .text-bg-secondary { background: var(--bg-button);  color: var(--text-secondary); }
+.console .text-bg-primary   { background: var(--blue);       color: var(--white); }
+.console .text-bg-info      { background: var(--blue-light); color: var(--text-on-accent); }
+.console .text-bg-dark      { background: var(--bg-header);  color: var(--text); }
+
+/* ========== Boutons : variantes ========== */
+/* La base (.console .btn) et la taille compacte (.btn-sm) sont dans default_www.css,
+   avec .userbtn et .machine-scan-btn. Il ne reste ici que les variantes de couleur. */
+/* Choix courant dans un groupe (sélecteur de période du monitoring). */
+.console .btn.active {
+    background: var(--blue);
+    color: var(--white);
+    box-shadow: 0 2px 8px var(--blue-shadow);
+}
+/* Action principale : le seul aplat coloré, comme les CTA du site. */
+.console .btn-primary {
+    background: var(--blue);
+    color: var(--white);
+}
+.console .btn-primary:hover,
+.console .btn-primary:focus {
+    background: var(--blue-hover);
+    color: var(--white);
+}
+/* Actions secondaires : seul le libellé est teinté. */
+.console .btn-outline-success   { color: var(--green); }
+.console .btn-outline-warning   { color: var(--yellow); }
+.console .btn-outline-info      { color: var(--blue-lighter); }
+.console .btn-outline-secondary { color: var(--text-secondary); }
+/* Destructif : même comportement que .userbtn-danger. */
+.console .btn-danger,
+.console .btn-outline-danger { color: var(--red); }
+.console .btn-danger:hover,
+.console .btn-outline-danger:hover {
+    background: var(--red-hover);
+    color: var(--white);
+}
+/* Le gap du bouton suffit : on neutralise le me-* que portent icônes et spinners. */
+.console .btn > .mdi,
+.console .btn > .spinner-border,
+.console .badge > .mdi,
+.console .badge > .spinner-border {
+    margin: 0;
 }
 
-/* Les variantes text-bg-* de Bootstrap, sur les couleurs du site. Le noir sur les
-   fonds clairs (succès, avertissement) parce que le texte du thème est presque blanc. */
-.console .text-bg-success   { background: var(--green);  color: #101010; }
-.console .text-bg-warning   { background: var(--yellow); color: #101010; }
-.console .text-bg-danger    { background: var(--red);    color: #fff; }
-.console .text-bg-secondary { background: var(--bg-button); color: var(--text-secondary); }
-.console .text-bg-primary   { background: var(--blue);   color: #101010; }
+/* Groupe de boutons : les <form> imbriqués ne doivent pas casser l'alignement. */
+.console .btn-group {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: .25rem;
+    vertical-align: middle;
+}
+.console .btn-group > form { display: contents; }
+.console .btn-group > .btn { flex: 0 0 auto; }
 
-/* --- boutons : l'aspect .userbtn du site ---------------------------------- */
-.console .btn {
-    display: inline-block;
-    padding: .3rem .6rem;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    background: var(--bg-button);
-    color: var(--text);
-    font-size: .9em;
+/* ========== Formulaires ========== */
+/* Les champs héritent des règles de default_www.css, par classe comme par élément. */
+/* .form-label est parfois un <span> (il n'étiquette alors aucun champ précis). */
+.console .form-label {
+    display: block;
+    margin-bottom: .3em;
+    color: var(--text-secondary);
+    font-size: .85em;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+}
+.console .form-text {
+    margin-top: .3em;
+    color: var(--text-secondary);
+    font-size: .85em;
+}
+.console .invalid-feedback {
+    margin-top: .3em;
+    color: var(--red);
+    font-size: .85em;
+}
+.console .form-check {
+    display: flex;
+    align-items: center;
+    gap: .5em;
+}
+.console .form-check-input {
+    flex: 0 0 auto;
+    width: 1.05em;
+    height: 1.05em;
+    margin: 0;
+    accent-color: var(--blue);
+    color-scheme: dark;
     cursor: pointer;
+}
+.console .form-check-label { cursor: pointer; }
+/* Ligne écartée par la recherche (le masquage par catégorie passe par .is-hidden, traité
+   avec les autres états génériques dans default_www.css). */
+.console .form-check.is-filtered { display: none; }
+
+/* Champ + bouton accolés. */
+.console .input-group {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: stretch;
+}
+.console .input-group > .form-control,
+.console .input-group > .form-select {
+    flex: 1 1 auto;
+    width: auto;
+    min-width: 0;
+    border-radius: 6px 0 0 6px;
+}
+.console .input-group > .btn {
+    flex: 0 0 auto;
+    border-radius: 0 6px 6px 0;
+    min-height: var(--field-height);
+}
+
+/* Bloc de filtres au-dessus d'un tableau : champs et bouton alignés en bas de ligne. */
+.console-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: .6rem .8rem;
+    padding: .8rem 1rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+}
+.console-filters > * {
+    flex: 1 1 11rem;
+    min-width: 0;
+    margin-bottom: 0;
+}
+/* Un groupe qui ne porte que des boutons ou une liste déroulante n'a pas à s'étirer. */
+.console-filters > .form-group:has(> .btn-group),
+.console-filters > .form-group:has(> .console-dropdown) { flex: 0 0 auto; }
+.console-filters .form-label { margin-bottom: .25em; }
+.console-filters .form-control,
+.console-filters .form-select { width: 100%; }
+.console-filters .btn { flex: 0 0 auto; }
+/* Les boutons se calent sur la hauteur exacte des champs de la même ligne ; ceux d'une
+   liste déroulante (btn-sm) gardent la leur. */
+.console-filters .btn:not(.btn-sm) {
+    min-height: var(--field-height);
+}
+/* Un groupe de boutons garde ses boutons à la hauteur des champs. */
+.console-filters .btn-group { align-items: stretch; }
+
+/* ========== Listes ========== */
+.console .list-group {
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.console .list-group-item {
+    padding: .5em .9em;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    border-top-width: 0;
+    list-style: none;
+}
+.console .list-group-item:first-child { border-top-width: 1px; }
+.console .list-group-flush .list-group-item {
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}
+.console .list-group-flush .list-group-item:last-child { border-bottom: 0; }
+
+/* ========== Pagination ========== */
+/* Horizontale, mêmes pastilles que la sous-navigation du site. */
+.console .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    list-style: none;
+    padding: .4rem 0;
+    margin: 0;
+}
+.console .page-item {
+    display: block;
+    list-style: none;
+}
+.console .page-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2em;
+    min-height: 2.2em;
+    padding: 0 .6em;
+    border: none;
+    border-radius: 20px;
+    background: var(--bg-button);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: background .2s, color .2s;
+}
+.console .page-link:hover {
+    background: var(--bg-button-hover);
+    color: var(--blue);
     text-decoration: none;
 }
-
-.console .btn:hover { background: var(--bg-button-hover); }
-.console .btn-sm { padding: .15rem .4rem; font-size: .82em; }
-.console .btn-primary { border-color: var(--blue); color: var(--blue-light); }
-.console .btn-danger, .console .btn-outline-danger { border-color: var(--red); color: var(--red); }
-.console .btn-group { display: inline-flex; flex-wrap: wrap; gap: .25rem; }
-
-/* --- messages -------------------------------------------------------------- */
-.console .alert {
-    padding: .6rem .8rem;
-    border: 1px solid var(--border);
-    border-left-width: 4px;
-    border-radius: 4px;
-    background: var(--bg-surface);
+.console .page-item.active .page-link {
+    background: var(--blue);
+    color: var(--white);
+    box-shadow: 0 2px 8px var(--blue-shadow);
+}
+.console .page-item.disabled .page-link {
+    opacity: .35;
+    pointer-events: none;
 }
 
+/* ========== Listes déroulantes (<details> natifs) ========== */
+.console-dropdown { position: relative; }
+/* Le <summary> est un bouton : on retire la puce de divulgation, remplacée par un chevron.
+   Sélecteur préfixé pour passer devant le `justify-content` de .console .btn. */
+.console .console-dropdown > summary {
+    width: 100%;
+    justify-content: space-between;
+    list-style: none;
+}
+.console-dropdown > summary::marker { content: ""; }
+.console-dropdown > summary::-webkit-details-marker { display: none; }
+.console-dropdown > summary::after {
+    content: "";
+    flex: 0 0 auto;
+    width: .35em;
+    height: .35em;
+    margin-left: .2em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-.15em) rotate(45deg);
+    transition: transform .2s;
+}
+.console-dropdown[open] > summary::after {
+    transform: translateY(.1em) rotate(-135deg);
+}
+
+.console-dropdown-menu {
+    position: absolute;
+    top: calc(100% + .3rem);
+    left: 0;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    /* Panneau des catégories ; celui des appareils, plus large, est traité en dessous. */
+    min-width: max(14rem, 100%);
+    max-width: min(85vw, 22rem);
+    padding: .5rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 14px var(--shadow);
+}
+/* Le panneau qui porte un champ de recherche liste des hostnames : il lui faut du large. */
+.console-dropdown-menu:has(> input) { min-width: max(19rem, 100%); }
+
+.console-dropdown-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+.console-dropdown-list .form-check { padding: .15rem 0; }
+
+/* ========== Messages ========== */
+.console .alert {
+    padding: .6rem .9rem;
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: 6px;
+    background: var(--bg-surface);
+}
 .console .alert-danger  { border-left-color: var(--red); }
 .console .alert-warning { border-left-color: var(--yellow); }
 .console .alert-success { border-left-color: var(--green); }
-.console .alert-heading { margin: 0 0 .35rem; font-size: 1rem; }
+.console .alert-info    { border-left-color: var(--blue); }
+.console .alert-heading { margin: 0 0 .35em; font-size: 1.05em; }
+.console .alert-link { color: var(--blue-light); font-weight: 600; }
+/* Listes de contenu : le reset du site ôte puces et retrait, il faut les rendre
+   (.list-group, qui n'est pas une liste à puces, garde le sien). */
+.console .alert ul,
+.console .card-body ul:not(.list-group) {
+    list-style: disc;
+    padding-left: 1.4em;
+    margin: 0;
+}
+.console .alert ol,
+.console .card-body ol {
+    padding-left: 1.6em;
+    margin: 0;
+}
+.console .alert li,
+.console .card-body li:not(.list-group-item) { margin-bottom: .2em; }
 
-/* --- utilitaires que les gabarits utilisent au passage -------------------- */
+/* ========== Barres de progression et attente ========== */
+.console .progress {
+    height: 20px;
+    overflow: hidden;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+}
+/* La largeur arrive du gabarit par la custom property --progress. */
+.console .progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--progress, 0%);
+    height: 100%;
+    background: var(--blue);
+    color: var(--white);
+    font-size: .8em;
+}
+.console .spinner-border {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    vertical-align: middle;
+    animation: console-spin .8s linear infinite;
+}
+.console .spinner-border-sm { width: .8em; height: .8em; }
+@keyframes console-spin { to { transform: rotate(360deg); } }
+
+/* ========== Monitoring ========== */
+/* Tuile de compteur : les quatre cartes de la ligne alignent leur libellé et leur
+   chiffre, quelle que soit la longueur du libellé. */
+.console .console-stat { height: 100%; }
+.console .console-stat .card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: .2em;
+    height: 100%;
+    padding: .6rem .9rem;
+    text-align: center;
+}
+.console .console-stat-value {
+    font-size: 2em;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Témoin de rafraîchissement automatique. */
+.console .refresh-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    vertical-align: middle;
+}
+.console .refresh-indicator.active {
+    background: var(--green);
+    animation: console-pulse 2s infinite;
+}
+.console .refresh-indicator.paused { background: var(--text-secondary); }
+@keyframes console-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+
+/* Chart.js tourne en maintainAspectRatio:false : la hauteur vient d'ici. */
+.console .console-chart {
+    position: relative;
+    height: 400px;
+}
+
+/* Tableau des changements d'état : une ligne isole son appareil au clic. */
+.console .state-change-row { cursor: pointer; }
+.console .state-change-row.isolated {
+    background: color-mix(in srgb, var(--blue) 22%, transparent);
+}
+
+/* ========== Journaux d'exécution ========== */
+.console .log-output {
+    max-height: 500px;
+    padding: 1rem;
+    overflow-y: auto;
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--separator);
+    color: var(--text);
+    font-family: "Fira Code", "Fira Mono", "Consolas", monospace;
+    font-size: .85em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+.console .log-output .log-time    { color: var(--text-secondary); }
+.console .log-output .log-info    { color: var(--blue-light); }
+.console .log-output .log-warning { color: var(--yellow); }
+.console .log-output .log-error   { color: var(--red); }
+
+/* ========== Utilitaires ========== */
+/* Uniquement ceux que les gabarits utilisent réellement. */
+.console .d-flex { display: flex; }
+.console .d-grid { display: grid; }
+.console .d-block { display: block; }
+
+.console .align-items-center { align-items: center; }
+.console .justify-content-between { justify-content: space-between; }
+.console .gap-2 { gap: .5rem; }
+.console .ms-auto { margin-left: auto; }
+
+.console .p-0 { padding: 0; }
+.console .mb-0 { margin-bottom: 0; }
+.console .mb-2 { margin-bottom: .5rem; }
+.console .mb-3 { margin-bottom: 1rem; }
+.console .mt-2 { margin-top: .5rem; }
+.console .mt-3 { margin-top: 1rem; }
+.console .mt-4 { margin-top: 1.5rem; }
+.console .me-1 { margin-right: .25rem; }
+.console .me-2 { margin-right: .5rem; }
+.console .ms-1 { margin-left: .25rem; }
+.console .mx-1 { margin-right: .25rem; margin-left: .25rem; }
+
+.console .text-center { text-align: center; }
+.console .text-end { text-align: right; }
+.console .text-decoration-none { text-decoration: none; }
 .console .text-muted { color: var(--text-secondary); }
 .console .text-danger { color: var(--red); }
 .console .text-success { color: var(--green); }
 .console .text-warning { color: var(--yellow); }
+.console .text-primary { color: var(--blue-light); }
+.console .text-info { color: var(--blue-lighter); }
 .console .small, .console small { font-size: .85em; }
+.console .fs-1 { font-size: 2.4em; }
+.console .fs-5 { font-size: 1.25em; }
+.console .fs-6 { font-size: 1em; }
+.console .display-6 { font-size: 2em; font-weight: 600; line-height: 1.2; }
+
+.console .align-middle { vertical-align: middle; }
+.console .rounded-pill { border-radius: 999px; }
+.console .border-danger { border-color: var(--red); }
+
 .console code { color: var(--blue-light); }
 
-/* Les icônes ont été converties de bootstrap-icons vers la police Material Design du
-   site (bi-trash -> mdi-delete, etc.) : elles rendent donc de vrais glyphes, et non
-   plus le vide qui laissait les boutons sans texte complètement muets. */
+/* ========== Responsive ========== */
+@media all and (max-width: 768px) {
+    /* Une colonne : les bases proportionnelles n'ont plus de sens. */
+    .console .row > [class*="col"] {
+        flex-basis: 100%;
+        min-width: 0;
+    }
+    /* Les grands tableaux défilent dans leur conteneur, jamais la page ; ceux qui ne font
+       que deux colonnes clé / valeur n'ont pas à défiler. */
+    .console .table { min-width: 34rem; }
+    .console .table-borderless,
+    .console .console-info-table { min-width: 0; }
+    .console .card-body { padding: .6rem .7rem; }
+    .console-filters { padding: .6rem .7rem; }
+    .console-filters > * { flex-basis: 100%; }
+    /* Le panneau déroulant se cale sur la largeur du filtre, sans déborder de l'écran. */
+    .console-dropdown-menu,
+    .console-dropdown-menu:has(> input) {
+        min-width: 100%;
+        max-width: 85vw;
+    }
+}

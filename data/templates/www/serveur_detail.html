@@ -11,13 +11,15 @@
 
     <!-- Section Check -->
     <div class="machine-scan-section" id="section-check">
-        <h3>
-            <span class="mdi mdi-server-network"></span> État du service
-            <button id="btn-check" class="userbtn machine-scan-btn" onclick="lancerCheck()">
-                <span class="mdi mdi-radar"></span> Vérifier
-            </button>
-            <span id="status-check" class="machine-scan-status"></span>
-        </h3>
+        <div class="machine-scan-header">
+            <h3><span class="mdi mdi-server-network"></span> État du service</h3>
+            <div class="machine-scan-actions">
+                <span id="status-check" class="machine-scan-status"></span>
+                <button id="btn-check" class="userbtn machine-scan-btn" onclick="lancerCheck()">
+                    <span class="mdi mdi-radar"></span> Vérifier
+                </button>
+            </div>
+        </div>
         <div class="machine-scan-result" id="result-check">
             <span class="scan-loading"><span class="mdi mdi-loading mdi-spin"></span> Vérification en cours...</span>
         </div>
@@ -40,7 +42,7 @@
             {% endif %}
             {% if serveur.hostname %}
             <tr>
-                <td class="monitoring-meta">Hostname</td>
+                <td class="monitoring-meta">Nom d'hôte</td>
                 <td>{{ serveur.hostname }}</td>
             </tr>
             {% endif %}
@@ -59,7 +61,7 @@
         </table>
     </div>
 
-    <p><a class="userbtn" href="{% url 'monitoring' %}"><span class="mdi mdi-arrow-left"></span> Retour</a></p>
+    <p><a class="userbtn" href="{% url 'monitoring_services' %}"><span class="mdi mdi-arrow-left"></span> Retour aux services</a></p>
 </div>
 
 <script>

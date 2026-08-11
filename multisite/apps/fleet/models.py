@@ -1,19 +1,9 @@
-"""The lab's own machines, as opposed to whatever is on the network.
+"""Les machines propres au lab, par opposition à ce qui traîne sur le réseau.
 
-This app absorbs `selene/console` from the home-server-stacks repository — the
-Flask page that answered four questions nothing off the shelf answers together:
-which machine still reports, what updates are pending, what has drifted from the
-ansible recipe, and which running images have a newer tag. See
-`_ops/docs/console-merge.md` there for the decision and the invariants.
-
-The split that matters, and the reason `Machine` does not reuse `devices.Device`:
-
-* `devices.Device` is what the scanner **observed** on the network;
-* `Machine` is what the lab **declares** in `_common/inventory.conf`.
-
-Conflating them would lose the only interesting question — the difference. A
-device seen on the LAN and declared nowhere is a stranger; a machine declared and
-never seen is a machine that did not come back.
+`devices.Device` est ce que le scanner a **observé** ; `Machine` est ce que le lab
+**déclare** dans `_common/inventory.conf`. Les confondre perdrait la seule question
+intéressante — la différence : un appareil vu et déclaré nulle part est un inconnu,
+une machine déclarée et jamais vue est une machine qui n'est pas revenue.
 """
 
 from django.conf import settings
@@ -24,11 +14,11 @@ from apps.core.models import TimeStampedModel
 
 
 class Machine(TimeStampedModel):
-    """A machine as declared in `_common/inventory.conf`.
+    """Une machine telle que déclarée dans `_common/inventory.conf`.
 
-    The file stays the source of truth — it is parsed by busybox awk on the router
-    and by every tool in that repository — so these rows are a mirror of it, never
-    the place a machine is created. `apps.fleet.inventory.sync()` reconciles them.
+    Le fichier reste la source de vérité — il est lu par tous les outils du lab —
+    donc ces lignes n'en sont qu'un miroir, réconcilié par
+    `apps.fleet.inventory.sync()` et jamais l'endroit où l'on crée une machine.
     """
 
     name = models.CharField(max_length=64, unique=True)
@@ -36,16 +26,21 @@ class Machine(TimeStampedModel):
     mac = models.CharField(max_length=17, blank=True)
     role = models.CharField(max_length=64, blank=True)
     os_family = models.CharField(max_length=16, blank=True, help_text="linux | openwrt | windows")
-    ac_restores = models.CharField(max_length=16, blank=True, help_text="does it power itself back on?")
-    wol_known = models.CharField(max_length=16, blank=True, help_text="is Wake-on-LAN known to work?")
+    ac_restores = models.CharField(
+        max_length=16, blank=True, help_text="does it power itself back on?",
+    )
+    wol_known = models.CharField(
+        max_length=16, blank=True, help_text="is Wake-on-LAN known to work?",
+    )
     wake_order = models.PositiveIntegerField(default=0, help_text="0 = never woken automatically")
     ssh_user = models.CharField(max_length=32, blank=True)
-    # A machine dropped from inventory.conf keeps its row: its reports still point
-    # at it, and a machine that silently vanishes from the page is exactly the kind
-    # of absence this console exists to make visible.
+    # Une machine retirée de inventory.conf garde sa ligne : ses rapports y renvoient
+    # encore, et une machine qui disparaît en silence est exactement le genre
+    # d'absence que cette console existe pour rendre visible.
     retired = models.BooleanField(default=False)
 
     class Meta:
+        """Meta data"""
         ordering = ["wake_order", "name"]
 
     def __str__(self):
@@ -53,26 +48,21 @@ class Machine(TimeStampedModel):
 
     @property
     def latest_report(self):
+        """Le rapport le plus récent de cette machine, ou None."""
         return self.reports.first()
 
 
 class Report(models.Model):
-    """One `homelab-report` document, as posted by the machine itself.
+    """Un document `homelab-report`, tel que posté par la machine elle-même.
 
-    Not a `TimeStampedModel`: that gives a UUID primary key, which is the right
-    default for a domain object and the wrong one for a table that grows by ten
-    rows an hour for ever.
-
-    Kept as history rather than overwritten, which is what the Flask console could
-    not do — it held one JSON file per machine. A filesystem filling up is only
-    visible as a trend, and the trend is what beszel was dropped for. `tasks.py`
-    prunes it; an unbounded history table is the mistake this database already
-    made once with `monitoring_checkresult`.
+    Conservé en historique plutôt qu'écrasé : un disque qui se remplit ne se voit
+    qu'en tendance. Pas un `TimeStampedModel`, dont la clé UUID serait le mauvais
+    défaut pour une table qui grossit de dix lignes par heure ; `tasks.py` la purge.
     """
 
     machine = models.ForeignKey(Machine, on_delete=models.CASCADE, related_name="reports")
-    # The machine's own timestamp, not ours: it is what decides staleness, and it
-    # keeps working when the console was down while the machine kept reporting.
+    # L'horodatage de la machine, pas le nôtre : c'est lui qui décide de la péremption
+    # et il reste juste si la console était éteinte pendant que la machine rapportait.
     at = models.DateTimeField()
     received_at = models.DateTimeField(auto_now_add=True)
     schema = models.PositiveIntegerField(default=1)
@@ -82,10 +72,11 @@ class Report(models.Model):
     drift_changes = models.JSONField(default=list)
 
     class Meta:
+        """Meta data"""
         ordering = ["-at"]
         constraints = [
-            # Re-posting the same document is then idempotent, which matters
-            # because `homelab-report` is run both by a timer and by hand.
+            # Reposter le même document devient idempotent, ce qui compte car
+            # `homelab-report` est lancé à la fois par un timer et à la main.
             models.UniqueConstraint(fields=["machine", "at"], name="fleet_report_unique_at"),
         ]
         indexes = [models.Index(fields=["machine", "-at"])]
@@ -95,19 +86,20 @@ class Report(models.Model):
 
     @property
     def age_seconds(self):
+        """Âge du rapport en secondes."""
         return int((timezone.now() - self.at).total_seconds())
 
     @property
     def state(self):
-        """`ok` or `stale`. The timer runs hourly, so the threshold is two misses."""
+        """`ok` ou `stale`. Le timer étant horaire, le seuil vaut deux passages ratés."""
         return "stale" if self.age_seconds > settings.FLEET_STALE_AFTER else "ok"
 
     @property
     def worst_disk(self):
-        """The fullest filesystem — the only one worth a column.
+        """Le système de fichiers le plus plein — le seul qui mérite une colonne.
 
-        `disk` is a packed fact, `/:46% /boot:14% ...`; the mount point is taken
-        with rpartition because it contains slashes and colons do not.
+        `disk` est un fait compacté (`/:46% /boot:14% ...`) ; le point de montage est
+        pris par la droite, car il contient des slashs et pas de deux-points.
         """
         worst, where = 0, ""
         for item in (self.facts.get("disk") or "").split():
@@ -122,21 +114,16 @@ class Report(models.Model):
 
 
 class Stack(TimeStampedModel):
-    """A compose project deployed on a machine, as the Docker daemon reports it.
+    """Un projet compose déployé sur une machine, tel que Docker le rapporte.
 
-    Nothing declares these. Compose stamps `com.docker.compose.project`,
-    `.project.working_dir` and `.project.config_files` on every container it
-    creates, so `homelab-probe` derives the whole list — which is what finally
-    gives the stacks living in their own git repositories a trace, with no list to
-    keep in sync.
-
-    Current state, deliberately, not one row per report: this table would
-    otherwise grow like `monitoring_checkresult` (1.9 M rows for a question nobody
-    asks about the past). A stack that stops being deployed keeps its row with a
-    stale `last_seen`, which is more useful than deleting it.
+    Rien ne les déclare : compose estampille ses conteneurs, donc `homelab-probe`
+    en dérive la liste entière — ce qui donne enfin une trace aux stacks vivant dans
+    leur propre dépôt. État courant et non une ligne par rapport, pour ne pas
+    reproduire la croissance de `monitoring_checkresult`.
     """
 
     class Compose(models.TextChoices):
+        """Suivi git du fichier compose de la stack."""
         TRACKED = "tracked", "Suivi par git"
         UNTRACKED = "untracked", "Jamais commité"
         MISSING = "missing", "Fichier disparu"
@@ -149,15 +136,20 @@ class Stack(TimeStampedModel):
     remote = models.CharField(max_length=256, blank=True)
     head = models.CharField(max_length=64, blank=True)
     worktree = models.CharField(max_length=16, blank=True, help_text="clean | dirty")
-    behind = models.IntegerField(null=True, blank=True, help_text="commits behind the last known remote ref")
+    behind = models.IntegerField(
+        null=True, blank=True, help_text="commits behind the last known remote ref",
+    )
     compose = models.CharField(max_length=16, default=Compose.UNKNOWN)
     first_seen = models.DateTimeField(default=timezone.now)
     last_seen = models.DateTimeField(default=timezone.now)
 
     class Meta:
+        """Meta data"""
         ordering = ["machine__name", "project"]
         constraints = [
-            models.UniqueConstraint(fields=["machine", "project", "path"], name="fleet_stack_unique_per_path"),
+            models.UniqueConstraint(
+                fields=["machine", "project", "path"], name="fleet_stack_unique_per_path",
+            ),
         ]
 
     def __str__(self):
@@ -165,22 +157,22 @@ class Stack(TimeStampedModel):
 
     @property
     def repo(self):
-        """The remote's short name. The full URL is kept; a table wants the name."""
+        """Le nom court du remote. L'URL complète est gardée ; un tableau veut le nom."""
         if not self.remote or self.remote == "-":
             return "-"
         return self.remote.rstrip("/").rsplit("/", 1)[-1].removesuffix(".git")
 
     @property
     def foreign(self):
-        """Does this stack come from a repository other than home-server-stacks?"""
+        """Cette stack vient-elle d'un dépôt autre que home-server-stacks ?"""
         return self.repo not in ("home-server-stacks", "-")
 
     @property
     def severity(self):
-        """How loudly the page should say something is wrong.
+        """À quel point la page doit signaler un problème.
 
-        `missing` and `untracked` are the two states no other check in the lab can
-        see: the containers are healthy, so gatus and wud are both satisfied.
+        `missing` et `untracked` sont les deux états qu'aucun autre contrôle du lab
+        ne voit : les conteneurs tournent, donc gatus et wud sont satisfaits.
         """
         if self.compose in (self.Compose.MISSING, self.Compose.UNTRACKED):
             return "danger"

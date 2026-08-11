@@ -1,48 +1,34 @@
 {% extends "base.html" %}
 
-{% block title %}Flotte - Network Monitor{% endblock %}
-
-{% block console_content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
-    <h1 class="h2">Flotte</h1>
-    <span class="text-muted small">
+{% block console_toolbar %}
+<div class="console-toolbar">
+    <span class="console-toolbar-info">
         {{ observed_declared }} machine{{ observed_declared|pluralize }} déclarée{{ observed_declared|pluralize }}
         vue{{ observed_declared|pluralize }} par le scanner, sur {{ observed_total }} appareil{{ observed_total|pluralize }} observé{{ observed_total|pluralize }}
     </span>
+    <span class="console-toolbar-info">Généré le {{ generated|date:"d/m/Y H:i:s" }}</span>
 </div>
+{% endblock %}
 
+{% block console_content %}
 {% if wud_error %}
-<div class="alert alert-warning d-flex align-items-center" role="alert">
-    <i class="mdi mdi-alert me-2"></i>
-    <div>
-        wud est injoignable, la colonne « images » est vide : <code>{{ wud_error }}</code>
-    </div>
+<div class="alert alert-warning">
+    <i class="mdi mdi-alert"></i>
+    wud est injoignable, la colonne « images » est vide : <code>{{ wud_error }}</code>
 </div>
 {% endif %}
 
 {% if stack_alerts %}
-{% comment %} The two states no other check in the lab can see. gatus sees healthy containers
-   and wud sees a fine image, so this banner is the only place they surface. {% endcomment %}
-<div class="alert alert-danger" role="alert">
-    <h6 class="alert-heading"><i class="mdi mdi-file-remove me-2"></i>Stacks sans fichier compose exploitable</h6>
-    <ul class="mb-0 small">
-        {% for stack in stack_alerts %}
-        <li>
-            <strong>{{ stack.machine.name }}/{{ stack.project }}</strong> —
-            {% if stack.compose == "missing" %}
-            le fichier compose a disparu : personne ne peut redéployer ni mettre à jour cette stack
-            {% else %}
-            le fichier compose n'a jamais été commité : il disparaît avec le disque
-            {% endif %}
-            <br><code class="text-muted">{{ stack.path }}</code>
-        </li>
-        {% endfor %}
-    </ul>
+{% comment %} Le détail est sur la page Stacks ; ce rappel évite qu'un déplacement de page
+   fasse disparaître une alerte que rien d'autre ne remonte. {% endcomment %}
+<div class="alert alert-danger">
+    <i class="mdi mdi-file-remove"></i>
+    {{ stack_alerts|length }} stack{{ stack_alerts|length|pluralize }} sans fichier compose exploitable —
+    <a href="{% url 'fleet:stacks' %}">voir le détail</a>
 </div>
 {% endif %}
 
-<!-- Machines déclarées -->
-<div class="table-responsive mb-4">
+<div class="table-responsive">
     <table class="table table-hover align-middle">
         <thead>
             <tr>
@@ -72,8 +58,7 @@
                     {% elif m.state == "stale" %}
                     <span class="badge text-bg-warning">rapport ancien</span>
                     {% else %}
-                    {% comment %} Honest rather than empty: hermes, ceryx, eudore and hecate sit
-                       here until they get an agent. {% endcomment %}
+                    {% comment %} Honnête plutôt que vide : une machine sans agent reste ici. {% endcomment %}
                     <span class="badge text-bg-secondary">jamais rapporté</span>
                     {% endif %}
                     {% if m.observed %}
@@ -114,8 +99,8 @@
                     {% if m.disk.mount %}<div class="text-muted small">{{ m.disk.mount }}</div>{% endif %}
                 </td>
                 <td>
-                    {% comment %} A status instead of a zero when the check could not run: "I
-                       could not tell" and "nothing to report" are different answers. {% endcomment %}
+                    {% comment %} Un statut plutôt qu'un zéro quand le contrôle n'a pas tourné :
+                       « je ne sais pas » et « rien à signaler » sont deux réponses. {% endcomment %}
                     {% if m.drift.status == "ok" %}
                         {% if m.drift.count %}
                         <span class="badge text-bg-warning" title="{{ m.drift.changes|join:', ' }}">{{ m.drift.count }}</span>
@@ -137,8 +122,8 @@
                     {% endif %}
                 </td>
                 <td class="small">
-                    {% comment %} The column to watch between outages: a machine showing `d`
-                       will not wake at the next power cut. {% endcomment %}
+                    {% comment %} La colonne à surveiller entre deux coupures : une machine
+                       affichant `d` ne se réveillera pas à la prochaine. {% endcomment %}
                     {% if m.wake_order %}
                         {% if "g" in m.facts.wol %}
                         <span class="text-success">{{ m.facts.wol }}</span>
@@ -164,7 +149,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="11" class="text-center text-muted py-4">
+                <td colspan="{% if user.is_staff %}11{% else %}10{% endif %}" class="console-empty">
                     Aucune machine. <code>_common/inventory.conf</code> est-il bien monté ?
                     Vérifier avec <code>manage.py sync_inventory</code>.
                 </td>
@@ -174,55 +159,7 @@
     </table>
 </div>
 
-<!-- Stacks déployées -->
-<h2 class="h4 pb-2 mb-3 border-bottom">Stacks déployées</h2>
-<p class="text-muted small">
-    Rien n'est déclaré ici : compose estampille son projet, son répertoire et son fichier
-    sur chaque conteneur, donc le démon Docker sait déjà de quel checkout chaque stack
-    provient. C'est ce qui donne une trace aux stacks vivant dans leur propre dépôt git.
-</p>
-
-{% for m in machines %}
-{% if m.stacks %}
-<div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <strong>{{ m.name }}</strong>
-        <span class="text-muted small">{{ m.stacks|length }} stack{{ m.stacks|length|pluralize }}</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-sm mb-0">
-            <thead>
-                <tr>
-                    <th>Projet</th>
-                    <th>Dépôt</th>
-                    <th>HEAD</th>
-                    <th>Arbre</th>
-                    <th>Retard</th>
-                    <th>Compose</th>
-                    <th>Vu</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in m.stacks %}
-                <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
-                    <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
-                    <td>{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
-                    <td><code class="small">{{ s.head|default:"-" }}</code></td>
-                    <td class="small">{{ s.worktree|default:"-" }}</td>
-                    <td class="small">{% if s.behind %}{{ s.behind }}{% elif s.behind == 0 %}0{% else %}-{% endif %}</td>
-                    <td class="small">{{ s.get_compose_display }}</td>
-                    <td class="small text-muted">{{ s.last_seen|timesince }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endif %}
-{% endfor %}
-
-<p class="text-muted small">
-    Généré le {{ generated|date:"d/m/Y H:i:s" }}.
+<p class="console-toolbar-info">
     La disponibilité reste chez gatus : <a href="http://selene.argawaen.net:8080">selene:8080</a>
     répond quand cette page est justement ce qui est cassé.
 </p>

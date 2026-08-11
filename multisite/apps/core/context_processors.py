@@ -1,13 +1,18 @@
-"""Template context shared by the public site and the console."""
+"""Contexte de gabarit partagé par le site public et la console."""
 
 from django.conf import settings
 
 
 def sso(request):
-    """Whether SSO is configured, so the header can offer it as the primary button.
+    """Indique si le SSO est configuré, pour que l'en-tête le propose en premier.
 
-    Read from settings rather than tested per template: `OIDC_ENABLED` is already
-    "OIDC_RP_CLIENT_ID is set", and with it empty the whole flow is off and only the
-    local form makes sense.
+    Lu depuis les réglages plutôt que testé dans chaque gabarit : `OIDC_ENABLED` vaut
+    déjà « OIDC_RP_CLIENT_ID est renseigné », et sans lui seul le formulaire local a
+    un sens.
     """
-    return {"oidc_enabled": getattr(settings, "OIDC_ENABLED", False)}
+    return {
+        "oidc_enabled": getattr(settings, "OIDC_ENABLED", False),
+        # Noms des groupes authentik, pour que la page 403 dise lequel demander.
+        "oidc_admin_group": getattr(settings, "OIDC_ADMIN_GROUP", ""),
+        "oidc_viewer_group": getattr(settings, "OIDC_VIEWER_GROUP", ""),
+    }

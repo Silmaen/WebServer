@@ -1,20 +1,18 @@
 {% load static template_extra %}
+<!DOCTYPE html>
 <html lang="fr">
 <head>
     <title>{% block title %}Site de Lachouette{% endblock %}</title>
     <meta charset="UTF-8">
     <meta name="robots" content="index,follow">
     <meta name="author" content="Argawaen">
-    <meta name="description" content="le contenu">
+    <meta name="description" content="Site personnel d'Argawaen : projets, bricolage et supervision du homelab.">
     <link rel="shortcut icon" href="{% static 'img/favicon_www.ico' %}"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- feuille de style -->
-    {% comment %} La police d'icones du site. common_base.html la chargeait deja, mais pas
-       ce gabarit : tous les `class="mdi mdi-..."` des pages de www ne rendaient donc
-       rien. Meme source et meme version que common_base.html, pour n'en avoir qu'une. {% endcomment %}
+    {% comment %} La police d'icônes du site : sans ce chargement, tous les `class="mdi mdi-…"`
+       ne rendent rien. {% endcomment %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/MaterialDesign-Webfont/7.4.47/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="{% static 'css/default_www.css' %}">
-    <script src="{% static 'js/chartutils.js' %}"></script>
     {% block additionnalhead %}
     {% endblock %}
 </head>
@@ -22,7 +20,7 @@
 <header class="site-header">
     <div class="upper-header" role="banner">
         <div class="site-title">
-            <a href="/" title="super site"><img alt="Accueil" src="{% static 'img/www/test.png' %}" width="90" height="90"></a>
+            <a href="{% url 'accueil' %}" title="Accueil"><img alt="Accueil" src="{% static 'img/www/test.png' %}" width="90" height="90"></a>
             <h3 class="noprint">La crypte de Lachouette</h3>
         </div>
         <div class="site-topright">
@@ -31,23 +29,20 @@
                 {% if user.userprofile.avatar.url != "" %}<img alt="" src="{{ user.userprofile.avatar.url }}" width="30" height="30">{% endif %}
                 <span>{{ user.username }}</span>
                 <a class="userbtn mdi mdi-account-circle" href="{% url 'profile' %}">Profil</a>
-                {% comment %} Avec le SSO actif, la déconnexion passe par oidc_logout : il
-                   vide la session Django *et* ferme celle d'authentik. Sinon se
-                   déconnecter ne fait rien de visible, puisque le SSO rouvre la
-                   session au clic suivant. {% endcomment %}
+                {% comment %} Sous SSO, `logout` seul est inopérant : authentik rouvre la session au
+                   clic suivant. `oidc_logout` ferme les deux. {% endcomment %}
                 <form method="post" action="{% if oidc_enabled %}{% url 'oidc_logout' %}{% else %}{% url 'logout' %}{% endif %}">
                     {% csrf_token %}
-                    <button type="submit" class="userbtn mdi mdi-logout">Sign out</button>
+                    <button type="submit" class="userbtn mdi mdi-logout">Déconnexion</button>
                 </form>
                 {% else %}
-                {% comment %} SSO first: that is how one signs in on a normal day. The local form
-                   stays one click further away, and is what still works the day
-                   authentik does not. {% endcomment %}
+                {% comment %} SSO en premier, c'est le cas courant ; le formulaire local reste le
+                   secours quand authentik est indisponible. {% endcomment %}
                 {% if oidc_enabled %}
-                <a class="userbtn mdi mdi-shield-account" href="{% url 'oidc_authentication_init' %}">Sign in</a>
-                <a class="userbtn mdi mdi-login" href="{% url 'login' %}" title="Connexion locale, en secours si authentik est indisponible">Local</a>
+                <a class="userbtn mdi mdi-shield-account" href="{% url 'oidc_authentication_init' %}">Connexion</a>
+                <a class="userbtn mdi mdi-login" href="{% url 'login' %}" title="Connexion locale, en secours si authentik est indisponible">Locale</a>
                 {% else %}
-                <a class="userbtn mdi mdi-login" href="{% url 'login' %}">Sign in</a>
+                <a class="userbtn mdi mdi-login" href="{% url 'login' %}">Connexion</a>
                 {% endif %}
                 {% endif %}
             </div>
@@ -120,15 +115,15 @@
                 {% endif %}
             </div>
             {% block InnerContent %}
-            <p>Empty</p>
+            <p>Aucun contenu.</p>
             {% endblock %}
         {% endblock %}
     </div>
 </div>
 <footer class="site-footer">
     <div class="FooterContent">
-        <p class="footer-copy">&copy; Design by Argawaen, all rights reserved. The site design, the logo are
-            trademarks and/or registered trademarks of Argawaen.</p>
+        <p class="footer-copy">&copy; Conception Argawaen, tous droits réservés. Le design du site et le
+            logo sont des marques déposées d'Argawaen.</p>
         {% if is_admin %}
         <a class="userbtn mdi mdi-shield-crown" href="{% url 'admin:index' %}">Admin Django</a>
         {% endif %}

@@ -20,9 +20,9 @@
                 <div class="fs-1 text-info mb-2">
                     <i class="mdi mdi-sitemap"></i>
                 </div>
-                <h5>{{ network_count }} r&eacute;seau{{ network_count|pluralize:"x" }}</h5>
+                <h5>{{ network_count }} réseau{{ network_count|pluralize:"x" }}</h5>
                 <div class="text-muted small">
-                    {{ gateway_count }} avec gateway configur&eacute;e
+                    {{ gateway_count }} avec gateway configurée
                 </div>
             </div>
         </div>
@@ -33,7 +33,7 @@
                 <div class="fs-1 text-warning mb-2">
                     <i class="mdi mdi-format-list-checks"></i>
                 </div>
-                <h5>{{ task_active_count }} t&acirc;che{{ task_active_count|pluralize:"s" }} active{{ task_active_count|pluralize:"s" }}</h5>
+                <h5>{{ task_active_count }} tâche{{ task_active_count|pluralize:"s" }} active{{ task_active_count|pluralize:"s" }}</h5>
                 <div class="text-muted small">
                     {{ task_total_count }} au total ({{ task_failed_count }} en erreur)
                 </div>
@@ -73,10 +73,10 @@
                         <i class="mdi mdi-open-in-new me-1"></i> Django Admin
                     </a>
                     <a href="{% url 'core:task-list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="mdi mdi-format-list-checks me-1"></i> T&acirc;ches (page compl&egrave;te)
+                        <i class="mdi mdi-format-list-checks me-1"></i> Tâches (page complète)
                     </a>
                     <a href="{% url 'network:credential-list' %}" class="btn btn-outline-secondary btn-sm">
-                        <i class="mdi mdi-key me-1"></i> Credentials Gateway (page compl&egrave;te)
+                        <i class="mdi mdi-key me-1"></i> Credentials Gateway (page complète)
                     </a>
                 </div>
             </div>
