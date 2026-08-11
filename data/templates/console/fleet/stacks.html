@@ -46,7 +46,12 @@
                     <th>Dépôt</th>
                     <th>HEAD</th>
                     <th>Arbre</th>
-                    <th>Retard git</th>
+                    {% comment %} Le titre n'est pas décoratif : ce nombre est mesuré
+                       contre la dernière ref distante que le checkout connaît, et
+                       c'est le rapport horaire qui la rafraîchit. Sans cette
+                       précision, un 0 juste après un push se lit « à jour » alors
+                       qu'il veut dire « pas encore su ». {% endcomment %}
+                    <th title="Commits de retard sur le remote, mesurés contre la dernière ref connue du checkout. Elle est rafraîchie par le rapport horaire (homelab-report fetche chaque checkout), donc un push tout juste poussé peut n'apparaître qu'au rapport suivant.">Retard git</th>
                     <th>Images</th>
                     <th>Compose</th>
                     <th>Vu</th>
@@ -66,9 +71,12 @@
                         {% if s.behind %}
                         <span class="badge text-bg-warning" title="commits de retard sur le remote">{{ s.behind }}</span>
                         {% elif s.behind == 0 %}
-                        <span class="text-muted">à jour</span>
+                        <span class="text-muted" title="Aucun commit de retard sur la ref connue au dernier rapport ({{ s.last_seen|timesince }}).">à jour</span>
                         {% else %}
-                        <span class="text-muted">-</span>
+                        {% comment %} None, pas zéro : la sonde n'a pas pu compter (pas
+                           un checkout, pas de remote). Le tiret dit « je ne sais
+                           pas », ce que « à jour » ne doit jamais dire. {% endcomment %}
+                        <span class="text-muted" title="Inconnu : ce stack ne tourne pas depuis un checkout git avec un remote.">-</span>
                         {% endif %}
                     </td>
                     <td>
