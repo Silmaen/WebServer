@@ -25,15 +25,34 @@ python manage.py collectstatic            # Collect static files
 
 ### Docker
 
+`deploy.sh` at the repository root is the all-in-one entry point (its user-facing text is
+in English, unlike the rest of the project). It checks the tooling and `.env`, warns on a
+missing inventory file, pre-creates the media directory with the right owner, updates the
+repository, builds, starts, and waits for `db`, `redis` and `web` to report healthy.
+
+```bash
+./deploy.sh                 # déploiement complet : pull + build + up + attente
+./deploy.sh --no-pull       # sans toucher au dépôt (obligatoire si l'arbre est sale)
+./deploy.sh --tests         # lance la suite de tests avant de démarrer
+./deploy.sh --dry-run       # affiche le plan sans rien exécuter
+./deploy.sh status | logs | stop | restart
+./deploy.sh tests [app]     # tests dans un conteneur jetable, base de test dédiée
+./deploy.sh superuser       # créer un admin
+./deploy.sh shell           # shell Django
+```
+
+Les commandes sous-jacentes, si besoin :
+
 ```bash
 cp .env.example .env                      # Créer le fichier d'environnement (puis éditer)
 docker compose up --build                 # Build et démarrage
-docker compose up -d                      # Démarrage en arrière-plan
 docker compose down                       # Arrêt
 docker compose exec web python /app/multisite/manage.py test www   # Lancer les tests
-docker compose exec web python /app/multisite/manage.py createsuperuser  # Créer un admin
 docker compose logs -f web                # Suivre les logs
 ```
+
+Migrations et `collectstatic` sont lancés par `entrypoint.sh` au démarrage du conteneur
+`web` : ni `deploy.sh` ni toi n'avez à les rejouer à la main.
 
 ### Import de données depuis MySQL
 
