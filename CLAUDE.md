@@ -110,7 +110,7 @@ Front-end: no framework. **Bootstrap is not loaded** (neither CSS nor JS) — se
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
 - `/console/` — la console (see below), from `multisite/apps/`:
   - `/console/` — dashboard (`apps.dashboard`)
-  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state
+  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state. `POST fleet/approve/<machine>/<verb>/` and `POST fleet/deploy/<machine>/<project>/` publish an ntfy approval (staff only, see the ntfy contract below)
   - `/console/devices/` — devices observed by the scanner, with `add/`, `<uuid>/`, `<uuid>/edit/`, `<uuid>/delete/`, `<uuid>/probe/`
   - `/console/networks/` — monitored networks and gateway credentials
   - `/console/monitoring/` — supervision history (time series + state transitions)
@@ -180,6 +180,31 @@ Console models (`multisite/apps/*/models.py`):
 - `apps.monitoring` — `MonitoringCheck` (ICMP/TCP/HTTP/DNS on a device), `CheckResult`
 
 `fleet.Machine` and `devices.Device` are deliberately **not** merged: one is declared, the other observed, and the gap between them is the interesting signal. Same for the two check engines — gatus owns declared machines and services, `apps.monitoring` owns everything else the scanner finds (`apps/monitoring/policy.py`).
+
+### Acting on a machine: the ntfy contract
+
+`apps/fleet/ntfy.py` is the **only** way the console affects a machine, and its invariant is that **no command is ever transmitted**. The console publishes a verb plus names it has first validated against the database, on an ntfy topic it can write but not read; the machine's own agent decides which playbook or script that means. The worst an attacker reaching these endpoints can obtain is asking a machine to converge on what its git repository already describes.
+
+Two shapes exist:
+- **Per machine** — `publish(verb, machine)` writes `<verb> <machine>`, `verb` one of `VERBS` (`converge`, `upgrade`, `upgrade-reboot`, `report`). Buttons on the Fleet page.
+- **Per stack** — `publish_deploy(machine, project)` writes `deploy <machine> <project>`, two names and never a path. Button on the Stacks page, shown only when the stack is `deployable`.
+
+**`Stack.deployable` requires `homelab-probe` to report a deploy script.** The probe adds a `deploy` key to the stack entry of the report:
+
+```json
+{"project": "immich", "path": "/srv/stacks/immich", "compose": "tracked",
+ "behind": 2, "deploy": "deploy.sh"}
+```
+
+Ingestion is deliberately tolerant (`apps/fleet/ingest.py` `_deploy_script`): a probe that does not know the field sends nothing and the stack simply is not deployable; `-` means "no script"; and only a bare filename is accepted — a path comes from the machine and is never trusted. A stack whose compose file has disappeared is never deployable, since the script could not run anyway.
+
+So the feature spans two repositories. **In this one** everything is in place: field, ingestion, columns, button, guards, tests. **In `home-server-stacks`** two things are still needed: `homelab-probe` must emit `deploy`, and the agent must handle the `deploy <machine> <project>` message by locating and running that stack's script.
+
+### Is a stack out of date?
+
+Two independent signals, deliberately kept apart on the Stacks page because they have different remedies:
+- **git** — `Stack.behind` (commits behind the remote) and `Stack.git_en_retard`. `None` when the probe cannot tell, which is not the same as zero. A commit never applied means "redeploy".
+- **images** — wud sees a newer tag. `apps/fleet/wud.py` `by_container()` returns every watched container per machine, and `apps/fleet/state.py` `_attacher_images()` maps them onto stacks: by the `com.docker.compose.project` label when wud exposes it, otherwise by container-name prefix, longest project first (a service name can contain hyphens, and two projects can share a prefix). Each stack gets an in-memory `.images` dict, like `enrich.annotate` does with `.flotte`.
 
 ### User Levels & Access Control
 
@@ -336,6 +361,13 @@ Shared building blocks, all defined in CSS and never inline:
 - `CeleryTasksTest` — verifier_machines and verifier_serveurs shared tasks (with mocked dependencies)
 - `MonitoringServicesAccessTest` — the services page, split off from the machines page: access control, template, active sub-page
 - `TemplatesTest` also asserts what `/` dispatches to (guest → `a_propos`, admin → `monitoring`)
+
+`apps/fleet/tests.py` covers the fleet:
+- `IngestDeployScriptTest` — the report's `deploy` field: reported, absent, `-`, a path (refused), and a missing compose file
+- `RetardStackTest` — the two lags kept apart, and image-to-stack attribution by compose label then by name prefix
+- `WudGroupementTest` — `local` watcher means selene, per-machine summary, project read from labels
+- `PublicationDeploiementTest` — `publish_deploy` validates machine, stack, script and token **before** publishing, and the body is `deploy <machine> <project>` with no path
+- `DeployStackViewTest` — access control (anonymous→302, member→403, staff→303), and GET refused
 
 `apps/core/tests.py` covers the console:
 - `ConsoleAccessTest` — the three cases on a console page (anonymous→302, logged-in without group→403, viewer→200), plus viewer refused on a staff-only page

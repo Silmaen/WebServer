@@ -62,7 +62,21 @@ class StacksView(FleetBaseView):
         # Ne garder que les machines qui rapportent au moins une stack, pour que la
         # page puisse dire « aucune » sans lister des machines vides.
         ctx["machines"] = [row for row in ctx["machines"] if row["stacks"]]
+        toutes = [stack for row in ctx["machines"] for stack in row["stacks"]]
+        # Les deux retards sont comptés séparément : un compose jamais appliqué et une
+        # image dont le tag a bougé ne se soignent pas de la même façon.
+        ctx["stacks_total"] = len(toutes)
+        ctx["stacks_git_en_retard"] = sum(1 for s in toutes if s.git_en_retard)
+        ctx["stacks_images_en_retard"] = sum(1 for s in toutes if s.images["behind"])
+        ctx["stacks_deployables"] = sum(1 for s in toutes if s.deployable)
         return ctx
+
+
+def _voir_autre_page(url_name, *args):
+    """Redirige en 303, pour qu'un rafraîchissement ne rejoue pas le POST."""
+    response = redirect(url_name, *args)
+    response.status_code = 303
+    return response
 
 
 class ApproveView(StaffRequiredMixin, View):
@@ -78,7 +92,20 @@ class ApproveView(StaffRequiredMixin, View):
             messages.error(request, error)
         else:
             messages.success(request, f"« {verb} » publié pour {machine}")
-        response = redirect("fleet:index")
-        # 303, pour qu'un rafraîchissement de la page d'arrivée ne rejoue pas le POST.
-        response.status_code = 303
-        return response
+        return _voir_autre_page("fleet:index")
+
+
+class DeployStackView(StaffRequiredMixin, View):
+    """Demande la mise à jour d'une stack par son script de déploiement.
+
+    Même contrat que `ApproveView` : la console publie un verbe et deux noms validés
+    en base, et c'est l'agent de la machine qui retrouve et lance le script.
+    """
+
+    def post(self, request, machine, project):
+        error = ntfy.publish_deploy(machine, project)
+        if error:
+            messages.error(request, error)
+        else:
+            messages.success(request, f"Mise à jour demandée pour {machine}/{project}")
+        return _voir_autre_page("fleet:stacks")

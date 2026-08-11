@@ -140,6 +140,12 @@ class Stack(TimeStampedModel):
         null=True, blank=True, help_text="commits behind the last known remote ref",
     )
     compose = models.CharField(max_length=16, default=Compose.UNKNOWN)
+    # Nom du script de déploiement trouvé par la sonde à côté du compose, vide sinon.
+    # C'est lui qui autorise la console à proposer une mise à jour de la stack.
+    deploy_script = models.CharField(
+        max_length=128, blank=True,
+        help_text="script de déploiement rapporté par homelab-probe",
+    )
     first_seen = models.DateTimeField(default=timezone.now)
     last_seen = models.DateTimeField(default=timezone.now)
 
@@ -179,3 +185,17 @@ class Stack(TimeStampedModel):
         if (self.behind or 0) > 0 or self.worktree == "dirty":
             return "warning"
         return ""
+
+    @property
+    def deployable(self):
+        """La console peut-elle demander une mise à jour de cette stack ?
+
+        Un script disparu avec son compose ne peut pas être lancé : on ne propose
+        rien plutôt que de publier une demande qui échouera sur la machine.
+        """
+        return bool(self.deploy_script) and self.compose != self.Compose.MISSING
+
+    @property
+    def git_en_retard(self):
+        """Le checkout est-il derrière son remote ? `None` quand la sonde ne sait pas."""
+        return None if self.behind is None else self.behind > 0

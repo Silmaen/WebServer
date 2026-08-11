@@ -52,12 +52,16 @@ def build_state(sync=True):
     stacks = _stacks_by_machine(machines)
     containers, wud_error = wud.containers()
     images = wud.by_machine(containers)
+    par_conteneur = wud.by_container(containers)
 
     # Le côté observé, joint sur l'adresse : rapprocher un Device d'une machine
     # déclarée est tout l'intérêt de garder les deux tables séparées.
     observed = {d.ip_address: d for d in Device.objects.exclude(ip_address=None)}
 
-    rows = [_ligne(machine, reports, stacks, images, observed) for machine in machines]
+    rows = [
+        _ligne(machine, reports, stacks, images, observed, par_conteneur)
+        for machine in machines
+    ]
 
     return {
         "generated": timezone.now(),
@@ -70,12 +74,42 @@ def build_state(sync=True):
     }
 
 
-def _ligne(machine, reports, stacks, images, observed):
+def _attacher_images(stacks, containers):
+    """Pose sur chaque stack les conteneurs wud qui lui appartiennent.
+
+    Appariement sur le label compose quand wud l'expose, sinon sur le préfixe du nom
+    de conteneur — projets les plus longs d'abord, parce qu'un nom de service peut
+    contenir des tirets et que deux projets peuvent partager un préfixe.
+    """
+    par_projet = {stack.project: [] for stack in stacks}
+    projets = sorted(par_projet, key=len, reverse=True)
+
+    for container in containers:
+        projet = container["project"] if container["project"] in par_projet else ""
+        if not projet:
+            projet = next(
+                (p for p in projets if container["container"].startswith((f"{p}-", f"{p}_"))),
+                "",
+            )
+        if projet:
+            par_projet[projet].append(container)
+
+    for stack in stacks:
+        siens = par_projet[stack.project]
+        # Attribut posé en mémoire, comme `enrich.annotate` : c'est de l'affichage.
+        stack.images = {
+            "total": len(siens),
+            "behind": [c for c in siens if c["update"]],
+        }
+
+
+def _ligne(machine, reports, stacks, images, observed, par_conteneur):
     """Une machine déclarée, augmentée de ce que les quatre sources en savent."""
     report = reports.get(machine.id)
     device = observed.get(machine.ip) if machine.ip else None
     disk_percent, disk_mount = report.worst_disk if report else (0, "")
     machine_stacks = stacks.get(machine.id, [])
+    _attacher_images(machine_stacks, par_conteneur.get(machine.name, []))
 
     return {
         "name": machine.name,
@@ -119,7 +153,11 @@ def _stack_json(stack):
         "worktree": stack.worktree,
         "behind": stack.behind,
         "compose": stack.compose,
+        "deploy_script": stack.deploy_script,
+        "deployable": stack.deployable,
         "severity": stack.severity,
+        # Posé par `_attacher_images`, absent si l'état n'est pas passé par là.
+        "images": getattr(stack, "images", None),
         "first_seen": stack.first_seen,
         "last_seen": stack.last_seen,
     }

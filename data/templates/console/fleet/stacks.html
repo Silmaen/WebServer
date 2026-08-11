@@ -3,10 +3,10 @@
 {% block console_toolbar %}
 <div class="console-toolbar">
     <span class="console-toolbar-info">
-        Rien n'est déclaré ici : compose estampille son projet, son répertoire et son
-        fichier sur chaque conteneur, donc le démon Docker sait déjà de quel checkout
-        chaque stack provient. C'est ce qui donne une trace aux stacks vivant dans leur
-        propre dépôt git.
+        {{ stacks_total }} stack{{ stacks_total|pluralize }} —
+        {% if stacks_git_en_retard %}{{ stacks_git_en_retard }} en retard sur git{% else %}git à jour{% endif %},
+        {% if stacks_images_en_retard %}{{ stacks_images_en_retard }} avec une image plus récente{% else %}images à jour{% endif %}.
+        {% if stacks_deployables %}{{ stacks_deployables }} ont un script de déploiement.{% endif %}
     </span>
     <span class="console-toolbar-info">Généré le {{ generated|date:"d/m/Y H:i:s" }}</span>
 </div>
@@ -46,9 +46,11 @@
                     <th>Dépôt</th>
                     <th>HEAD</th>
                     <th>Arbre</th>
-                    <th>Retard</th>
+                    <th>Retard git</th>
+                    <th>Images</th>
                     <th>Compose</th>
                     <th>Vu</th>
+                    {% if user.is_staff %}<th>Actions</th>{% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -58,9 +60,48 @@
                     <td>{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
                     <td><code class="small">{{ s.head|default:"-" }}</code></td>
                     <td class="small">{{ s.worktree|default:"-" }}</td>
-                    <td class="small">{% if s.behind %}{{ s.behind }}{% elif s.behind == 0 %}0{% else %}-{% endif %}</td>
+                    {% comment %} Les deux retards restent séparés : un compose commité mais jamais
+                       appliqué et une image dont le tag a bougé n'ont pas le même remède. {% endcomment %}
+                    <td>
+                        {% if s.behind %}
+                        <span class="badge text-bg-warning" title="commits de retard sur le remote">{{ s.behind }}</span>
+                        {% elif s.behind == 0 %}
+                        <span class="text-muted">à jour</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if s.images.behind %}
+                        <span class="badge text-bg-warning" title="{% for b in s.images.behind %}{{ b.container }} : {{ b.tag }} → {{ b.available }}
+{% endfor %}">{{ s.images.behind|length }}/{{ s.images.total }}</span>
+                        {% elif s.images.total %}
+                        <span class="text-muted">0/{{ s.images.total }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
                     <td class="small">{{ s.get_compose_display }}</td>
                     <td class="small text-muted">{{ s.last_seen|timesince }}</td>
+                    {% if user.is_staff %}
+                    <td>
+                        {% comment %} Le bouton n'apparaît que si la sonde a vu un script à côté du
+                           compose : la console ne demande jamais ce qui ne peut pas aboutir. {% endcomment %}
+                        {% if s.deployable %}
+                        <div class="btn-group btn-group-sm">
+                            <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-success"
+                                        title="Publie une demande de mise à jour ; c'est l'agent de {{ m.name }} qui lance {{ s.deploy_script }}">
+                                    <i class="mdi mdi-rocket-launch"></i> Mettre à jour
+                                </button>
+                            </form>
+                        </div>
+                        {% else %}
+                        <span class="text-muted small" title="aucun script de déploiement rapporté par la sonde">-</span>
+                        {% endif %}
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
@@ -70,4 +111,10 @@
 {% empty %}
 <p class="console-empty">Aucune machine ne rapporte de stack.</p>
 {% endfor %}
+
+<p class="console-toolbar-info">
+    Une demande de mise à jour ne transmet aucune commande : la console publie
+    <code>deploy &lt;machine&gt; &lt;projet&gt;</code> sur son sujet ntfy, et c'est l'agent de la
+    machine qui retrouve le script et l'exécute.
+</p>
 {% endblock %}

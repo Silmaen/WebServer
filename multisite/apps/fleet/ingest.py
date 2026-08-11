@@ -40,6 +40,21 @@ def _behind(value):
         return None
 
 
+def _deploy_script(value):
+    """Le script de déploiement rapporté, ou vide.
+
+    Tolérant à dessein : les sondes qui ne connaissent pas encore ce champ n'envoient
+    rien, et `-` est la façon qu'elles ont d'écrire « pas de script ». Seul un nom de
+    fichier est accepté — un chemin viendrait de la machine et n'a pas à être suivi.
+    """
+    if not isinstance(value, str):
+        return ""
+    nom = value.strip()
+    if nom in ("", "-") or "/" in nom or nom.startswith("."):
+        return ""
+    return nom[:128]
+
+
 def store(machine, payload):
     """Enregistre un rapport et réconcilie les stacks de la machine.
 
@@ -99,6 +114,7 @@ def _store_stacks(machine, stacks):
                 "worktree": entry.get("worktree") or "",
                 "behind": _behind(entry.get("behind")),
                 "compose": entry.get("compose") or Stack.Compose.UNKNOWN,
+                "deploy_script": _deploy_script(entry.get("deploy")),
                 "last_seen": now,
             },
         )
