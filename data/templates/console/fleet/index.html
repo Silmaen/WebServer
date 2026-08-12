@@ -1,21 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_js %}
-{% if request.GET.attente %}
-{% comment %} Même mécanique que sur la page Stacks, et pour la même raison : une approbation
-   agit sur la machine, pas sur cette base. L'agent traite les messages en série, donc le
-   rapport de suivi publié derrière l'action arrive quand l'action est finie ; ces trois
-   rechargements sont ce qui va le chercher. {% endcomment %}
-<script>
-    (function () {
-        var tour = parseInt("{{ request.GET.attente|escapejs }}", 10) || 1;
-        if (tour > 3) { return; }
-        setTimeout(function () {
-            location.replace(location.pathname + "?attente=" + (tour + 1));
-        }, 20000);
-    })();
-</script>
-{% endif %}
+{% include "console/includes/auto_refresh.html" %}
 {% endblock %}
 
 {% block console_toolbar %}
@@ -85,6 +71,18 @@
                        page fraîche, et toute action semble sans effet. {% endcomment %}
                     {% if m.at %}
                     <div class="text-muted small" title="Cette ligne date du dernier rapport de la machine, pas du chargement de la page.">rapporté il y a {{ m.at|timesince }}</div>
+                    {% endif %}
+                    {% comment %} Ce que la page ne savait pas dire : « une action tourne ». Un
+                       `upgrade` peut durer le quart d'heure, et sans ce badge la ligne se lit
+                       comme si le clic n'avait rien produit. Il s'éteint dès qu'un rapport
+                       arrive, et au bout d'une heure de toute façon. {% endcomment %}
+                    {% if m.action_en_cours %}
+                    <div class="small">
+                        <span class="badge text-bg-info"
+                              title="« {{ m.action_verbe }} » publié le {{ m.action_at|date:'d/m/Y H:i:s' }}. Cette ligne changera au prochain rapport de {{ m.name }}.">
+                            <i class="mdi mdi-progress-clock"></i> {{ m.action_verbe }} en cours
+                        </span>
+                    </div>
                     {% endif %}
                     {% if m.observed %}
                     <div class="text-muted small">scanner : {{ m.observed.status }}</div>

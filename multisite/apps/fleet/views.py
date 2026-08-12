@@ -10,7 +10,7 @@ from apps.core.mixins import ConsolePageMixin, StaffRequiredMixin, ViewerRequire
 from www.render_utils import fleet_subpages
 
 from . import ntfy
-from .models import Stack
+from .models import Machine, Stack
 from .state import build_state
 
 
@@ -35,6 +35,15 @@ class FleetBaseView(ViewerRequiredMixin, ConsolePageMixin, TemplateView):
             for stack in row["stacks"]
             if stack.compose in (Stack.Compose.MISSING, Stack.Compose.UNTRACKED)
         ]
+        # Reste-t-il quelque chose à attendre ? C'est au serveur de le dire, parce que
+        # lui seul sait si un rapport est arrivé depuis la demande. La page se
+        # rechargeait auparavant un nombre fixe de fois, et une action longue --
+        # quatorze minutes de `pacman -Syu` sur hecate -- se terminait bien après que la
+        # page avait renoncé.
+        ctx["attente_active"] = any(
+            row["action_en_cours"] or any(s.deploiement_en_cours for s in row["stacks"])
+            for row in ctx["machines"]
+        )
         return ctx
 
 
@@ -73,16 +82,15 @@ class StacksView(FleetBaseView):
         return ctx
 
 
-def _voir_autre_page(url_name, *args, attente=False):
+def _voir_autre_page(url_name, *args):
     """Redirige en 303, pour qu'un rafraîchissement ne rejoue pas le POST.
 
-    `attente` marque la page pour qu'elle se recharge quelques fois d'elle-même : une
-    action agit sur une machine, pas sur cette base, donc sans ça on revient sur l'état
-    d'avant l'action et le bouton a l'air de n'avoir rien fait.
+    Aucun marqueur dans l'URL : la page se recharge d'elle-même tant que le serveur
+    déclare `attente_active`, ce qu'il lit dans `action_requested_at` et
+    `deploy_requested_at`. Un paramètre ne pouvait porter qu'un compteur aveugle, et un
+    compteur aveugle a déjà renoncé quinze minutes trop tôt sur un `upgrade` de hecate.
     """
     response = redirect(url_name, *args)
-    if attente:
-        response["Location"] = f"{response['Location']}?attente=1"
     response.status_code = 303
     return response
 
@@ -136,11 +144,14 @@ class ApproveView(StaffRequiredMixin, View):
         if error:
             messages.error(request, error)
         else:
+            # Après la publication, jamais avant : une demande qui n'est pas partie ne
+            # doit pas s'afficher « en cours ».
+            Machine.objects.filter(name=machine).update(
+                action_requested_at=timezone.now(), action_requested_verb=verb
+            )
             suite = _rapport_de_suivi(verb, machine)
             messages.success(request, f"« {verb} » publié pour {machine}{suite}")
-        return _voir_autre_page(
-            _page_de_retour(request, "fleet:index"), attente=not error
-        )
+        return _voir_autre_page(_page_de_retour(request, "fleet:index"))
 
 
 class DeployStackView(StaffRequiredMixin, View):
@@ -165,4 +176,4 @@ class DeployStackView(StaffRequiredMixin, View):
             messages.success(
                 request, f"Mise à jour demandée pour {machine}/{project}{suite}"
             )
-        return _voir_autre_page("fleet:stacks", attente=not error)
+        return _voir_autre_page("fleet:stacks")

@@ -1,25 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra_js %}
-{% if request.GET.attente %}
-{% comment %} Une action agit sur la machine, pas sur cette base : la page qui suit le POST
-   montre encore le dernier rapport horaire. L'agent publie son rapport quand l'action est
-   finie, et ce rechargement est ce qui va le chercher — sinon le bouton semble n'avoir
-   rien fait pendant une heure.
-
-   Borné à trois tours de vingt secondes : le temps qu'un déploiement (~40 s) et le
-   rapport qui le suit (~30 s) arrivent. Sans borne, la page se rechargerait pour
-   toujours, ce qui est la version bruyante du même problème. {% endcomment %}
-<script>
-    (function () {
-        var tour = parseInt("{{ request.GET.attente|escapejs }}", 10) || 1;
-        if (tour > 3) { return; }
-        setTimeout(function () {
-            location.replace(location.pathname + "?attente=" + (tour + 1));
-        }, 20000);
-    })();
-</script>
-{% endif %}
+{% include "console/includes/auto_refresh.html" %}
 {% endblock %}
 
 {% block console_toolbar %}

@@ -40,6 +40,19 @@ class Machine(TimeStampedModel):
     # encore, et une machine qui disparaît en silence est exactement le genre
     # d'absence que cette console existe pour rendre visible.
     retired = models.BooleanField(default=False)
+    # Quand la console a publié une approbation pour cette machine, et laquelle. Même
+    # rôle que `Stack.deploy_requested_at` : une demande n'est pas un résultat, mais
+    # entre le clic et le rapport qui suit il faut bien que la page puisse dire qu'il
+    # se passe quelque chose. Un `upgrade` sur hecate a pris quatorze minutes, dont la
+    # page ne montrait rien.
+    action_requested_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="dernière approbation publiée par la console",
+    )
+    action_requested_verb = models.CharField(
+        max_length=20, blank=True,
+        help_text="verbe de cette approbation, pour l'afficher",
+    )
 
     class Meta:
         """Meta data"""
@@ -52,6 +65,23 @@ class Machine(TimeStampedModel):
     def latest_report(self):
         """Le rapport le plus récent de cette machine, ou None."""
         return self.reports.first()
+
+    @property
+    def action_en_cours(self):
+        """Une approbation a-t-elle été publiée, sans rapport depuis ?
+
+        Mêmes deux bornes que `Stack.deploiement_en_cours`, et la seconde compte
+        davantage ici : un `upgrade` sur hecate a duré quatorze minutes (`pacman -Syu`),
+        donc « en cours » doit tenir aussi longtemps qu'une action peut durer. La borne
+        est l'heure que l'agent accorde au playbook ; au-delà, c'est terminé, réussi ou
+        non.
+        """
+        if not self.action_requested_at:
+            return False
+        dernier = self.latest_report
+        if dernier and dernier.received_at > self.action_requested_at:
+            return False
+        return timezone.now() - self.action_requested_at < timedelta(hours=1)
 
 
 class Report(models.Model):

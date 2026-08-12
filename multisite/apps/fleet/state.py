@@ -123,6 +123,11 @@ def _ligne(machine, reports, stacks, images, observed, par_conteneur):
         "state": report.state if report else "never reported",
         "age": report.age_seconds if report else None,
         "at": report.at if report else None,
+        # Une action publiée dont aucun rapport n'est encore revenu. La page s'en sert
+        # deux fois : pour le badge de la ligne, et pour décider si elle se recharge.
+        "action_en_cours": machine.action_en_cours,
+        "action_verbe": machine.action_requested_verb,
+        "action_at": machine.action_requested_at,
         "facts": report.facts if report else {},
         "drift": {
             "status": report.drift_status if report else "unknown",

@@ -254,15 +254,15 @@ class DeployStackViewTest(TestCase):
 
     @override_settings(FLEET_NTFY_TOKEN="jeton")
     def test_staff_publie_et_revient_en_303(self):
-        """Le staff publie, et la redirection demande l'attente."""
+        """Le staff publie, et revient sur la page des stacks en 303."""
         _admin()
         self.client.login(username="admin", password="motdepasse")
         with mock.patch("apps.fleet.ntfy.requests.post"):
             response = self.client.post(self.url)
         self.assertEqual(response.status_code, 303)
-        # `?attente=1` fait recharger la page quelques fois. Sans lui on revient sur
-        # l'état du dernier rapport horaire, et l'action semble n'avoir rien fait.
-        self.assertEqual(response["Location"], f"{reverse('fleet:stacks')}?attente=1")
+        # Pas de marqueur dans l'URL : la page se recharge parce que le serveur
+        # déclare `attente_active`, pas parce qu'un paramètre le lui dit.
+        self.assertEqual(response["Location"], reverse("fleet:stacks"))
 
     @override_settings(FLEET_NTFY_TOKEN="jeton")
     def test_la_demande_est_horodatee(self):
@@ -343,20 +343,18 @@ class ApproveViewRetourTest(TestCase):
             return self.client.post(self.url, data)
 
     def test_retour_sur_les_stacks(self):
-        """Rafraîchir depuis la page Stacks y ramène, avec l'attente."""
+        """Rafraîchir depuis la page Stacks y ramène."""
         response = self._poste(retour="fleet:stacks")
-        self.assertEqual(response["Location"], f"{reverse('fleet:stacks')}?attente=1")
+        self.assertEqual(response["Location"], reverse("fleet:stacks"))
 
     def test_retour_par_defaut(self):
         """Sans champ `retour`, on revient sur la page Machines."""
-        self.assertEqual(
-            self._poste()["Location"], f"{reverse('fleet:index')}?attente=1"
-        )
+        self.assertEqual(self._poste()["Location"], reverse("fleet:index"))
 
     def test_retour_hors_liste_ignore(self):
         """Une destination inventée est ignorée, pas suivie."""
         response = self._poste(retour="https://exemple.invalide/pwned")
-        self.assertEqual(response["Location"], f"{reverse('fleet:index')}?attente=1")
+        self.assertEqual(response["Location"], reverse("fleet:index"))
 
     def test_report_ne_publie_pas_de_rapport_de_suivi(self):
         """`report` est déjà un rapport : pas de second message."""
@@ -364,3 +362,61 @@ class ApproveViewRetourTest(TestCase):
             self.client.post(self.url, {"retour": "fleet:stacks"})
         corps = [appel.kwargs["data"].decode() for appel in poste.call_args_list]
         self.assertEqual(corps, ["report selene"])
+
+
+@override_settings(FLEET_NTFY_TOKEN="jeton")
+class ActionEnCoursTest(TestCase):
+    """Ce qui permet à la page de dire « il se passe quelque chose », et de l'attendre.
+
+    C'est le manque qui a fait passer un `upgrade` de hecate pour une action ignorée :
+    il a duré quatorze minutes, la page n'en montrait rien, et le rechargement
+    automatique — un nombre de tours fixe, à l'époque — avait renoncé bien avant.
+    """
+
+    def setUp(self):
+        self.machine = _machine(nom="hecate", ip="10.10.10.13")
+        self.url = reverse("fleet:approve", args=["hecate", "upgrade"])
+        self.client = Client()
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+
+    def _approuve(self):
+        with mock.patch("apps.fleet.ntfy.requests.post"):
+            self.client.post(self.url)
+        self.machine.refresh_from_db()
+
+    def test_action_publiee_marque_la_machine(self):
+        """Le verbe et l'heure sont retenus, pour que la page puisse les afficher."""
+        self.assertFalse(self.machine.action_en_cours)
+        self._approuve()
+        self.assertEqual(self.machine.action_requested_verb, "upgrade")
+        self.assertTrue(self.machine.action_en_cours)
+
+    def test_publication_refusee_ne_marque_rien(self):
+        """Sans jeton rien n'est publié, donc rien n'est « en cours »."""
+        with override_settings(FLEET_NTFY_TOKEN=""):
+            with mock.patch("apps.fleet.ntfy.requests.post"):
+                self.client.post(self.url)
+        self.machine.refresh_from_db()
+        self.assertIsNone(self.machine.action_requested_at)
+
+    def test_un_rapport_solde_l_action(self):
+        """Un rapport reçu après la demande éteint le badge, réussie ou non.
+
+        C'est ce qui rend les deux champs auto-nettoyants : l'ingestion n'a rien à
+        remettre à zéro, et une action ratée cesse d'être « en cours » dès que la machine
+        reparle.
+        """
+        self._approuve()
+        store(self.machine, RAPPORT)
+        self.machine.refresh_from_db()
+        self.assertFalse(self.machine.action_en_cours)
+
+    def test_la_page_declare_l_attente(self):
+        """`attente_active` est ce qui fait recharger la page, et il vient du serveur."""
+        page = reverse("fleet:index")
+        self.assertFalse(self.client.get(page).context["attente_active"])
+        self._approuve()
+        self.assertTrue(self.client.get(page).context["attente_active"])
+        store(self.machine, RAPPORT)
+        self.assertFalse(self.client.get(page).context["attente_active"])

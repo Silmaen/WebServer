@@ -1,0 +1,56 @@
+{% comment %} Le rechargement automatique des pages de la flotte, et rien d'autre.
+
+Une action de la console agit sur une machine, pas sur cette base : la page qui suit le
+POST montre encore le dernier rapport reçu. L'agent de la machine publie son rapport
+quand l'action est finie, et ce script est ce qui va le chercher.
+
+Deux choses apprises en s'en servant, et c'est pourquoi il vit ici plutôt qu'en double
+dans les deux gabarits :
+
+1. **C'est le serveur qui dit s'il faut attendre**, via `attente_active` : lui seul sait
+   si un rapport est arrivé depuis la demande. La première version rechargeait trois
+   fois vingt secondes puis renonçait — or un `upgrade` sur hecate a duré quatorze
+   minutes (`pacman -Syu`). La page avait donc abandonné bien avant le résultat, et
+   l'action passait pour n'avoir rien fait alors qu'elle venait d'appliquer 143 mises à
+   jour.
+
+2. **La position de la page est conservée.** Un rechargement ramène l'ascenseur en haut,
+   ce qui est insupportable quand on surveille la sixième machine d'une liste. Elle est
+   mise de côté avant de partir et restaurée à l'arrivée, par chemin, dans
+   `sessionStorage` : rien à nettoyer, et rien qui survive à l'onglet.
+
+Le rythme suit ce qu'on attend : quatre tours rapprochés, parce qu'un déploiement de
+stack dure une minute, puis une fois par minute, parce qu'un `upgrade` peut durer le
+quart d'heure. Le plafond est là pour la panne — une machine éteinte juste après un clic
+ne rapportera jamais — et il est calé sur l'heure au bout de laquelle `action_en_cours`
+s'éteint de lui-même.
+{% endcomment %}
+<script>
+    (function () {
+        var CLE_SCROLL = "console:scroll:" + location.pathname;
+        var CLE_TOUR = "console:tour:" + location.pathname;
+
+        // Restauré tout de suite : ce script est chargé en fin de page, la mise en page
+        // existe donc déjà et le saut ne se voit pas.
+        var y = sessionStorage.getItem(CLE_SCROLL);
+        if (y !== null) {
+            sessionStorage.removeItem(CLE_SCROLL);
+            window.scrollTo(0, parseInt(y, 10) || 0);
+        }
+
+        {% if not attente_active %}
+        // Plus rien en cours : le compteur repart de zéro pour la prochaine action.
+        sessionStorage.removeItem(CLE_TOUR);
+        return;
+        {% endif %}
+
+        var tour = (parseInt(sessionStorage.getItem(CLE_TOUR), 10) || 0) + 1;
+        if (tour > 65) { return; }
+        sessionStorage.setItem(CLE_TOUR, String(tour));
+        var delai = tour <= 4 ? 15000 : 60000;
+        setTimeout(function () {
+            sessionStorage.setItem(CLE_SCROLL, String(window.scrollY));
+            location.reload();
+        }, delai);
+    })();
+</script>
