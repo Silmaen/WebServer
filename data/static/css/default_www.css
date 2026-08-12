@@ -489,6 +489,20 @@ a:active,a:focus,a:hover {
 	padding: 5px;
 	gap: 15px;
 }
+
+/* Sous 1000 px, la rangée de droite (monitoring, flotte, appareils, réseaux,
+   administration) ne tient plus sur une ligne : ses entrées passent à la ligne et se
+   centrent, au lieu de déborder des deux côtés de l'écran — coupées, donc
+   inatteignables. Au-delà, la barre garde sa ligne unique pleine largeur. */
+@media all and (max-width: 1000px) {
+	.inner-nav-menu,
+	.sub-inner-nav-menu,
+	.archives-subnav-menu {
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 5px 15px;
+	}
+}
 .site-nav-item,
 .inner-nav-item,
 .sub-inner-nav-item,
@@ -1797,13 +1811,13 @@ select:focus,
 		justify-content: center;
 	}
 	.inner-nav-menu {
-		flex: none;
+		/* Une ligne pleine par menu, et surtout un menu qui peut rétrécir : avec
+		   `flex: none` il gardait la largeur de son contenu, si bien qu'il débordait
+		   de l'écran au lieu de laisser ses entrées passer à la ligne. */
+		flex: 1 1 100%;
 	}
 	.inner-nav-right {
 		justify-content: center;
-	}
-	.archives-subnav-menu {
-		flex-wrap: wrap;
 	}
 	/* Articles */
 	.Article {
@@ -1827,8 +1841,28 @@ select:focus,
 	.monitoring-grid {
 		grid-template-columns: 1fr;
 	}
-	/* Machines : scroll horizontal */
+	/* ---------- Priorité de colonnes ----------
+	   Les listes portent de 5 à 11 colonnes : sur un téléphone, un défilement
+	   horizontal ne montrait qu'un morceau de ligne, en-tête envolé et boutons hors
+	   écran. On ne garde donc que l'identité, l'état et les actions ; le reste vit sur
+	   la fiche de l'objet, à un lien de là. La classe se pose sur le <th> ET sur le
+	   <td> : c'est la paire qui fait disparaître la colonne. */
+	.col-secondaire {
+		display: none;
+	}
+	/* Le tableau ne défilant plus, c'est à la cellule d'actions de laisser ses boutons
+	   passer à la ligne — l'inverse du nowrap qu'elle porte sur grand écran. */
+	.admin-table:has(.col-secondaire) .admin-actions {
+		white-space: normal;
+	}
+	/* Machines : scroll horizontal pour un tableau qui garde toutes ses colonnes. */
 	.monitoring-machines-table {
 		min-width: 700px;
+	}
+	/* Mais un tableau qui masque ses colonnes secondaires n'a plus rien à faire
+	   défiler : sans ceci le min-width le maintiendrait plus large que l'écran pour
+	   rien. Le :has() l'emporte sur la règle ci-dessus par sa spécificité. */
+	.monitoring-machines-table:has(.col-secondaire) {
+		min-width: 0;
 	}
 }

@@ -14,22 +14,22 @@
                     <thead>
                         <tr>
                             <th>Nom</th>
-                            <th>IP</th>
+                            <th class="col-secondaire">IP</th>
                             <th>Statut</th>
-                            <th>Uptime</th>
-                            <th>MAJ</th>
-                            <th>Disque</th>
-                            <th>Dérive</th>
-                            <th>Images</th>
-                            <th>Stacks</th>
-                            <th>Dernière vérification</th>
+                            <th class="col-secondaire">Uptime</th>
+                            <th class="col-secondaire">MAJ</th>
+                            <th class="col-secondaire">Disque</th>
+                            <th class="col-secondaire">Dérive</th>
+                            <th class="col-secondaire">Images</th>
+                            <th class="col-secondaire">Stacks</th>
+                            <th class="col-secondaire">Dernière vérification</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for machine in categorie.machines.all %}
                         <tr>
                             <td><a href="{% url 'monitoring_machine_detail' machine.id %}">{{ machine.nom }}</a></td>
-                            <td>{{ machine.adresse_ip|default:"-" }}</td>
+                            <td class="col-secondaire">{{ machine.adresse_ip|default:"-" }}</td>
                             {% comment %} Le statut vient du moteur de checks de la console quand la
                                machine est dans l'inventaire, et retombe sur `en_ligne` sinon :
                                un seul moteur, un seul écrivain par fait. {% endcomment %}
@@ -45,8 +45,8 @@
                             </td>
                             {% comment %} Ce que la machine rapporte d'elle-même, via apps.fleet. Vide
                                quand elle n'est pas dans inventory.conf. {% endcomment %}
-                            <td class="monitoring-meta">{{ machine.flotte.facts.uptime|default:"-" }}</td>
-                            <td>
+                            <td class="monitoring-meta col-secondaire">{{ machine.flotte.facts.uptime|default:"-" }}</td>
+                            <td class="col-secondaire">
                                 {% if machine.flotte.facts.security and machine.flotte.facts.security != "0" %}
                                 <span class="status-indicator status-offline" title="mises à jour de sécurité en attente"></span>{{ machine.flotte.facts.updates }}
                                 {% elif machine.flotte.facts.updates and machine.flotte.facts.updates != "0" %}
@@ -55,26 +55,26 @@
                                 <span class="monitoring-meta">{{ machine.flotte.facts.updates|default:"-" }}</span>
                                 {% endif %}
                             </td>
-                            <td>
+                            <td class="col-secondaire">
                                 {% if machine.flotte.disk.percent %}
                                 <span {% if machine.flotte.disk.percent >= 85 %}class="monitoring-alerte-badge"{% endif %} title="{{ machine.flotte.disk.mount }}">{{ machine.flotte.disk.percent }}%</span>
                                 {% else %}<span class="monitoring-meta">-</span>{% endif %}
                             </td>
-                            <td class="monitoring-meta">
+                            <td class="monitoring-meta col-secondaire">
                                 {% if machine.flotte.drift.status == "ok" %}{{ machine.flotte.drift.count }}
                                 {% elif machine.flotte %}{{ machine.flotte.drift.status }}
                                 {% else %}-{% endif %}
                             </td>
-                            <td class="monitoring-meta">
+                            <td class="monitoring-meta col-secondaire">
                                 {% if machine.flotte.images.total %}{{ machine.flotte.images.behind|length }}/{{ machine.flotte.images.total }}
                                 {% else %}-{% endif %}
                             </td>
-                            <td class="monitoring-meta">
+                            <td class="monitoring-meta col-secondaire">
                                 {% if machine.flotte.stacks %}{{ machine.flotte.stacks|length }}
                                 {% if machine.flotte.stack_alerts %}<span class="mdi mdi-alert monitoring-alerte-badge" title="stack sans fichier compose exploitable"></span>{% endif %}
                                 {% else %}-{% endif %}
                             </td>
-                            <td class="monitoring-meta">
+                            <td class="monitoring-meta col-secondaire">
                                 {% if machine.derniere_verification %}
                                     {{ machine.derniere_verification|date:"d/m/Y H:i" }}
                                 {% else %}

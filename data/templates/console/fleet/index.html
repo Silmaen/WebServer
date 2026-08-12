@@ -52,14 +52,14 @@
             <tr>
                 <th>Machine</th>
                 <th>État</th>
-                <th>OS</th>
-                <th>Uptime</th>
-                <th>MAJ</th>
-                <th>Docker</th>
-                <th>Disque</th>
-                <th>Dérive</th>
-                <th>Images</th>
-                <th>WoL</th>
+                <th class="col-secondaire">OS</th>
+                <th class="col-secondaire">Uptime</th>
+                <th class="col-secondaire">MAJ</th>
+                <th class="col-secondaire">Docker</th>
+                <th class="col-secondaire">Disque</th>
+                <th class="col-secondaire">Dérive</th>
+                <th class="col-secondaire">Images</th>
+                <th class="col-secondaire">WoL</th>
                 {% if user.is_staff %}<th>Actions</th>{% endif %}
             </tr>
         </thead>
@@ -90,9 +90,9 @@
                     <div class="text-muted small">scanner : {{ m.observed.status }}</div>
                     {% endif %}
                 </td>
-                <td class="small">{{ m.facts.os|default:"-" }}<br><span class="text-muted">{{ m.facts.kernel|default:"" }}</span></td>
-                <td class="small">{{ m.facts.uptime|default:"-" }}</td>
-                <td>
+                <td class="small col-secondaire">{{ m.facts.os|default:"-" }}<br><span class="text-muted">{{ m.facts.kernel|default:"" }}</span></td>
+                <td class="small col-secondaire">{{ m.facts.uptime|default:"-" }}</td>
+                <td class="col-secondaire">
                     {% if m.facts.security and m.facts.security != "0" %}
                     <span class="badge text-bg-danger" title="mises à jour de sécurité en attente">{{ m.facts.updates }} ⚠</span>
                     {% elif m.facts.updates and m.facts.updates != "0" %}
@@ -102,7 +102,7 @@
                     {% endif %}
                     {% if m.facts.reboot == "yes" %}<div class="small text-warning">redémarrage dû</div>{% endif %}
                 </td>
-                <td class="small">
+                <td class="small col-secondaire">
                     {{ m.facts.docker|default:"-" }}
                     {% if m.facts.unhealthy and m.facts.unhealthy != "0" %}
                     <div class="text-danger">{{ m.facts.unhealthy }} unhealthy</div>
@@ -111,7 +111,7 @@
                     <div class="text-danger">{{ m.facts.restarting }} en boucle</div>
                     {% endif %}
                 </td>
-                <td>
+                <td class="col-secondaire">
                     {% if m.disk.percent >= 85 %}
                     <span class="badge text-bg-danger">{{ m.disk.percent }}%</span>
                     {% elif m.disk.percent >= 70 %}
@@ -123,7 +123,7 @@
                     {% endif %}
                     {% if m.disk.mount %}<div class="text-muted small">{{ m.disk.mount }}</div>{% endif %}
                 </td>
-                <td>
+                <td class="col-secondaire">
                     {% comment %} Un statut plutôt qu'un zéro quand le contrôle n'a pas tourné :
                        « je ne sais pas » et « rien à signaler » sont deux réponses. {% endcomment %}
                     {% if m.drift.status == "ok" %}
@@ -136,7 +136,7 @@
                     <span class="badge text-bg-secondary">{{ m.drift.status }}</span>
                     {% endif %}
                 </td>
-                <td>
+                <td class="col-secondaire">
                     {% if m.images.behind %}
                     <span class="badge text-bg-warning" title="{% for b in m.images.behind %}{{ b.container }}: {{ b.tag }} → {{ b.available }}
 {% endfor %}">{{ m.images.behind|length }}/{{ m.images.total }}</span>
@@ -146,7 +146,7 @@
                     <span class="text-muted">-</span>
                     {% endif %}
                 </td>
-                <td class="small">
+                <td class="small col-secondaire">
                     {% comment %} La colonne à surveiller entre deux coupures : une machine
                        affichant `d` ne se réveillera pas à la prochaine. {% endcomment %}
                     {% if m.wake_order %}

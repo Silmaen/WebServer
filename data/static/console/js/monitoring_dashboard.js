@@ -181,11 +181,12 @@
             return '<tr class="state-change-row' + (isolatedDeviceId === device.id ? " isolated" : "")
                 + '" data-device-id="' + device.id + '">'
                 + "<td><strong>" + device.hostname + "</strong></td>"
-                + "<td><code>" + device.ip + "</code></td>"
-                + '<td><span class="badge">' + (categoryLabels[device.category] || device.category) + "</span></td>"
+                // col-secondaire : masquée sous 768 px, comme le <th> correspondant.
+                + '<td class="col-secondaire"><code>' + device.ip + "</code></td>"
+                + '<td class="col-secondaire"><span class="badge">' + (categoryLabels[device.category] || device.category) + "</span></td>"
                 + "<td>" + statusBadge(device.current) + "</td>"
-                + "<td>" + transitions + "</td>"
-                + "<td><small>" + new Date(last.time).toLocaleString("fr-FR") + "</small></td>"
+                + '<td class="col-secondaire">' + transitions + "</td>"
+                + '<td class="col-secondaire"><small>' + new Date(last.time).toLocaleString("fr-FR") + "</small></td>"
                 + '<td><button type="button" class="btn btn-sm isolate-btn" '
                 + 'title="Afficher uniquement cet appareil"><i class="mdi mdi-eye"></i></button></td>'
                 + "</tr>";

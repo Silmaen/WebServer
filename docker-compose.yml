@@ -13,8 +13,12 @@ services:
     # variant. The constraint keeps it on the current major, so the fleet page reports
     # a real lag or nothing. Bumping the image means bumping this regex on the same
     # line of thought, which is exactly when the question deserves to be asked.
+    # watch.digest, because with the tag pinned to one major there is no greater tag to
+    # find: the only remaining signal is the same tag being republished, which is where
+    # the minor releases -- and their security fixes -- arrive. `deploy.sh` pulls them.
     labels:
       wud.tag.include: '^16-alpine$$'
+      wud.watch.digest: 'true'
     volumes:
       - ${SERVER_PATH_PGDB:-./docker_data/db}:/var/lib/postgresql/data
     # On the loopback only, and only because celery_scanner runs with the host's
@@ -34,6 +38,7 @@ services:
     # Same reason as db: left unconstrained, wud offered `32bit-stretch` as an upgrade.
     labels:
       wud.tag.include: '^8-alpine$$'
+      wud.watch.digest: 'true'
     # Same reason as db above: the scanner reaches it at 127.0.0.1.
     ports:
       - "127.0.0.1:${REDIS_PORT:-6379}:6379"

@@ -59,24 +59,42 @@
     <div class="card-header console-card-header">
         <strong>{{ m.name }}</strong>
         <span class="text-muted small">{{ m.stacks|length }} stack{{ m.stacks|length|pluralize }}</span>
+        {% comment %} L'âge de la donnée, ici aussi : tout ce tableau vient du dernier rapport
+           de cette machine, pas du chargement de la page. {% endcomment %}
+        {% if m.at %}<span class="text-muted small">· rapporté il y a {{ m.at|timesince }}</span>{% endif %}
+        {% if user.is_staff %}
+        {% comment %} Le rafraîchissement forcé, sur la page où l'on agit. Il publie le verbe
+           `report`, que l'agent de la machine sait déjà traiter : elle relance sa sonde et
+           renvoie son état en quelques dizaines de secondes, au lieu d'attendre l'heure.
+           `retour` ramène ici — sans lui, `ApproveView` renvoie sur la page Machines et on
+           perd l'endroit qu'on regardait. {% endcomment %}
+        <form method="post" action="{% url 'fleet:approve' m.name 'report' %}">
+            {% csrf_token %}
+            <input type="hidden" name="retour" value="fleet:stacks">
+            <button type="submit" class="btn btn-outline-secondary btn-sm"
+                    title="Demande à {{ m.name }} de publier son état maintenant, sans attendre le rapport horaire">
+                <i class="mdi mdi-refresh"></i> Rafraîchir
+            </button>
+        </form>
+        {% endif %}
     </div>
     <div class="table-responsive">
         <table class="table table-sm">
             <thead>
                 <tr>
                     <th>Projet</th>
-                    <th>Dépôt</th>
-                    <th>HEAD</th>
-                    <th>Arbre</th>
+                    <th class="col-secondaire">Dépôt</th>
+                    <th class="col-secondaire">HEAD</th>
+                    <th class="col-secondaire">Arbre</th>
                     {% comment %} Le titre n'est pas décoratif : ce nombre est mesuré
                        contre la dernière ref distante que le checkout connaît, et
                        c'est le rapport horaire qui la rafraîchit. Sans cette
                        précision, un 0 juste après un push se lit « à jour » alors
                        qu'il veut dire « pas encore su ». {% endcomment %}
                     <th title="Commits de retard sur le remote, mesurés contre la dernière ref connue du checkout. Elle est rafraîchie par le rapport horaire (homelab-report fetche chaque checkout), donc un push tout juste poussé peut n'apparaître qu'au rapport suivant.">Retard git</th>
-                    <th>Images</th>
+                    <th class="col-secondaire">Images</th>
                     <th>Compose</th>
-                    <th>Vu</th>
+                    <th class="col-secondaire">Vu</th>
                     {% if user.is_staff %}<th>Actions</th>{% endif %}
                 </tr>
             </thead>
@@ -84,9 +102,9 @@
                 {% for s in m.stacks %}
                 <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
                     <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
-                    <td>{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
-                    <td><code class="small">{{ s.head|default:"-" }}</code></td>
-                    <td class="small">{{ s.worktree|default:"-" }}</td>
+                    <td class="col-secondaire">{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
+                    <td class="col-secondaire"><code class="small">{{ s.head|default:"-" }}</code></td>
+                    <td class="small col-secondaire">{{ s.worktree|default:"-" }}</td>
                     {% comment %} Les deux retards restent séparés : un compose commité mais jamais
                        appliqué et une image dont le tag a bougé n'ont pas le même remède. {% endcomment %}
                     <td>
@@ -101,7 +119,7 @@
                         <span class="text-muted" title="Inconnu : ce stack ne tourne pas depuis un checkout git avec un remote.">-</span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td class="col-secondaire">
                         {% if s.images.behind %}
                         <span class="badge text-bg-warning" title="{% for b in s.images.behind %}{{ b.container }} : {{ b.tag }} → {{ b.available }}
 {% endfor %}">{{ s.images.behind|length }}/{{ s.images.total }}</span>
@@ -112,11 +130,23 @@
                         {% endif %}
                     </td>
                     <td class="small">{{ s.get_compose_display }}</td>
-                    <td class="small text-muted">{{ s.last_seen|timesince }}</td>
+                    <td class="small text-muted col-secondaire">{{ s.last_seen|timesince }}</td>
                     {% if user.is_staff %}
                     <td>
                         {% comment %} Le bouton n'apparaît que si la sonde a vu un script à côté du
                            compose : la console ne demande jamais ce qui ne peut pas aboutir. {% endcomment %}
+                        {% comment %} Entre le clic et le rapport qui suit il y a une minute et demie
+                           pendant laquelle la ligne montre encore l'état d'avant. Ce badge est ce
+                           qui distingue « en cours » de « rien fait ». Il s'éteint tout seul : un
+                           rapport arrivé après la demande le solde, et une heure aussi. {% endcomment %}
+                        {% if s.deploiement_en_cours %}
+                        <div class="small mb-1">
+                            <span class="badge text-bg-info"
+                                  title="Demandé le {{ s.deploy_requested_at|date:'d/m/Y H:i:s' }}. Cette ligne changera au prochain rapport de {{ m.name }}.">
+                                <i class="mdi mdi-progress-clock"></i> en cours
+                            </span>
+                        </div>
+                        {% endif %}
                         {% if s.deployable %}
                         <div class="btn-group btn-group-sm">
                             <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">

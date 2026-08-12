@@ -68,10 +68,32 @@ supervision les lit via `getComputedStyle` et leur concatène un suffixe d'opaci
 
 ## Responsive
 
-- Breakpoint principal : `max-width: 1000px`.
-- Breakpoint mobile : `max-width: 768px`.
+- Breakpoint principal : `max-width: 1000px`. C'est là que les menus de navigation
+  passent à la ligne : au-delà, la barre tient sur une seule ligne pleine largeur et doit
+  y rester.
+- Breakpoint mobile : `max-width: 768px`. C'est là qu'un tableau de liste masque ses
+  colonnes secondaires (`.col-secondaire`).
 - Utilisation de `vw` pour le dimensionnement responsive.
 - Layout en **flexbox**.
+
+### Tableaux de liste : priorité de colonnes
+
+Les listes de la console et du monitoring portent de 5 à 11 colonnes. Sous 768 px, on ne
+les fait **pas** défiler horizontalement : on masque les colonnes secondaires avec
+`.col-secondaire`, posée sur le `<th>` **et** sur son `<td>` (c'est la paire qui fait
+disparaître la colonne). Ne restent que l'identité, l'état et les actions ; le reste vit
+sur la fiche de l'objet.
+
+Deux conséquences sont portées par le CSS, jamais par les gabarits :
+
+- un tableau qui masque des colonnes n'a plus à défiler → `min-width: 0` via
+  `:has(.col-secondaire)` ;
+- sa cellule d'actions laisse ses boutons passer à la ligne, à l'inverse du `nowrap`
+  qu'elle porte sur grand écran (là, c'est le tableau qui défile).
+
+Un `flex-wrap: nowrap` sur un conteneur de menu ou de boutons est à considérer comme un
+débordement en puissance : c'est ce qui rendait la navigation inatteignable sur téléphone,
+coupée des deux côtés de l'écran.
 
 ## Pas de styles inline
 

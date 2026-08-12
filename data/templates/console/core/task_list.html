@@ -6,11 +6,11 @@
         <thead>
             <tr>
                 <th>Nom</th>
-                <th>Déclenchée par</th>
+                <th class="col-secondaire">Déclenchée par</th>
                 <th>Statut</th>
-                <th>Créée</th>
-                <th>Durée</th>
-                <th>Résultat</th>
+                <th class="col-secondaire">Créée</th>
+                <th class="col-secondaire">Durée</th>
+                <th class="col-secondaire">Résultat</th>
                 <th></th>
             </tr>
         </thead>
@@ -18,7 +18,7 @@
             {% for task in tasks %}
             <tr>
                 <td><a href="{% url 'core:task-detail' task.pk %}">{{ task.name }}</a></td>
-                <td>
+                <td class="col-secondaire">
                     {% if task.triggered_by %}
                         <i class="mdi mdi-account"></i> {{ task.triggered_by.get_full_name|default:task.triggered_by.email|default:task.triggered_by.username }}
                     {% else %}
@@ -36,15 +36,15 @@
                         <span class="badge text-bg-danger"><i class="mdi mdi-close-circle me-1"></i>{{ task.get_status_display }}</span>
                     {% endif %}
                 </td>
-                <td>{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
-                <td>
+                <td class="col-secondaire">{{ task.created_at|date:"d/m/Y H:i:s" }}</td>
+                <td class="col-secondaire">
                     {% if task.started_at %}
                         {{ task.duration.total_seconds|floatformat:1 }}s
                     {% else %}
                         -
                     {% endif %}
                 </td>
-                <td>
+                <td class="col-secondaire">
                     {% if task.status == "success" and task.result %}
                         <small class="text-muted">
                             {% if task.result.hosts_found is not None %}

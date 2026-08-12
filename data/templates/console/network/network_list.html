@@ -22,11 +22,11 @@
             <tr>
                 <th>Nom</th>
                 <th>CIDR</th>
-                <th>VLAN</th>
-                <th>Gateway</th>
-                <th>Appareils</th>
-                <th>Dernier scan</th>
-                <th>Actif</th>
+                <th class="col-secondaire">VLAN</th>
+                <th class="col-secondaire">Gateway</th>
+                <th class="col-secondaire">Appareils</th>
+                <th class="col-secondaire">Dernier scan</th>
+                <th class="col-secondaire">Actif</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -35,16 +35,16 @@
             <tr>
                 <td><a href="{% url 'network:detail' network.pk %}">{{ network.name }}</a></td>
                 <td><code>{{ network.cidr }}</code></td>
-                <td>{{ network.vlan_id|default:"-" }}</td>
-                <td>
+                <td class="col-secondaire">{{ network.vlan_id|default:"-" }}</td>
+                <td class="col-secondaire">
                     {{ network.gateway|default:"-" }}
                     {% if network.can_query_gateway %}
                         <span class="badge text-bg-info" title="API ubus configurée"><i class="mdi mdi-router-network"></i></span>
                     {% endif %}
                 </td>
-                <td><span class="badge text-bg-primary rounded-pill">{{ network.devices.count }}</span></td>
-                <td>{{ network.last_scan|date:"d/m/Y H:i"|default:"Jamais" }}</td>
-                <td>
+                <td class="col-secondaire"><span class="badge text-bg-primary rounded-pill">{{ network.devices.count }}</span></td>
+                <td class="col-secondaire">{{ network.last_scan|date:"d/m/Y H:i"|default:"Jamais" }}</td>
+                <td class="col-secondaire">
                     {% if network.is_active %}
                         <span class="badge text-bg-success">Oui</span>
                     {% else %}

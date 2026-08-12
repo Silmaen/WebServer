@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.shortcuts import redirect
+from django.utils import timezone
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -107,11 +108,27 @@ def _rapport_de_suivi(verb, machine):
     return " — un rapport suivra dès que ce sera terminé, cette page se rafraîchit seule"
 
 
+# Les deux seules pages sur lesquelles une action peut renvoyer. Une liste blanche et
+# non le `Referer` ou un `next` libre : un paramètre de redirection non contraint est
+# une redirection ouverte, et il n'y a ici que deux destinations à connaître.
+PAGES_DE_RETOUR = ("fleet:index", "fleet:stacks")
+
+
+def _page_de_retour(request, defaut):
+    """La page où revenir après une action, prise dans la liste blanche."""
+    demandee = request.POST.get("retour")
+    return demandee if demandee in PAGES_DE_RETOUR else defaut
+
+
 class ApproveView(StaffRequiredMixin, View):
     """Publie une approbation pour une machine.
 
     Atteindre cet endpoint ne permet pas d'exécuter une commande : il écrit un
     message nommant l'un des quatre verbes sur un sujet ntfy. Voir `apps/fleet/ntfy.py`.
+
+    Le champ `retour` sert au bouton « Demander un rapport » de la page Stacks : sans
+    lui, rafraîchir une ligne renvoyait sur la page Machines, ce qui fait perdre
+    l'endroit qu'on regardait.
     """
 
     def post(self, request, machine, verb):
@@ -121,7 +138,9 @@ class ApproveView(StaffRequiredMixin, View):
         else:
             suite = _rapport_de_suivi(verb, machine)
             messages.success(request, f"« {verb} » publié pour {machine}{suite}")
-        return _voir_autre_page("fleet:index", attente=not error)
+        return _voir_autre_page(
+            _page_de_retour(request, "fleet:index"), attente=not error
+        )
 
 
 class DeployStackView(StaffRequiredMixin, View):
@@ -136,6 +155,12 @@ class DeployStackView(StaffRequiredMixin, View):
         if error:
             messages.error(request, error)
         else:
+            # Horodaté après la publication, jamais avant : marquer « en cours » une
+            # demande qui n'est pas partie ferait mentir la page dans le seul cas où
+            # elle doit être crue.
+            Stack.objects.filter(machine__name=machine, project=project).update(
+                deploy_requested_at=timezone.now()
+            )
             suite = _rapport_de_suivi("deploy", machine)
             messages.success(
                 request, f"Mise à jour demandée pour {machine}/{project}{suite}"

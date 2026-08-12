@@ -11,8 +11,8 @@
             <thead>
                 <tr>
                     <th>Nom</th>
-                    <th>Catégorie</th>
-                    <th>IP</th>
+                    <th class="col-secondaire">Catégorie</th>
+                    <th class="col-secondaire">IP</th>
                     <th>Statut</th>
                     <th>Actions</th>
                 </tr>
@@ -21,8 +21,8 @@
                 {% for machine in machines %}
                 <tr>
                     <td>{{ machine.nom }}</td>
-                    <td>{{ machine.categorie.nom }}</td>
-                    <td>{{ machine.adresse_ip|default:"-" }}</td>
+                    <td class="col-secondaire">{{ machine.categorie.nom }}</td>
+                    <td class="col-secondaire">{{ machine.adresse_ip|default:"-" }}</td>
                     <td>
                         <span class="status-indicator {% if machine.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
                         {% if machine.en_ligne %}En ligne{% else %}Hors ligne{% endif %}
@@ -50,10 +50,10 @@
             <thead>
                 <tr>
                     <th>Titre</th>
-                    <th>Catégorie</th>
-                    <th>URL / Adresse</th>
+                    <th class="col-secondaire">Catégorie</th>
+                    <th class="col-secondaire">URL / Adresse</th>
                     <th>Statut</th>
-                    <th>Icône</th>
+                    <th class="col-secondaire">Icône</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -61,8 +61,8 @@
                 {% for serveur in serveurs %}
                 <tr>
                     <td>{{ serveur.titre }}</td>
-                    <td>{{ serveur.categorie.nom }}</td>
-                    <td>
+                    <td class="col-secondaire">{{ serveur.categorie.nom }}</td>
+                    <td class="col-secondaire">
                         {% if serveur.url %}<a href="{{ serveur.url }}" target="_blank" rel="noopener">{{ serveur.url }}</a>{% endif %}
                         {% if serveur.adresse and serveur.port %}
                             {% if serveur.url %}<br>{% endif %}{{ serveur.adresse }}:{{ serveur.port }}
@@ -72,7 +72,7 @@
                         <span class="status-indicator {% if serveur.en_ligne %}status-online{% else %}status-offline{% endif %}"></span>
                         {% if serveur.en_ligne %}En ligne{% else %}Hors ligne{% endif %}
                     </td>
-                    <td>{% if serveur.has_icone %}{{ serveur.icone_html }}{% else %}-{% endif %}</td>
+                    <td class="col-secondaire">{% if serveur.has_icone %}{{ serveur.icone_html }}{% else %}-{% endif %}</td>
                     <td class="admin-actions">
                         <a class="userbtn" href="{% url 'admin_serveur_modifier' serveur.pk %}"><span class="mdi mdi-pencil"></span> Modifier</a>
                         <form method="post" action="{% url 'admin_serveur_supprimer' serveur.pk %}" class="admin-inline-form">
@@ -96,9 +96,9 @@
             <thead>
                 <tr>
                     <th>Nom</th>
-                    <th>Slug</th>
-                    <th>Icône</th>
-                    <th>Ordre</th>
+                    <th class="col-secondaire">Slug</th>
+                    <th class="col-secondaire">Icône</th>
+                    <th class="col-secondaire">Ordre</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -106,9 +106,9 @@
                 {% for cat in categories %}
                 <tr>
                     <td>{{ cat.nom }}</td>
-                    <td>{{ cat.slug }}</td>
-                    <td>{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
-                    <td class="admin-ordre-cell">
+                    <td class="col-secondaire">{{ cat.slug }}</td>
+                    <td class="col-secondaire">{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
+                    <td class="admin-ordre-cell col-secondaire">
                         <form method="post" action="{% url 'admin_service_categorie_monter' cat.pk %}" class="admin-inline-form">
                             {% csrf_token %}
                             <button type="submit" class="admin-ordre-btn" title="Monter"{% if forloop.first %} disabled{% endif %}><span class="mdi mdi-arrow-up"></span></button>

@@ -6,6 +6,8 @@ intéressante — la différence : un appareil vu et déclaré nulle part est un
 une machine déclarée et jamais vue est une machine qui n'est pas revenue.
 """
 
+from datetime import timedelta
+
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -148,6 +150,15 @@ class Stack(TimeStampedModel):
     )
     first_seen = models.DateTimeField(default=timezone.now)
     last_seen = models.DateTimeField(default=timezone.now)
+    # Quand la console a publié une demande de mise à jour pour cette stack. Une
+    # demande, pas un résultat : la console n'exécute rien, elle publie un verbe, et
+    # c'est la machine qui décide. Comparé à `last_seen`, ce champ permet de dire
+    # « en cours » entre le clic et le rapport qui suit -- les soixante-dix secondes
+    # pendant lesquelles la page semblait ne rien faire.
+    deploy_requested_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="dernière demande de mise à jour publiée par la console",
+    )
 
     class Meta:
         """Meta data"""
@@ -199,3 +210,23 @@ class Stack(TimeStampedModel):
     def git_en_retard(self):
         """Le checkout est-il derrière son remote ? `None` quand la sonde ne sait pas."""
         return None if self.behind is None else self.behind > 0
+
+    @property
+    def deploiement_en_cours(self):
+        """Une mise à jour a-t-elle été demandée, et rien rapporté depuis ?
+
+        Deux bornes, parce qu'une demande n'est pas un résultat :
+
+        * un rapport arrivé **après** la demande la solde, quoi qu'ait fait le script.
+          C'est ce qui rend le champ auto-nettoyant : rien à remettre à zéro à
+          l'ingestion, et un déploiement qui a échoué cesse d'être « en cours » dès que
+          la machine reparle ;
+        * au-delà d'une heure c'est fini de toute façon, réussi ou non -- c'est le
+          `timeout` que l'agent applique au script. Sans cette borne, une machine
+          éteinte juste après un clic garderait sa ligne « en cours » pour toujours.
+        """
+        if not self.deploy_requested_at:
+            return False
+        if self.last_seen > self.deploy_requested_at:
+            return False
+        return timezone.now() - self.deploy_requested_at < timedelta(hours=1)

@@ -631,6 +631,16 @@
     .console .table { min-width: 34rem; }
     .console .table-borderless,
     .console .console-info-table { min-width: 0; }
+    /* Une liste qui masque ses colonnes secondaires (voir .col-secondaire dans
+       default_www.css) tient dans l'écran : elle ne doit plus être forcée au-delà. */
+    .console .table:has(.col-secondaire) { min-width: 0; }
+    /* Et puisqu'elle ne défile plus, l'arbitrage du haut de ce fichier s'inverse : ce
+       n'est plus au tableau de défiler mais aux boutons d'actions de passer à la ligne.
+       Sans ceci, trois boutons côte à côte relargissent la cellule au-delà de l'écran. */
+    .console .table:has(.col-secondaire) td:has(> .btn),
+    .console .table:has(.col-secondaire) td:has(> .btn-group),
+    .console .table:has(.col-secondaire) td:has(> form > .btn) { white-space: normal; }
+    .console .table:has(.col-secondaire) td > .btn-group { flex-wrap: wrap; }
     .console .card-body { padding: .6rem .7rem; }
     .console-filters { padding: .6rem .7rem; }
     .console-filters > * { flex-basis: 100%; }

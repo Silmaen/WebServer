@@ -48,11 +48,11 @@
         <thead>
             <tr>
                 <th>Nom d'hôte</th>
-                <th>IP</th>
-                <th>Catégorie</th>
+                <th class="col-secondaire">IP</th>
+                <th class="col-secondaire">Catégorie</th>
                 <th>Statut</th>
-                <th>Réseau</th>
-                <th>Fabricant</th>
+                <th class="col-secondaire">Réseau</th>
+                <th class="col-secondaire">Fabricant</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -60,8 +60,8 @@
             {% for device in devices %}
             <tr>
                 <td><a href="{% url 'devices:detail' device.pk %}">{{ device.hostname }}</a></td>
-                <td>{{ device.ip_address }}</td>
-                <td>{{ device.get_category_display }}</td>
+                <td class="col-secondaire">{{ device.ip_address }}</td>
+                <td class="col-secondaire">{{ device.get_category_display }}</td>
                 <td>
                     {% if device.status == "online" %}
                         <span class="badge text-bg-success">{{ device.get_status_display }}</span>
@@ -73,8 +73,8 @@
                         <span class="badge text-bg-secondary">{{ device.get_status_display }}</span>
                     {% endif %}
                 </td>
-                <td>{{ device.network|default:"-" }}</td>
-                <td>{{ device.manufacturer|default:"-" }}</td>
+                <td class="col-secondaire">{{ device.network|default:"-" }}</td>
+                <td class="col-secondaire">{{ device.manufacturer|default:"-" }}</td>
                 <td>
                     <div class="btn-group btn-group-sm">
                         <a href="{% url 'devices:detail' device.pk %}" class="btn btn-outline-info" title="Voir">

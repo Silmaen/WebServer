@@ -151,18 +151,18 @@
                         <thead>
                             <tr>
                                 <th>Nom d'hôte</th>
-                                <th>IP</th>
-                                <th>Catégorie</th>
+                                <th class="col-secondaire">IP</th>
+                                <th class="col-secondaire">Catégorie</th>
                                 <th>Statut</th>
-                                <th>Dernière activité</th>
+                                <th class="col-secondaire">Dernière activité</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for device in recent_devices %}
                             <tr>
                                 <td><a href="{% url 'devices:detail' device.pk %}">{{ device.hostname }}</a></td>
-                                <td>{{ device.ip_address }}</td>
-                                <td>{{ device.get_category_display }}</td>
+                                <td class="col-secondaire">{{ device.ip_address }}</td>
+                                <td class="col-secondaire">{{ device.get_category_display }}</td>
                                 <td>
                                     {% if device.status == "online" %}
                                         <span class="badge text-bg-success">{{ device.get_status_display }}</span>
@@ -174,7 +174,7 @@
                                         <span class="badge text-bg-secondary">{{ device.get_status_display }}</span>
                                     {% endif %}
                                 </td>
-                                <td>{{ device.last_seen|date:"d/m/Y H:i"|default:"-" }}</td>
+                                <td class="col-secondaire">{{ device.last_seen|date:"d/m/Y H:i"|default:"-" }}</td>
                             </tr>
                             {% empty %}
                             <tr>

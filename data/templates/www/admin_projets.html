@@ -8,12 +8,12 @@
             <thead>
                 <tr>
                     <th>Titre</th>
-                    <th>Catégorie</th>
-                    <th>Couleur</th>
+                    <th class="col-secondaire">Catégorie</th>
+                    <th class="col-secondaire">Couleur</th>
                     <th>Actif</th>
-                    <th>Visibilité</th>
-                    <th>Date</th>
-                    <th>Ordre</th>
+                    <th class="col-secondaire">Visibilité</th>
+                    <th class="col-secondaire">Date</th>
+                    <th class="col-secondaire">Ordre</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -21,12 +21,12 @@
                 {% for projet in projets %}
                 <tr>
                     <td>{{ projet.titre }}</td>
-                    <td>{{ projet.categorie.nom }}</td>
-                    <td><span class="admin-color-sample" style="--sample-color: {{ projet.couleur }}">{{ projet.couleur }}</span></td>
+                    <td class="col-secondaire">{{ projet.categorie.nom }}</td>
+                    <td class="col-secondaire"><span class="admin-color-sample" style="--sample-color: {{ projet.couleur }}">{{ projet.couleur }}</span></td>
                     <td>{% if projet.actif %}<span class="mdi mdi-check"></span>{% else %}<span class="mdi mdi-close"></span>{% endif %}</td>
-                    <td>{{ projet.get_visibilite_display }}</td>
-                    <td>{{ projet.date_creation }}</td>
-                    <td class="admin-ordre-cell">
+                    <td class="col-secondaire">{{ projet.get_visibilite_display }}</td>
+                    <td class="col-secondaire">{{ projet.date_creation }}</td>
+                    <td class="admin-ordre-cell col-secondaire">
                         <form method="post" action="{% url 'admin_projet_monter' projet.pk %}" class="admin-inline-form">
                             {% csrf_token %}
                             <button type="submit" class="admin-ordre-btn" title="Monter"{% if forloop.first %} disabled{% endif %}><span class="mdi mdi-arrow-up"></span></button>
@@ -58,9 +58,9 @@
             <thead>
                 <tr>
                     <th>Nom</th>
-                    <th>Slug</th>
-                    <th>Icône</th>
-                    <th>Ordre</th>
+                    <th class="col-secondaire">Slug</th>
+                    <th class="col-secondaire">Icône</th>
+                    <th class="col-secondaire">Ordre</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -68,9 +68,9 @@
                 {% for cat in categories %}
                 <tr>
                     <td>{{ cat.nom }}</td>
-                    <td>{{ cat.slug }}</td>
-                    <td>{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
-                    <td class="admin-ordre-cell">
+                    <td class="col-secondaire">{{ cat.slug }}</td>
+                    <td class="col-secondaire">{% if cat.mdi_icon_name %}<span class="mdi mdi-{{ cat.mdi_icon_name }}"></span>{% else %}-{% endif %}</td>
+                    <td class="admin-ordre-cell col-secondaire">
                         <form method="post" action="{% url 'admin_projet_categorie_monter' cat.pk %}" class="admin-inline-form">
                             {% csrf_token %}
                             <button type="submit" class="admin-ordre-btn" title="Monter"{% if forloop.first %} disabled{% endif %}><span class="mdi mdi-arrow-up"></span></button>

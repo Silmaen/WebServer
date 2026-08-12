@@ -7,20 +7,20 @@
             <thead>
                 <tr>
                     <th>Nom d'utilisateur</th>
-                    <th>Prénom</th>
-                    <th>Nom</th>
-                    <th>Courriel</th>
+                    <th class="col-secondaire">Prénom</th>
+                    <th class="col-secondaire">Nom</th>
+                    <th class="col-secondaire">Courriel</th>
                     <th>Niveau</th>
-                    <th>Dernière connexion</th>
+                    <th class="col-secondaire">Dernière connexion</th>
                 </tr>
             </thead>
             <tbody>
                 {% for u in users %}
                 <tr>
                     <td>{{ u.username }}</td>
-                    <td>{{ u.first_name }}</td>
-                    <td>{{ u.last_name }}</td>
-                    <td>{{ u.email }}</td>
+                    <td class="col-secondaire">{{ u.first_name }}</td>
+                    <td class="col-secondaire">{{ u.last_name }}</td>
+                    <td class="col-secondaire">{{ u.email }}</td>
                     <td>
                         {% if u.is_superuser %}
                             <span class="admin-badge">Super-administrateur</span>
@@ -36,7 +36,7 @@
                             </form>
                         {% endif %}
                     </td>
-                    <td>{{ u.last_login|default:"-" }}</td>
+                    <td class="col-secondaire">{{ u.last_login|default:"-" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -265,6 +265,47 @@ class DeployStackViewTest(TestCase):
         self.assertEqual(response["Location"], f"{reverse('fleet:stacks')}?attente=1")
 
     @override_settings(FLEET_NTFY_TOKEN="jeton")
+    def test_la_demande_est_horodatee(self):
+        """Une demande publiée marque la stack « en cours », et pas avant d'être partie."""
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        stack = Stack.objects.get(project="immich")
+        self.assertIsNone(stack.deploy_requested_at)
+        self.assertFalse(stack.deploiement_en_cours)
+        with mock.patch("apps.fleet.ntfy.requests.post"):
+            self.client.post(self.url)
+        stack.refresh_from_db()
+        self.assertIsNotNone(stack.deploy_requested_at)
+        self.assertTrue(stack.deploiement_en_cours)
+
+    def test_publication_refusee_ne_marque_rien(self):
+        """Sans jeton rien n'est publié, donc rien n'est « en cours ».
+
+        L'ordre compte : marquer la ligne avant la publication ferait mentir la page
+        dans le seul cas où elle doit être crue.
+        """
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        with override_settings(FLEET_NTFY_TOKEN=""):
+            self.client.post(self.url)
+        self.assertIsNone(Stack.objects.get(project="immich").deploy_requested_at)
+
+    @override_settings(FLEET_NTFY_TOKEN="jeton")
+    def test_un_rapport_solde_le_en_cours(self):
+        """Un rapport arrivé après la demande éteint le badge, quoi qu'ait fait le script.
+
+        C'est ce qui rend le champ auto-nettoyant : l'ingestion n'a rien à remettre à
+        zéro, et un déploiement échoué cesse d'être « en cours » dès que la machine
+        reparle.
+        """
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        with mock.patch("apps.fleet.ntfy.requests.post"):
+            self.client.post(self.url)
+        store(self.machine, RAPPORT)
+        self.assertFalse(Stack.objects.get(project="immich").deploiement_en_cours)
+
+    @override_settings(FLEET_NTFY_TOKEN="jeton")
     def test_un_rapport_suit_la_demande(self):
         """Deux messages partent : la demande, puis un rapport.
 
@@ -279,3 +320,47 @@ class DeployStackViewTest(TestCase):
             self.client.post(self.url)
         corps = [appel.kwargs["data"].decode() for appel in poste.call_args_list]
         self.assertEqual(corps, ["deploy selene immich", "report selene"])
+
+
+@override_settings(FLEET_NTFY_TOKEN="jeton")
+class ApproveViewRetourTest(TestCase):
+    """Le rafraîchissement forcé, et où il ramène.
+
+    `retour` est une liste blanche de deux noms de vues, pas une URL : un paramètre de
+    redirection libre serait une redirection ouverte, et il n'y a que deux destinations
+    à connaître.
+    """
+
+    def setUp(self):
+        _machine()
+        self.url = reverse("fleet:approve", args=["selene", "report"])
+        self.client = Client()
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+
+    def _poste(self, **data):
+        with mock.patch("apps.fleet.ntfy.requests.post"):
+            return self.client.post(self.url, data)
+
+    def test_retour_sur_les_stacks(self):
+        """Rafraîchir depuis la page Stacks y ramène, avec l'attente."""
+        response = self._poste(retour="fleet:stacks")
+        self.assertEqual(response["Location"], f"{reverse('fleet:stacks')}?attente=1")
+
+    def test_retour_par_defaut(self):
+        """Sans champ `retour`, on revient sur la page Machines."""
+        self.assertEqual(
+            self._poste()["Location"], f"{reverse('fleet:index')}?attente=1"
+        )
+
+    def test_retour_hors_liste_ignore(self):
+        """Une destination inventée est ignorée, pas suivie."""
+        response = self._poste(retour="https://exemple.invalide/pwned")
+        self.assertEqual(response["Location"], f"{reverse('fleet:index')}?attente=1")
+
+    def test_report_ne_publie_pas_de_rapport_de_suivi(self):
+        """`report` est déjà un rapport : pas de second message."""
+        with mock.patch("apps.fleet.ntfy.requests.post") as poste:
+            self.client.post(self.url, {"retour": "fleet:stacks"})
+        corps = [appel.kwargs["data"].decode() for appel in poste.call_args_list]
+        self.assertEqual(corps, ["report selene"])
