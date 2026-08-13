@@ -190,33 +190,39 @@ class DeployStackView(StaffRequiredMixin, View):
         return _voir_autre_page("fleet:stacks")
 
 
-class ForgetStackView(StaffRequiredMixin, View):
-    """Retire de la base la ligne d'une stack qui n'est plus déployée.
+class DeleteStackView(StaffRequiredMixin, View):
+    """Supprime la ligne d'une stack. La seule suppression de toute la flotte.
 
-    La seule suppression de toute la flotte, et elle ne touche que cette console : la
-    machine n'en sait rien. Elle existe parce qu'une stack déplacée ou supprimée
-    laissait une ligne que rien ne pouvait plus mettre à jour — la sonde ne la rapporte
-    plus, donc son état restait figé au dernier instant où elle a été vue à moitié
-    démontée.
+    Elle ne touche que cette base : la machine n'en sait rien, aucun conteneur n'est
+    arrêté, aucun fichier effacé. Ce que la console supprime, c'est **sa trace**.
 
-    Une stack encore rapportée est refusée : la supprimer ne ferait rien, le prochain
-    rapport la recréerait en perdant son `first_seen`.
+    Aucune condition, et c'est voulu. Ce sont les traces qui n'ont pas de remède
+    ailleurs : un refactor qui déplace une stack, un déménagement entre deux serveurs,
+    une stack de bricolage qu'on ne veut pas suivre dans la durée. Le seul cas où la
+    ligne revient est celui où la machine la rapporte encore -- au rapport suivant, avec
+    un `first_seen` neuf. Le dire est plus utile que l'interdire : c'est une information
+    sur la machine, pas une erreur de manipulation.
     """
 
     def post(self, request, pk):
-        """Supprime la ligne, si et seulement si elle n'est plus rapportée."""
+        """Supprime la ligne, quel que soit son état."""
         stack = Stack.objects.filter(pk=pk).select_related("machine").first()
         if stack is None:
             messages.error(request, "Cette stack n'existe plus.")
-        elif stack.present:
-            messages.error(
+            return _voir_autre_page("fleet:stacks")
+
+        nom, encore_la = str(stack), stack.present
+        stack.delete()
+        if encore_la:
+            # Ni un refus ni un avertissement caché dans un log : la ligne va revenir,
+            # et savoir pourquoi est la seule chose qui permette d'agir sur la cause.
+            messages.warning(
                 request,
-                f"{stack} est encore rapportée par sa machine : rien à oublier.",
+                f"{nom} supprimée, mais sa machine la rapportait encore : elle "
+                f"réapparaîtra au prochain rapport. C'est sur la machine que ça se règle.",
             )
         else:
-            nom = str(stack)
-            stack.delete()
-            messages.success(request, f"{nom} a été oubliée.")
+            messages.success(request, f"{nom} supprimée.")
         return _voir_autre_page("fleet:stacks")
 
 
@@ -243,7 +249,7 @@ class AckStackAlertView(StaffRequiredMixin, View):
             messages.error(request, "Cette stack n'existe plus.")
         elif not stack.alerte_acquittable:
             # Ni une stack saine ni une stack disparue n'ont d'alerte à taire — la
-            # seconde a « Oublier ».
+            # seconde se supprime.
             messages.error(request, f"{stack} ne porte pas d'alerte compose à acquitter.")
         elif stack.alerte_acquittee:
             Stack.objects.filter(pk=stack.pk).update(alert_ack="")
@@ -260,11 +266,12 @@ class AckStackAlertView(StaffRequiredMixin, View):
         return _voir_autre_page("fleet:stacks")
 
 
-class ForgetGoneStacksView(StaffRequiredMixin, View):
-    """Oublie d'un coup toutes les stacks que plus aucune machine ne rapporte.
+class DeleteGoneStacksView(StaffRequiredMixin, View):
+    """Supprime d'un coup toutes les lignes que plus aucune machine ne rapporte.
 
-    Un bouton par ligne suffisait mal : le cas courant est un ménage dans le lab, qui
-    en laisse plusieurs derrière lui d'un coup.
+    Un bouton par ligne suffisait mal : le cas courant est un ménage dans le lab — un
+    refactor, un déménagement entre deux serveurs — qui en laisse plusieurs d'un coup. Et
+    celles-là ne reviendront pas : plus personne ne les rapporte.
     """
 
     def post(self, request):
@@ -274,7 +281,7 @@ class ForgetGoneStacksView(StaffRequiredMixin, View):
         disparues.delete()
         if nombre:
             pluriel = "s" if nombre > 1 else ""
-            messages.success(request, f"{nombre} stack{pluriel} oubliée{pluriel}.")
+            messages.success(request, f"{nombre} stack{pluriel} supprimée{pluriel}.")
         else:
-            messages.info(request, "Aucune stack disparue à oublier.")
+            messages.info(request, "Aucune stack disparue à supprimer.")
         return _voir_autre_page("fleet:stacks")

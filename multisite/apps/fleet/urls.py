@@ -14,15 +14,15 @@ urlpatterns = [
         "deploy/<str:machine>/<str:project>/",
         views.DeployStackView.as_view(), name='deploy',
     ),
-    # Par clé et non par machine + projet : une stack déplacée porte le même projet à
-    # deux chemins, et c'est justement la ligne d'avant qu'il s'agit d'oublier.
+    # Par clé et non par machine + projet : un refactor laisse plusieurs lignes au même
+    # projet à des chemins différents, et c'est une ligne précise qu'il s'agit de retirer.
     path(
-        "stacks/<uuid:pk>/oublier/",
-        views.ForgetStackView.as_view(), name='forget_stack',
+        "stacks/<uuid:pk>/supprimer/",
+        views.DeleteStackView.as_view(), name='delete_stack',
     ),
     path(
-        "stacks/oublier-disparues/",
-        views.ForgetGoneStacksView.as_view(), name='forget_gone_stacks',
+        "stacks/supprimer-disparues/",
+        views.DeleteGoneStacksView.as_view(), name='delete_gone_stacks',
     ),
     path(
         "stacks/<uuid:pk>/ignorer/",

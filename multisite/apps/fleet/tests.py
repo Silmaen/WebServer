@@ -340,19 +340,32 @@ class AcquittementAlerteTest(TestCase):
         self.assertContains(self._page(), "Réactiver l'alerte")
 
 
-class ForgetStackViewTest(TestCase):
-    """Le seul bouton de la console qui supprime, et ce qu'il refuse de supprimer."""
+class SuppressionStackTest(TestCase):
+    """La seule suppression de la console, et elle ne pose aucune condition.
+
+    Les cas visés n'ont de remède nulle part ailleurs : un refactor qui déplace une stack,
+    un déménagement entre deux serveurs, une stack de bricolage qu'on ne veut pas suivre
+    dans la durée. Rien n'est touché sur la machine — ce qui part est la trace.
+    """
 
     def setUp(self):
         self.machine = _machine()
         store(self.machine, RAPPORT)
         self.stack = Stack.objects.get(project="immich")
-        self.url = reverse("fleet:forget_stack", args=[self.stack.pk])
+        self.url = reverse("fleet:delete_stack", args=[self.stack.pk])
         self.client = Client()
+
+    def _staff(self):
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
 
     def _absente(self):
         """Rend la stack absente du dernier rapport."""
         store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z", "stacks": []})
+
+    def _page(self):
+        with mock.patch("apps.fleet.state.wud.containers", return_value=([], None)):
+            return self.client.get(reverse("fleet:stacks"))
 
     def test_anonyme_redirige(self):
         """Un anonyme est renvoyé vers la connexion."""
@@ -366,42 +379,62 @@ class ForgetStackViewTest(TestCase):
 
     def test_get_refuse(self):
         """Seul POST est accepté : une suppression n'est pas une lecture."""
-        _admin()
-        self.client.login(username="admin", password="motdepasse")
+        self._staff()
         self.assertEqual(self.client.get(self.url).status_code, 405)
 
-    def test_staff_oublie_une_stack_absente(self):
-        """Le geste qui manquait : la ligne part, et la page revient en 303."""
+    def test_suppression_d_une_stack_disparue(self):
+        """Le cas du refactor : la ligne part, et elle ne reviendra pas."""
         self._absente()
-        _admin()
-        self.client.login(username="admin", password="motdepasse")
+        self._staff()
         response = self.client.post(self.url)
         self.assertEqual(response.status_code, 303)
         self.assertEqual(response["Location"], reverse("fleet:stacks"))
         self.assertFalse(Stack.objects.filter(pk=self.stack.pk).exists())
 
-    def test_stack_encore_rapportee_refusee(self):
-        """La supprimer ne ferait rien : le prochain rapport la recréerait sans son âge."""
-        _admin()
-        self.client.login(username="admin", password="motdepasse")
-        self.client.post(self.url)
-        self.assertTrue(Stack.objects.filter(pk=self.stack.pk).exists())
+    def test_suppression_d_une_stack_encore_rapportee(self):
+        """Aucune condition : une stack vivante se supprime aussi.
 
-    def test_oubli_en_masse(self):
+        Elle reviendra au prochain rapport — c'est un fait sur la machine, pas une erreur
+        de manipulation, donc la page le dit au lieu de refuser le geste.
+        """
+        self._staff()
+        self.client.post(self.url)
+        self.assertFalse(Stack.objects.filter(pk=self.stack.pk).exists())
+
+    def test_la_ligne_quitte_la_page(self):
+        """Ce que l'on voulait : plus de ligne, et plus rien dans les compteurs."""
+        self._staff()
+        self.client.post(self.url)
+        contexte = self._page().context
+        self.assertEqual(contexte["machines"], [])
+        self.assertEqual(contexte["stacks_total"], 0)
+        self.assertEqual(contexte["stack_alerts"], [])
+
+    def test_rien_n_est_touche_ailleurs(self):
+        """La machine et ses rapports restent : la console ne supprime que sa trace."""
+        self._staff()
+        self.client.post(self.url)
+        self.assertTrue(Machine.objects.filter(name="selene").exists())
+        self.assertTrue(self.machine.reports.exists())
+
+    def test_suppression_en_masse_des_disparues(self):
         """Un ménage dans le lab en laisse plusieurs : un seul clic les efface."""
         self._absente()
-        _admin()
-        self.client.login(username="admin", password="motdepasse")
-        response = self.client.post(reverse("fleet:forget_gone_stacks"))
+        self._staff()
+        response = self.client.post(reverse("fleet:delete_gone_stacks"))
         self.assertEqual(response.status_code, 303)
         self.assertEqual(Stack.objects.count(), 0)
 
-    def test_oubli_en_masse_epargne_les_presentes(self):
-        """Seules les disparues partent : ce qui tourne garde sa ligne et son `first_seen`."""
-        _admin()
-        self.client.login(username="admin", password="motdepasse")
-        self.client.post(reverse("fleet:forget_gone_stacks"))
+    def test_suppression_en_masse_epargne_les_presentes(self):
+        """Le bouton du bandeau ne parle que des disparues : ce qui tourne reste."""
+        self._staff()
+        self.client.post(reverse("fleet:delete_gone_stacks"))
         self.assertTrue(Stack.objects.filter(pk=self.stack.pk).exists())
+
+    def test_le_bouton_est_propose_sur_chaque_ligne(self):
+        """Sur toutes les lignes, pas seulement les disparues."""
+        self._staff()
+        self.assertContains(self._page(), "Supprimer")
 
 
 class RetardStackTest(TestCase):

@@ -40,10 +40,9 @@
 </div>
 {% endif %}
 
-{% comment %} Les stacks que plus aucune machine ne rapporte. Elles gardent leur ligne — « ceci
-   était déployé ici » est une information — mais elles ne portent plus d'alerte, et ce bouton
-   est ce qui manquait : la sonde ne les connaît plus, donc rien d'autre ne pouvait les faire
-   disparaître de la page. {% endcomment %}
+{% comment %} Les stacks que plus aucune machine ne rapporte : un refactor, un déménagement entre
+   deux serveurs. Elles ne portent plus d'alerte, et ce bouton fait le ménage d'un coup — le cas
+   courant en laisse plusieurs à la fois, et celles-là ne reviendront pas. {% endcomment %}
 {% if stacks_absentes %}
 <div class="alert console-toolbar">
     <span class="console-toolbar-info">
@@ -53,11 +52,11 @@
     </span>
     {% if user.is_staff %}
     <span class="console-toolbar-actions">
-        <form method="post" action="{% url 'fleet:forget_gone_stacks' %}">
+        <form method="post" action="{% url 'fleet:delete_gone_stacks' %}">
             {% csrf_token %}
-            <button type="submit" class="btn btn-outline-secondary btn-sm"
-                    title="Retire ces lignes de la console. Les machines ne sont pas touchées.">
-                <i class="mdi mdi-broom"></i> Oublier les stacks disparues
+            <button type="submit" class="btn btn-outline-danger btn-sm"
+                    title="Supprime ces lignes de la base de la console. Les machines ne sont pas touchées, et celles-ci ne reviendront pas : plus personne ne les rapporte.">
+                <i class="mdi mdi-broom"></i> Supprimer les stacks disparues
             </button>
         </form>
     </span>
@@ -176,21 +175,9 @@
                             </span>
                         </div>
                         {% endif %}
-                        {% if not s.present %}
-                        {% comment %} Le seul bouton de la console qui supprime quelque chose, et il
-                           ne supprime qu'ici : la machine n'a plus cette stack de toute façon. {% endcomment %}
-                        <div class="btn-group btn-group-sm">
-                            <form method="post" action="{% url 'fleet:forget_stack' s.pk %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-secondary"
-                                        title="Retire cette ligne de la console. {{ m.name }} n'est pas touchée.">
-                                    <i class="mdi mdi-broom"></i> Oublier
-                                </button>
-                            </form>
-                        </div>
-                        {% comment %} Les deux gestes peuvent coexister : un compose jamais commité
-                           s'acquitte *et* se redéploie si la sonde a vu un script. {% endcomment %}
-                        {% elif s.deployable or s.alerte_acquittable %}
+                        {% comment %} Les gestes coexistent : un compose jamais commité s'acquitte
+                           *et* se redéploie si la sonde a vu un script, et n'importe quelle ligne
+                           se supprime. {% endcomment %}
                         <div class="btn-group btn-group-sm">
                             {% if s.deployable %}
                             <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
@@ -220,10 +207,18 @@
                                 {% endif %}
                             </form>
                             {% endif %}
+                            {% comment %} Sur chaque ligne, sans condition : ce sont les traces qui
+                               n'ont de remède nulle part ailleurs — un refactor, un déménagement
+                               entre deux serveurs, une stack de bricolage qu'on ne veut pas suivre.
+                               Rien n'est touché sur la machine, seule la trace part. {% endcomment %}
+                            <form method="post" action="{% url 'fleet:delete_stack' s.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger"
+                                        title="Supprime cette ligne de la base de la console. {{ m.name }} n'est pas touchée : aucun conteneur arrêté, aucun fichier effacé.{% if s.present %} Attention : {{ m.name }} rapporte encore cette stack, la ligne réapparaîtra au prochain rapport.{% endif %}">
+                                    <i class="mdi mdi-delete"></i> Supprimer
+                                </button>
+                            </form>
                         </div>
-                        {% else %}
-                        <span class="text-muted small" title="aucun script de déploiement rapporté par la sonde">-</span>
-                        {% endif %}
                     </td>
                     {% endif %}
                 </tr>
