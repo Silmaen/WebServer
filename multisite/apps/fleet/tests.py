@@ -122,6 +122,55 @@ class LibelleComposeTest(TestCase):
         self.assertContains(response, "Suivi par git")
 
 
+class CheminCourtTest(TestCase):
+    """Le chemin tel qu'on le lit sur la machine, pas tel que Docker l'a résolu.
+
+    hestia monte ses disques à la façon d'openmediavault, et compose inscrit le
+    `working_dir` résolu : le rapport porte donc
+    `/srv/dev-disk-by-uuid-816eb92f-…/serverconfig/…` alors que la machine se lit
+    `/srv/serverconfig/…`. Aucune trace du raccourci ne remonte, il est reconstruit ici.
+    """
+
+    def setUp(self):
+        self.machine = _machine(nom="hestia", ip="10.10.0.14")
+
+    def test_le_point_de_montage_est_retire(self):
+        """Le segment du disque disparaît, le reste du chemin est intact."""
+        stack = Stack(
+            machine=self.machine, project="rustfs",
+            path="/srv/dev-disk-by-uuid-816eb92f-555c-449c-965b-d8b24de89164"
+                 "/serverconfig/home-server-stacks/hestia/rustfs",
+        )
+        self.assertEqual(
+            stack.path_court,
+            "/srv/serverconfig/home-server-stacks/hestia/rustfs",
+        )
+        self.assertTrue(stack.path_raccourci)
+
+    def test_un_chemin_ordinaire_est_inchange(self):
+        """Rien à raccourcir : pas d'infobulle, et surtout pas de chemin réécrit."""
+        stack = Stack(machine=self.machine, project="immich", path="/srv/stacks/immich")
+        self.assertEqual(stack.path_court, "/srv/stacks/immich")
+        self.assertFalse(stack.path_raccourci)
+
+    def test_la_base_garde_le_chemin_rapporte(self):
+        """C'est de l'affichage : `path` reste la valeur exacte, qui identifie la ligne."""
+        chemin = "/srv/dev-disk-by-label-data/serverconfig/rustfs"
+        store(self.machine, {**RAPPORT, "stacks": [{"project": "rustfs", "path": chemin}]})
+        self.assertEqual(Stack.objects.get(project="rustfs").path, chemin)
+
+    def test_la_page_montre_le_chemin_court(self):
+        """Et le complet reste à un survol de souris."""
+        chemin = "/srv/dev-disk-by-uuid-816eb92f/serverconfig/rustfs"
+        store(self.machine, {**RAPPORT, "stacks": [{"project": "rustfs", "path": chemin}]})
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        with mock.patch("apps.fleet.state.wud.containers", return_value=([], None)):
+            response = self.client.get(reverse("fleet:stacks"))
+        self.assertContains(response, "/srv/serverconfig/rustfs")
+        self.assertContains(response, f"Chemin résolu : {chemin}")
+
+
 class StackDisparueTest(TestCase):
     """Une stack déplacée ou supprimée : plus rapportée, donc plus alarmante.
 

@@ -6,6 +6,7 @@ intéressante — la différence : un appareil vu et déclaré nulle part est un
 une machine déclarée et jamais vue est une machine qui n'est pas revenue.
 """
 
+import re
 from datetime import timedelta
 
 from django.conf import settings
@@ -13,6 +14,13 @@ from django.db import models
 from django.utils import timezone
 
 from apps.core.models import TimeStampedModel
+
+# Le segment d'un point de montage openmediavault, tel qu'il apparaît dans les chemins
+# rapportés par hestia : `/srv/dev-disk-by-uuid-816eb92f-…/serverconfig/…`. Docker
+# inscrit le `working_dir` **résolu**, donc c'est cette forme qui arrive ici, alors que
+# la machine a un raccourci (`/srv/serverconfig/…`) et que c'est celui-là qu'on lit.
+# Aucune trace de l'alias ne remonte dans le rapport : il est reconstruit à l'affichage.
+SEGMENT_MONTAGE = re.compile(r"/dev-disk-by-[^/]+")
 
 
 class Machine(TimeStampedModel):
@@ -248,6 +256,21 @@ class Stack(TimeStampedModel):
     def foreign(self):
         """Cette stack vient-elle d'un dépôt autre que home-server-stacks ?"""
         return self.repo not in ("home-server-stacks", "-")
+
+    @property
+    def path_court(self):
+        """Le chemin tel qu'on le lit sur la machine, sans le point de montage.
+
+        Purement de l'affichage : `path` garde la valeur rapportée, qui est la seule
+        exacte pour la machine et la seule qui identifie la ligne. Le chemin complet
+        reste à un survol de souris, parce qu'il faut bien pouvoir le retrouver.
+        """
+        return SEGMENT_MONTAGE.sub("", self.path) or self.path
+
+    @property
+    def path_raccourci(self):
+        """Le chemin a-t-il été raccourci ? Décide de l'infobulle du chemin complet."""
+        return self.path_court != self.path
 
     @property
     def severity(self):

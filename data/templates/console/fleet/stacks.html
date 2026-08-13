@@ -33,7 +33,8 @@
             {% else %}
             le fichier compose n'a jamais été commité : il disparaît avec le disque
             {% endif %}
-            <br><code class="text-muted">{{ stack.path }}</code>
+            <br><code class="text-muted"
+                      {% if stack.path_raccourci %}title="Chemin résolu : {{ stack.path }}"{% endif %}>{{ stack.path_court }}</code>
         </li>
         {% endfor %}
     </ul>
@@ -55,7 +56,8 @@
         <form method="post" action="{% url 'fleet:delete_gone_stacks' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-outline-danger btn-sm"
-                    title="Supprime ces lignes de la base de la console. Les machines ne sont pas touchées, et celles-ci ne reviendront pas : plus personne ne les rapporte.">
+                    title="Supprime ces lignes de la base de la console. Les machines ne sont pas touchées, et celles-ci ne reviendront pas : plus personne ne les rapporte."
+                    onclick="return confirm('Supprimer les {{ stacks_absentes }} lignes que plus aucune machine ne rapporte ?\n\nSeule la trace dans la console est supprimée. Les machines ne sont pas touchées.')">
                 <i class="mdi mdi-broom"></i> Supprimer les stacks disparues
             </button>
         </form>
@@ -81,9 +83,10 @@
         <form method="post" action="{% url 'fleet:approve' m.name 'report' %}">
             {% csrf_token %}
             <input type="hidden" name="retour" value="fleet:stacks">
-            <button type="submit" class="btn btn-outline-secondary btn-sm"
-                    title="Demande à {{ m.name }} de publier son état maintenant, sans attendre le rapport horaire">
-                <i class="mdi mdi-refresh"></i> Rafraîchir
+            <button type="submit" class="btn btn-outline-secondary btn-sm btn-icon"
+                    aria-label="Rafraîchir l'état de {{ m.name }}"
+                    title="Rafraîchir : demande à {{ m.name }} de publier son état maintenant, sans attendre le rapport horaire">
+                <i class="mdi mdi-refresh"></i>
             </button>
         </form>
         {% endif %}
@@ -113,7 +116,11 @@
                 {% comment %} Une stack disparue n'est pas une stack en faute : ligne grise, et
                    aucune couleur de gravité — son dernier état connu ne se répare pas. {% endcomment %}
                 <tr {% if not s.present %}class="stack-absente"{% elif s.severity %}class="table-{{ s.severity }}"{% endif %}>
-                    <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
+                    {% comment %} Le chemin raccourci : hestia rapporte le `working_dir` résolu, qui
+                       traverse le point de montage openmediavault, alors qu'on lit la machine par
+                       son raccourci. Le chemin complet reste dans l'infobulle. {% endcomment %}
+                    <td><code>{{ s.project }}</code><div class="text-muted small"
+                        {% if s.path_raccourci %}title="Chemin résolu : {{ s.path }}"{% endif %}>{{ s.path_court }}</div></td>
                     <td class="col-secondaire">{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
                     <td class="col-secondaire"><code class="small">{{ s.head|default:"-" }}</code></td>
                     <td class="small col-secondaire">{{ s.worktree|default:"-" }}</td>
@@ -175,47 +182,59 @@
                             </span>
                         </div>
                         {% endif %}
-                        {% comment %} Les gestes coexistent : un compose jamais commité s'acquitte
-                           *et* se redéploie si la sonde a vu un script, et n'importe quelle ligne
-                           se supprime. {% endcomment %}
-                        <div class="btn-group btn-group-sm">
-                            {% if s.deployable %}
-                            <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-success"
-                                        title="Publie une demande de mise à jour ; c'est l'agent de {{ m.name }} qui lance {{ s.deploy_script }}">
-                                    <i class="mdi mdi-rocket-launch"></i> Mettre à jour
-                                </button>
-                            </form>
-                            {% endif %}
-                            {% comment %} Toutes les alertes ne se réparent pas ici : un compose que la
-                               sonde ne reconnaît pas se corrige dans home-server-stacks. Ce bouton
-                               dit « je sais », pour cet état seulement. {% endcomment %}
-                            {% if s.alerte_acquittable %}
-                            <form method="post" action="{% url 'fleet:ack_stack_alert' s.pk %}">
-                                {% csrf_token %}
-                                {% if s.alerte_acquittee %}
-                                <button type="submit" class="btn btn-outline-secondary"
-                                        title="Remet cette alerte en service.">
-                                    <i class="mdi mdi-bell"></i> Réactiver l'alerte
-                                </button>
-                                {% else %}
-                                <button type="submit" class="btn btn-outline-secondary"
-                                        title="Tait l'alerte pour cet état du compose ({{ s.get_compose_display }}). Elle reviendra si la sonde en rapporte un autre.">
-                                    <i class="mdi mdi-bell-off"></i> Ignorer l'alerte
-                                </button>
+                        {% comment %} Icônes seules, libellé dans l'infobulle (et `aria-label`, sans
+                           quoi le bouton n'a plus de nom du tout). Les gestes coexistent : un compose
+                           jamais commité s'acquitte *et* se redéploie si la sonde a vu un script.
+                           La suppression, elle, est tenue à l'écart du groupe. {% endcomment %}
+                        <div class="console-actions">
+                            {% if s.deployable or s.alerte_acquittable %}
+                            <div class="btn-group btn-group-sm">
+                                {% if s.deployable %}
+                                <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-success btn-icon"
+                                            aria-label="Mettre à jour {{ s.project }}"
+                                            title="Mettre à jour : publie une demande ; c'est l'agent de {{ m.name }} qui lance {{ s.deploy_script }}">
+                                        <i class="mdi mdi-rocket-launch"></i>
+                                    </button>
+                                </form>
                                 {% endif %}
-                            </form>
+                                {% comment %} Toutes les alertes ne se réparent pas ici : un compose que la
+                                   sonde ne reconnaît pas se corrige dans home-server-stacks. Ce bouton
+                                   dit « je sais », pour cet état seulement. {% endcomment %}
+                                {% if s.alerte_acquittable %}
+                                <form method="post" action="{% url 'fleet:ack_stack_alert' s.pk %}">
+                                    {% csrf_token %}
+                                    {% if s.alerte_acquittee %}
+                                    <button type="submit" class="btn btn-outline-secondary btn-icon"
+                                            aria-label="Réactiver l'alerte de {{ s.project }}"
+                                            title="Réactiver l'alerte : remet ce signalement en service.">
+                                        <i class="mdi mdi-bell"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-outline-secondary btn-icon"
+                                            aria-label="Ignorer l'alerte de {{ s.project }}"
+                                            title="Ignorer l'alerte : la tait pour cet état du compose ({{ s.get_compose_display }}). Elle reviendra si la sonde en rapporte un autre.">
+                                        <i class="mdi mdi-bell-off"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                {% endif %}
+                            </div>
                             {% endif %}
                             {% comment %} Sur chaque ligne, sans condition : ce sont les traces qui
                                n'ont de remède nulle part ailleurs — un refactor, un déménagement
                                entre deux serveurs, une stack de bricolage qu'on ne veut pas suivre.
-                               Rien n'est touché sur la machine, seule la trace part. {% endcomment %}
-                            <form method="post" action="{% url 'fleet:delete_stack' s.pk %}">
+                               Rien n'est touché sur la machine, seule la trace part. Hors du groupe,
+                               et confirmée : rien ne rattrape un clic de trop. {% endcomment %}
+                            <form class="console-actions-danger" method="post"
+                                  action="{% url 'fleet:delete_stack' s.pk %}">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger"
-                                        title="Supprime cette ligne de la base de la console. {{ m.name }} n'est pas touchée : aucun conteneur arrêté, aucun fichier effacé.{% if s.present %} Attention : {{ m.name }} rapporte encore cette stack, la ligne réapparaîtra au prochain rapport.{% endif %}">
-                                    <i class="mdi mdi-delete"></i> Supprimer
+                                <button type="submit" class="btn btn-sm btn-outline-danger btn-icon"
+                                        aria-label="Supprimer la ligne {{ s.project }}"
+                                        title="Supprimer cette ligne de la base de la console. {{ m.name }} n'est pas touchée : aucun conteneur arrêté, aucun fichier effacé.{% if s.present %} Attention : {{ m.name }} rapporte encore cette stack, la ligne réapparaîtra au prochain rapport.{% endif %}"
+                                        onclick="return confirm('Supprimer la ligne {{ m.name|escapejs }}/{{ s.project|escapejs }} ?\n\n{% if s.present %}{{ m.name|escapejs }} rapporte encore cette stack : la ligne réapparaîtra au prochain rapport.{% else %}Plus aucune machine ne la rapporte : la suppression est définitive.{% endif %}\n\nSeule la trace dans la console part, la machine n\'est pas touchée.')">
+                                    <i class="mdi mdi-delete"></i>
                                 </button>
                             </form>
                         </div>

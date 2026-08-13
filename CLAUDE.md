@@ -241,7 +241,15 @@ Nothing is deleted by ingestion — "this was deployed here" is information — 
 
 The unconditional part is deliberate, and it replaced a guard that refused still-reported rows. Those leftovers have no remedy anywhere else: a refactor that moves a stack inside a machine (which leaves rows under the old path, sometimes under two project names), a stack moved between two servers, a throwaway stack nobody wants tracked for months. Keyed by UUID rather than machine + project, precisely because a refactor leaves several rows sharing one project name.
 
-The one consequence is stated rather than prevented: a row the machine still reports **comes back at the next report**, with a fresh `first_seen`. The view says so in a warning message — that is a fact about the machine, not a misclick, and knowing it is what lets you go fix the cause. The bulk sweep only takes `present=False` rows, which by definition cannot come back.
+The one consequence is stated rather than prevented: a row the machine still reports **comes back at the next report**, with a fresh `first_seen`. The view says so in a warning message, and the `confirm()` on the button says it *before* the click, in two variants (still reported → it will be back; gone → the delete is final) — that is a fact about the machine, not a misclick, and knowing it is what lets you go fix the cause. The bulk sweep only takes `present=False` rows, which by definition cannot come back.
+
+Both delete buttons go through `onclick="return confirm(…)"`, the same idiom as the `www` admin pages (there is no Bootstrap JS here, and a confirmation dialog is not worth a script). Interpolated names pass through `|escapejs`.
+
+### Paths reported through a mount point
+
+hestia mounts its disks the openmediavault way, and compose stamps the **resolved** `working_dir`, so its reports carry `/srv/dev-disk-by-uuid-816eb92f-…/serverconfig/home-server-stacks/hestia/rustfs` while the machine itself is read as `/srv/serverconfig/…`. No trace of that shortcut reaches the console, so `Stack.path_court` rebuilds it by dropping the segment matched by `SEGMENT_MONTAGE` (`/dev-disk-by-…`), and `path_raccourci` says whether it changed anything — that is what decides the tooltip carrying the resolved path.
+
+Display only: `path` keeps the reported value, which is the one that is true for the machine and the one that identifies the row (`machine`, `project`, `path` are its unique key). Widen the regex rather than touching `path` if another mount naming shows up.
 
 ### Silencing a compose alert the console cannot fix
 
@@ -363,6 +371,8 @@ Shared building blocks, all defined in CSS and never inline:
 - `.console-info-table` — key/value tables; the label column width is on the class, not on each `<th>`.
 - `.pagination` / `.page-item` / `.page-link` — horizontal, via the single `console/includes/pagination.html` partial. It uses `{% querystring %}` (Django 5.1+) so the current filters survive a page change.
 - `.btn-group.btn-group-sm` — wraps the buttons of an "Actions" cell; `> form { display: contents }` keeps a `<form>`-wrapped button aligned with an `<a>`.
+- `.btn-icon` — a button reduced to its icon, with the wording moved into `title`. It needs equal side padding, since the default padding is cut for text. **An icon-only button must also carry `aria-label`**, otherwise it has no accessible name at all.
+- `.console-actions` — an actions cell in two beats: the everyday gestures inside a `.btn-group`, and a destructive one held apart by `.console-actions-danger` (gap + a `--border` rule). That distance *is* the safeguard, since nothing undoes a delete; the rule is dropped at ≤768 px, where the button wraps to its own line and a left border would read as a stray tick. Both classes are in the nowrap/wrap selector lists, so a nested `.btn-group` keeps the same behaviour as a direct one.
 - `.is-hidden` — the generic "hidden" state class that JavaScript toggles. **Never** assign `element.style.display` from JS.
 - `.col-secondaire` — **column priority**, the answer to lists carrying 5 to 11 columns. Under 768 px the marked columns disappear and only identity, state and actions remain; the rest is one tap away on the object's own page. The class goes on the `<th>` **and** on its `<td>` — it is the pair that removes a column, so a table whose rows are built in JavaScript needs it in the JS too (`console/js/monitoring_dashboard.js`). Two consequences are handled by CSS, not by each template: a table that hides columns no longer needs to scroll (`min-width: 0` via `:has(.col-secondaire)`), and its actions cell lets its buttons wrap instead of staying on one line — the opposite of the wide-screen arbitration, which chose to scroll the table instead.
 
@@ -422,6 +432,7 @@ Shared building blocks, all defined in CSS and never inline:
 - `StacksPageDisparuesTest` — the alert stays while the stack is reported and goes out by itself when it is not, and a gone stack is counted nowhere else
 - `SuppressionStackTest` — the only delete in the console: access control, GET refused, a gone stack deleted, a still-reported one deleted too (it comes back, and the page says so), machine and reports untouched, and the bulk sweep sparing what runs
 - `LibelleComposeTest` — the five compose labels, and the rendered cell rather than only the method: an empty column was the symptom
+- `CheminCourtTest` — the mount-point segment dropped, an ordinary path untouched, `path` unchanged in the database, and the page showing the short form with the resolved one in a tooltip
 - `AcquittementAlerteTest` — acknowledging silences the alert without touching the state, a second click reactivates it, another compose state wakes it by itself, a git lag stays flagged, a healthy or gone stack is refused, and the button is actually on the page
 
 `apps/core/tests.py` covers the console:

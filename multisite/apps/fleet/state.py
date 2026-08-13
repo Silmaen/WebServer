@@ -151,6 +151,7 @@ def _stack_json(stack):
     return {
         "project": stack.project,
         "path": stack.path,
+        "path_court": stack.path_court,
         "remote": stack.remote,
         "repo": stack.repo,
         "foreign": stack.foreign,

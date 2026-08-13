@@ -146,8 +146,31 @@
 /* Cellules d'actions : boutons alignés, hauteur identique, sans rupture de ligne. */
 .console .table td:has(> .btn),
 .console .table td:has(> .btn-group),
+.console .table td:has(> .console-actions),
 .console .table td:has(> form > .btn) {
     white-space: nowrap;
+}
+
+/* Bouton réduit à son icône : le libellé vit dans l'infobulle. Il lui faut alors des
+   côtés égaux, sinon le padding pensé pour du texte le laisse tout en largeur. */
+.console .btn-icon {
+    padding-left: .45em;
+    padding-right: .45em;
+}
+
+/* Cellule d'actions en deux temps : les gestes courants groupés, la suppression tenue à
+   distance. Cette distance *est* le garde-fou -- rien n'annule une suppression, et un
+   bouton rouge collé à ceux qu'on utilise tous les jours finit par être cliqué. */
+.console .console-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+}
+.console .console-actions > .btn-group { flex-wrap: nowrap; }
+.console .console-actions-danger {
+    margin-left: .9rem;
+    padding-left: .9rem;
+    border-left: 1px solid var(--border);
 }
 .console .table td > .btn,
 .console .table td > form {
@@ -644,8 +667,18 @@
        Sans ceci, trois boutons côte à côte relargissent la cellule au-delà de l'écran. */
     .console .table:has(.col-secondaire) td:has(> .btn),
     .console .table:has(.col-secondaire) td:has(> .btn-group),
+    .console .table:has(.col-secondaire) td:has(> .console-actions),
     .console .table:has(.col-secondaire) td:has(> form > .btn) { white-space: normal; }
-    .console .table:has(.col-secondaire) td > .btn-group { flex-wrap: wrap; }
+    .console .table:has(.col-secondaire) td > .btn-group,
+    .console .console-actions,
+    .console .console-actions > .btn-group { flex-wrap: wrap; }
+    /* Le trait de séparation n'a plus de sens quand la suppression passe à la ligne : il
+       s'y lirait comme une coche perdue. La distance, elle, reste. */
+    .console .console-actions-danger {
+        margin-left: .5rem;
+        padding-left: 0;
+        border-left: 0;
+    }
     .console .card-body { padding: .6rem .7rem; }
     .console-filters { padding: .6rem .7rem; }
     .console-filters > * { flex-basis: 100%; }
