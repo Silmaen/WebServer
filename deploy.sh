@@ -93,13 +93,19 @@ check_env() {
 }
 
 # Read a variable from .env, falling back to the given default.
+#
+# The trailing CR is stripped: a .env saved from Windows turns every value into
+# `value<CR>`, and the consequences are silent rather than loud -- a path read that way
+# points at a directory nothing else will ever produce, so this script creates a second
+# media directory and reports the first one as missing.
 env_value() {
     local key="$1" default="${2:-}" line
     line="$(grep -E "^${key}=" .env 2>/dev/null | tail -1 || true)"
     if [ -z "$line" ]; then
         printf '%s' "$default"
     else
-        printf '%s' "${line#*=}"
+        line="${line#*=}"
+        printf '%s' "${line%$'\r'}"
     fi
 }
 
@@ -162,7 +168,13 @@ check_update() {
 
     local branch upstream
     branch="$(git rev-parse --abbrev-ref HEAD)"
-    upstream="$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || true)"
+    [ "$branch" != "HEAD" ] || fail "detached HEAD: there is no branch to compare."
+    # for-each-ref rather than `rev-parse --symbolic-full-name '@{upstream}'`: on a branch
+    # with no upstream the latter echoes the literal `@{upstream}` back and exits 0, so the
+    # guard below passed, the comparison below died on "ambiguous argument", and `check`
+    # ended on exit 128 with three "integer expected" errors instead of the documented 1.
+    # An empty string is an answer that can be tested.
+    upstream="$(git for-each-ref --format='%(upstream:short)' "refs/heads/$branch")"
     [ -n "$upstream" ] || fail "branch '$branch' tracks no upstream: nothing to compare against."
 
     if [ "$DRY_RUN" -eq 1 ]; then
@@ -172,8 +184,10 @@ check_update() {
         git fetch --quiet || fail "git fetch failed: is the remote reachable?"
     fi
 
-    local behind ahead
-    read -r behind ahead <<< "$(git rev-list --left-right --count "${upstream}...HEAD")"
+    local counts behind ahead
+    counts="$(git rev-list --left-right --count "${upstream}...HEAD" 2>/dev/null)" \
+        || fail "'$upstream' is not on disk: this branch was never pushed, or never fetched."
+    read -r behind ahead <<< "$counts"
     ok "branch '$branch' tracking '$upstream'"
 
     # A dirty tree does not block this check, but it will block the deployment.
@@ -206,18 +220,25 @@ check_update() {
 # releases -- which is where the security fixes are -- never land on the server.
 # The Dockerfile's base image needs its own pull: `docker compose pull` skips the
 # buildable services, and a year-old FROM is just as stale as a year-old postgres.
-# The tag is read from the Dockerfile rather than repeated here.
+# The tags are read from the Dockerfile rather than repeated here -- every `FROM` of it,
+# not just the first: `exit` after the first one was correct only as long as the build
+# stayed single-stage, and the day a stage is added in front the real base image silently
+# stops being refreshed. Stage names (`FROM x AS name`, then `FROM name`) are skipped,
+# since they are not pullable references.
 #
 # A registry we cannot reach is a warning, not a failure: the images already on
 # disk are enough to deploy, and aborting would leave the update half done.
 pull_images() {
     step "Refreshing the images"
-    local stale=0 base
+    local stale=0 stages base
     run docker compose pull --ignore-buildable --quiet || stale=1
-    base="$(awk '/^FROM/ { print $2; exit }' Dockerfile 2>/dev/null || true)"
-    if [ -n "$base" ]; then
+    stages="$(awk 'toupper($1) == "FROM" && toupper($3) == "AS" { print $4 }' Dockerfile 2>/dev/null || true)"
+    while read -r base; do
+        [ -n "$base" ] || continue
+        [ "$base" = "scratch" ] && continue
+        printf '%s\n' "$stages" | grep -qxF "$base" && continue
         run docker pull --quiet "$base" || stale=1
-    fi
+    done < <(awk 'toupper($1) == "FROM" { print $2 }' Dockerfile 2>/dev/null | sort -u)
     if [ "$stale" -eq 1 ]; then
         warn "some images could not be refreshed, keeping the ones already on disk"
     else
@@ -287,7 +308,10 @@ summary() {
     step "Service status"
     docker compose ps
     local port
-    port="$(env_value SERVER_PORT 8000)"
+    # Asked of the running container rather than of .env: an operator who exports
+    # SERVER_PORT for one run must not be told the port the file says.
+    port="$(docker compose port web 8000 2>/dev/null | head -1 | sed 's/.*://')"
+    [ -n "$port" ] || port="$(env_value SERVER_PORT 8000)"
     printf '\n'
     ok "site available at http://localhost:${port}/"
     printf '     console: http://localhost:%s/console/\n' "$port"
