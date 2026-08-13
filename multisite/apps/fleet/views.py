@@ -31,13 +31,14 @@ class FleetBaseView(ViewerRequiredMixin, ConsolePageMixin, TemplateView):
         # conteneurs sains et wud une image à jour, donc ce sont ces pages ou rien.
         # `present` seulement : une stack déplacée ou supprimée n'a plus de conteneurs,
         # donc plus de compose à réparer — l'alerte qu'elle portait était indéfinie et
-        # sans remède, c'est-à-dire du bruit.
+        # sans remède, c'est-à-dire du bruit. Et pas les acquittées : toutes les alertes
+        # ne se soignent pas ici, et une alerte qu'on ne peut pas éteindre finit par ne
+        # plus être lue — y compris les jours où elle a raison.
         ctx["stack_alerts"] = [
             stack
             for row in ctx["machines"]
             for stack in row["stacks"]
-            if stack.present
-            and stack.compose in (Stack.Compose.MISSING, Stack.Compose.UNTRACKED)
+            if stack.present and stack.compose_en_faute and not stack.alerte_acquittee
         ]
         # Reste-t-il quelque chose à attendre ? C'est au serveur de le dire, parce que
         # lui seul sait si un rapport est arrivé depuis la demande. La page se
@@ -88,6 +89,7 @@ class StacksView(FleetBaseView):
         ctx["stacks_images_en_retard"] = sum(1 for s in vivantes if s.images["behind"])
         ctx["stacks_deployables"] = sum(1 for s in vivantes if s.deployable)
         ctx["stacks_absentes"] = len(toutes) - len(vivantes)
+        ctx["stacks_acquittees"] = sum(1 for s in vivantes if s.alerte_acquittee)
         return ctx
 
 
@@ -215,6 +217,46 @@ class ForgetStackView(StaffRequiredMixin, View):
             nom = str(stack)
             stack.delete()
             messages.success(request, f"{nom} a été oubliée.")
+        return _voir_autre_page("fleet:stacks")
+
+
+class AckStackAlertView(StaffRequiredMixin, View):
+    """Acquitte — ou réactive — l'alerte compose d'une stack, sans rien changer d'autre.
+
+    Le geste qui manquait, et la raison est structurelle : toutes les alertes de cette
+    page ne se réparent pas ici. Une stack qui tourne, dont le dépôt est propre et à
+    jour, et dont la sonde ne reconnaît pas le fichier compose, se corrige dans
+    `home-server-stacks` ; la console, elle, n'avait rien à offrir qu'un encart rouge
+    permanent. Une alerte qu'on ne peut pas éteindre cesse d'être lue, y compris les
+    jours où elle a raison.
+
+    Ce n'est **pas** un masquage définitif : l'acquittement retient l'état acquitté et
+    ne vaut que pour lui. Que la sonde rapporte autre chose, et l'alerte revient d'elle-
+    même. Un même bouton fait les deux sens, parce que se tromper de clic doit coûter un
+    autre clic.
+    """
+
+    def post(self, request, pk):
+        """Bascule l'acquittement de l'alerte compose de cette stack."""
+        stack = Stack.objects.filter(pk=pk).select_related("machine").first()
+        if stack is None:
+            messages.error(request, "Cette stack n'existe plus.")
+        elif not stack.alerte_acquittable:
+            # Ni une stack saine ni une stack disparue n'ont d'alerte à taire — la
+            # seconde a « Oublier ».
+            messages.error(request, f"{stack} ne porte pas d'alerte compose à acquitter.")
+        elif stack.alerte_acquittee:
+            Stack.objects.filter(pk=stack.pk).update(alert_ack="")
+            messages.success(request, f"Alerte réactivée pour {stack}.")
+        else:
+            # L'état constaté, pas un booléen : c'est lui qui fera revenir l'alerte si
+            # la sonde rapporte autre chose.
+            Stack.objects.filter(pk=stack.pk).update(alert_ack=stack.compose)
+            messages.success(
+                request,
+                f"Alerte acquittée pour {stack} — elle reviendra si l'état change "
+                f"(« {stack.get_compose_display()} » aujourd'hui).",
+            )
         return _voir_autre_page("fleet:stacks")
 
 

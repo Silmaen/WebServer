@@ -162,6 +162,7 @@ def _stack_json(stack):
         "deployable": stack.deployable,
         "severity": stack.severity,
         "present": stack.present,
+        "alerte_acquittee": stack.alerte_acquittee,
         # Posé par `_attacher_images`, absent si l'état n'est pas passé par là.
         "images": getattr(stack, "images", None),
         "first_seen": stack.first_seen,

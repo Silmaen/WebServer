@@ -199,6 +199,22 @@ class Stack(TimeStampedModel):
         default=True,
         help_text="présente dans le dernier rapport de la machine",
     )
+    # L'état `compose` dont l'alerte a été acquittée, vide sinon -- « je sais ».
+    #
+    # Une valeur et non un booléen, et c'est tout l'intérêt : l'acquittement ne vaut
+    # que pour le problème constaté. Il suffit de le comparer à `compose` pour qu'il se
+    # réarme seul dès que l'état change, sans rien à remettre à zéro à l'ingestion --
+    # même mécanique auto-nettoyante que `deploy_requested_at` comparé à `last_seen`.
+    # Un booléen, lui, aurait fini par masquer un problème différent survenu depuis.
+    #
+    # Nécessaire parce que toutes les alertes ne se soignent pas ici : une stack qui
+    # tourne, dont le dépôt est propre, et dont la sonde ne reconnaît pas le fichier
+    # compose, se répare dans `home-server-stacks`. La console n'avait alors aucun
+    # geste à offrir, et une alerte sans geste finit par ne plus être lue du tout.
+    alert_ack = models.CharField(
+        max_length=16, blank=True,
+        help_text="état compose dont l'alerte a été acquittée",
+    )
     # Quand la console a publié une demande de mise à jour pour cette stack. Une
     # demande, pas un résultat : la console n'exécute rien, elle publie un verbe, et
     # c'est la machine qui décide. Comparé à `last_seen`, ce champ permet de dire
@@ -243,14 +259,44 @@ class Stack(TimeStampedModel):
         Une stack qui n'est plus rapportée ne relève de rien de tout cela : il n'y a
         plus de conteneurs, donc plus de compose à réparer. Elle ne pèse plus sur les
         alertes, sinon un déplacement de stack en laisserait une pour toujours.
+
+        Un acquittement n'éteint que l'alerte du compose : un retard git ou un arbre sale
+        restent signalés, car ce sont d'autres questions et personne ne les a acquittées.
         """
         if not self.present:
             return ""
-        if self.compose in (self.Compose.MISSING, self.Compose.UNTRACKED):
+        if self.compose_en_faute and not self.alerte_acquittee:
             return "danger"
         if (self.behind or 0) > 0 or self.worktree == "dirty":
             return "warning"
         return ""
+
+    @property
+    def compose_en_faute(self):
+        """Le fichier compose est-il dans un état qu'aucun autre contrôle ne voit ?
+
+        Les conteneurs tournent, donc gatus et wud sont satisfaits : ces deux états ne
+        sont visibles que d'ici.
+        """
+        return self.compose in (self.Compose.MISSING, self.Compose.UNTRACKED)
+
+    @property
+    def alerte_acquittee(self):
+        """Quelqu'un a-t-il dit « je sais » à propos de *cet* état du compose ?
+
+        La comparaison est ce qui rend l'acquittement auto-nettoyant : dès que la sonde
+        rapporte un autre état, il ne correspond plus et l'alerte revient d'elle-même.
+        """
+        return bool(self.alert_ack) and self.alert_ack == self.compose
+
+    @property
+    def alerte_acquittable(self):
+        """La page doit-elle proposer d'acquitter (ou de réactiver) cette alerte ?
+
+        Seulement sur une stack rapportée et en faute : ailleurs il n'y a rien à taire,
+        et une stack disparue a son propre bouton, « Oublier ».
+        """
+        return self.present and self.compose_en_faute
 
     @property
     def deployable(self):

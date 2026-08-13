@@ -36,7 +36,7 @@ class StackAdmin(admin.ModelAdmin):
 
     list_display = (
         "machine", "project", "repo", "head", "worktree", "behind", "compose",
-        "present", "last_seen",
+        "present", "alert_ack", "last_seen",
     )
     list_filter = ("machine", "compose", "worktree", "present")
     search_fields = ("project", "path", "remote")

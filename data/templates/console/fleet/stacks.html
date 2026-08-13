@@ -12,6 +12,9 @@
         {% if stacks_images_en_retard %}{{ stacks_images_en_retard }} avec une image plus récente{% else %}images à jour{% endif %}.
         {% if stacks_deployables %}{{ stacks_deployables }} ont un script de déploiement.{% endif %}
         {% if stacks_absentes %}{{ stacks_absentes }} plus rapportée{{ stacks_absentes|pluralize }}.{% endif %}
+        {% comment %} Une alerte acquittée doit rester comptée quelque part : taire n'est pas
+           effacer, et un chiffre visible est ce qui empêche l'oubli définitif. {% endcomment %}
+        {% if stacks_acquittees %}{{ stacks_acquittees }} alerte{{ stacks_acquittees|pluralize }} acquittée{{ stacks_acquittees|pluralize }}.{% endif %}
     </span>
     <span class="console-toolbar-info">Généré le {{ generated|date:"d/m/Y H:i:s" }}</span>
 </div>
@@ -141,6 +144,14 @@
                     </td>
                     <td class="small">
                         {% if s.present %}{{ s.get_compose_display }}
+                        {% comment %} « Je sais » : l'état reste affiché tel quel, seule l'alerte
+                           se tait. Et elle ne se taira que pour cet état-là. {% endcomment %}
+                        {% if s.alerte_acquittee %}
+                        <span class="badge text-bg-secondary"
+                              title="Alerte acquittée pour cet état. Elle reviendra d'elle-même si la sonde en rapporte un autre.">
+                            <i class="mdi mdi-bell-off"></i> acquittée
+                        </span>
+                        {% endif %}
                         {% else %}
                         <span class="badge text-bg-secondary"
                               title="Absente du dernier rapport de {{ m.name }} : cette stack n'est plus déployée. Son dernier état connu était « {{ s.get_compose_display }} ».">
@@ -177,8 +188,11 @@
                                 </button>
                             </form>
                         </div>
-                        {% elif s.deployable %}
+                        {% comment %} Les deux gestes peuvent coexister : un compose jamais commité
+                           s'acquitte *et* se redéploie si la sonde a vu un script. {% endcomment %}
+                        {% elif s.deployable or s.alerte_acquittable %}
                         <div class="btn-group btn-group-sm">
+                            {% if s.deployable %}
                             <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-outline-success"
@@ -186,6 +200,26 @@
                                     <i class="mdi mdi-rocket-launch"></i> Mettre à jour
                                 </button>
                             </form>
+                            {% endif %}
+                            {% comment %} Toutes les alertes ne se réparent pas ici : un compose que la
+                               sonde ne reconnaît pas se corrige dans home-server-stacks. Ce bouton
+                               dit « je sais », pour cet état seulement. {% endcomment %}
+                            {% if s.alerte_acquittable %}
+                            <form method="post" action="{% url 'fleet:ack_stack_alert' s.pk %}">
+                                {% csrf_token %}
+                                {% if s.alerte_acquittee %}
+                                <button type="submit" class="btn btn-outline-secondary"
+                                        title="Remet cette alerte en service.">
+                                    <i class="mdi mdi-bell"></i> Réactiver l'alerte
+                                </button>
+                                {% else %}
+                                <button type="submit" class="btn btn-outline-secondary"
+                                        title="Tait l'alerte pour cet état du compose ({{ s.get_compose_display }}). Elle reviendra si la sonde en rapporte un autre.">
+                                    <i class="mdi mdi-bell-off"></i> Ignorer l'alerte
+                                </button>
+                                {% endif %}
+                            </form>
+                            {% endif %}
                         </div>
                         {% else %}
                         <span class="text-muted small" title="aucun script de déploiement rapporté par la sonde">-</span>

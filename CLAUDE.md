@@ -121,7 +121,7 @@ Front-end: no framework. **Bootstrap is not loaded** (neither CSS nor JS) — se
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
 - `/console/` — la console (see below), from `multisite/apps/`:
   - `/console/` — dashboard (`apps.dashboard`)
-  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state. `POST fleet/approve/<machine>/<verb>/` and `POST fleet/deploy/<machine>/<project>/` publish an ntfy approval (staff only, see the ntfy contract below); `POST fleet/stacks/<uuid>/oublier/` and `POST fleet/stacks/oublier-disparues/` forget stacks no machine reports any more (staff only, see "A stack that moves or disappears")
+  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state. `POST fleet/approve/<machine>/<verb>/` and `POST fleet/deploy/<machine>/<project>/` publish an ntfy approval (staff only, see the ntfy contract below); `POST fleet/stacks/<uuid>/oublier/` and `POST fleet/stacks/oublier-disparues/` forget stacks no machine reports any more, `POST fleet/stacks/<uuid>/ignorer/` acknowledges a compose alert (staff only, see "A stack that moves or disappears" and "Silencing a compose alert the console cannot fix")
   - `/console/devices/` — devices observed by the scanner, with `add/`, `<uuid>/`, `<uuid>/edit/`, `<uuid>/delete/`, `<uuid>/probe/`
   - `/console/networks/` — monitored networks and gateway credentials
   - `/console/monitoring/` — supervision history (time series + state transitions)
@@ -235,6 +235,16 @@ Nothing is deleted by ingestion — "this was deployed here" is information — 
 - A stack still reported is **refused** by the forget view: deleting it would achieve nothing, the next report would recreate it and lose its `first_seen`.
 - A probe that sends **no** `stacks` key reconciles nothing. "No stacks" and "I don't talk about stacks" are two different documents, and confusing them would mark a whole machine as having nothing deployed.
 - `ntfy.publish_deploy()` and `DeployStackView` filter on `present=True`: a moved stack leaves a row with the same project name, and the one to deploy is the one still running.
+
+### Silencing a compose alert the console cannot fix
+
+Not every alert on the Stacks page has its remedy here. A stack that runs, whose checkout is clean and up to date, and whose compose file `homelab-probe` does not recognise, is fixed in `home-server-stacks` — the console could only show a permanent red box with no gesture at all attached to it, and **an alert that cannot be turned off stops being read, including on the days it is right**.
+
+`Stack.alert_ack` holds the **compose state that was acknowledged**, not a boolean, and that choice is the whole design: `alerte_acquittee` is `alert_ack == compose`, so the acknowledgement re-arms itself as soon as the probe reports something else, with nothing to reset at ingestion — the same self-cleaning trick as `deploy_requested_at` compared against `last_seen`. A boolean would eventually have masked a different, later problem.
+
+- `POST fleet/stacks/<uuid>/ignorer/` (staff) toggles it both ways; one button, because a misclick should cost another click. It refuses a healthy stack (nothing to silence) and a gone one (that has "Oublier").
+- An acknowledgement silences **only** the compose alert: `severity` still returns `warning` for a git lag or a dirty worktree, since nobody acknowledged those.
+- Silencing is not erasing: the row keeps its real compose label plus an "acquittée" badge, and the toolbar counts them (`stacks_acquittees`), so a muted alert is never invisible.
 
 `Stack.compose` declares `choices=Compose.choices`, and that is load-bearing: it is what makes `get_compose_display()` exist. Declared without it — as it was until the fix — Django generates no such method, the template swallows the missing attribute in silence, and the "Compose" column of the Stacks page stays **empty** while the alert box, which compares the raw value, still says "le fichier compose a disparu". It was the only choice-backed field in the console that did not declare its choices.
 
@@ -405,6 +415,7 @@ Shared building blocks, all defined in CSS and never inline:
 - `StacksPageDisparuesTest` — the alert stays while the stack is reported and goes out by itself when it is not, and a gone stack is counted nowhere else
 - `ForgetStackViewTest` — the only delete in the console: access control, GET refused, a gone stack forgotten, a still-reported one refused, and the bulk sweep sparing what runs
 - `LibelleComposeTest` — the five compose labels, and the rendered cell rather than only the method: an empty column was the symptom
+- `AcquittementAlerteTest` — acknowledging silences the alert without touching the state, a second click reactivates it, another compose state wakes it by itself, a git lag stays flagged, a healthy or gone stack is refused, and the button is actually on the page
 
 `apps/core/tests.py` covers the console:
 - `ConsoleAccessTest` — the three cases on a console page (anonymous→302, logged-in without group→403, viewer→200), plus viewer refused on a staff-only page

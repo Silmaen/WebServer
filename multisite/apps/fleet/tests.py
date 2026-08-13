@@ -223,6 +223,123 @@ class StacksPageDisparuesTest(TestCase):
         self.assertEqual(contexte["stacks_git_en_retard"], 0)
 
 
+class AcquittementAlerteTest(TestCase):
+    """L'alerte que la console ne peut pas réparer, et le seul geste honnête sur elle.
+
+    Une stack qui tourne, dépôt propre et à jour, dont la sonde ne reconnaît pas le
+    fichier compose : le remède est dans `home-server-stacks`, pas ici. Restait un encart
+    rouge permanent — et une alerte qu'on ne peut pas éteindre cesse d'être lue.
+    """
+
+    def setUp(self):
+        self.machine = _machine()
+        casse = {**RAPPORT["stacks"][0], "compose": "missing"}
+        store(self.machine, {**RAPPORT, "stacks": [casse]})
+        self.stack = Stack.objects.get(project="immich")
+        self.url = reverse("fleet:ack_stack_alert", args=[self.stack.pk])
+        self.client = Client()
+
+    def _staff(self):
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+
+    def _page(self):
+        with mock.patch("apps.fleet.state.wud.containers", return_value=([], None)):
+            return self.client.get(reverse("fleet:stacks"))
+
+    def test_anonyme_redirige(self):
+        """Un anonyme est renvoyé vers la connexion."""
+        self.assertEqual(self.client.post(self.url).status_code, 302)
+
+    def test_utilisateur_sans_droit_interdit(self):
+        """Un membre sans droit console reçoit un 403."""
+        User.objects.create_user(username="simple", password="motdepasse")
+        self.client.login(username="simple", password="motdepasse")
+        self.assertEqual(self.client.post(self.url).status_code, 403)
+
+    def test_get_refuse(self):
+        """Seul POST est accepté."""
+        self._staff()
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_acquittement_eteint_l_alerte(self):
+        """La ligne reste, l'état reste affiché, seule l'alerte se tait."""
+        self._staff()
+        self.assertEqual(len(self._page().context["stack_alerts"]), 1)
+
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 303)
+        self.stack.refresh_from_db()
+        self.assertEqual(self.stack.alert_ack, "missing")
+        self.assertTrue(self.stack.alerte_acquittee)
+        # Plus d'encart, plus de ligne rouge, mais l'état lui-même est inchangé. Il
+        # reste `warning` : le rapport porte `behind: 2`, et un acquittement ne parle
+        # que du compose — le retard git n'a été acquitté par personne.
+        self.assertEqual(self.stack.severity, "warning")
+        self.assertEqual(self.stack.compose, "missing")
+
+        contexte = self._page().context
+        self.assertEqual(contexte["stack_alerts"], [])
+        # Comptée, car taire n'est pas effacer.
+        self.assertEqual(contexte["stacks_acquittees"], 1)
+
+    def test_second_clic_reactive(self):
+        """Un même bouton fait les deux sens : se tromper coûte un autre clic."""
+        self._staff()
+        self.client.post(self.url)
+        self.client.post(self.url)
+        self.stack.refresh_from_db()
+        self.assertEqual(self.stack.alert_ack, "")
+        self.assertEqual(self.stack.severity, "danger")
+
+    def test_un_autre_etat_reveille_l_alerte(self):
+        """L'acquittement ne vaut que pour l'état acquitté.
+
+        C'est ce qui le rend auto-nettoyant, et ce qu'un booléen ne pouvait pas faire :
+        il aurait masqué le problème suivant, différent, survenu depuis.
+        """
+        self._staff()
+        self.client.post(self.url)
+        autre = {**RAPPORT["stacks"][0], "compose": "untracked"}
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z", "stacks": [autre]})
+        stack = Stack.objects.get(project="immich")
+        self.assertFalse(stack.alerte_acquittee)
+        self.assertEqual(stack.severity, "danger")
+
+    def test_retour_a_la_normale_ne_laisse_pas_d_alerte(self):
+        """Un compose revenu suivi ne porte plus d'alerte, acquittée ou non."""
+        self._staff()
+        self.client.post(self.url)
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z"})
+        stack = Stack.objects.get(project="immich")
+        self.assertFalse(stack.alerte_acquittee)
+        self.assertFalse(stack.compose_en_faute)
+        # `behind: 2` dans le rapport : la gravité restante est celle du retard git,
+        # qui n'a jamais été acquittée — un acquittement ne parle que du compose.
+        self.assertEqual(stack.severity, "warning")
+
+    def test_stack_saine_refusee(self):
+        """Il n'y a rien à taire sur une stack qui ne signale rien."""
+        self._staff()
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z"})
+        self.client.post(self.url)
+        self.assertEqual(Stack.objects.get(project="immich").alert_ack, "")
+
+    def test_stack_disparue_refusee(self):
+        """Une stack qui n'est plus rapportée a son propre bouton, « Oublier »."""
+        self._staff()
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z", "stacks": []})
+        self.client.post(self.url)
+        self.assertEqual(Stack.objects.get(project="immich").alert_ack, "")
+
+    def test_le_bouton_est_propose_au_staff(self):
+        """Le geste doit être visible sur la page, sinon il n'existe pas."""
+        self._staff()
+        self.assertContains(self._page(), "Ignorer l'alerte")
+        self.client.post(self.url)
+        self.assertContains(self._page(), "Réactiver l'alerte")
+
+
 class ForgetStackViewTest(TestCase):
     """Le seul bouton de la console qui supprime, et ce qu'il refuse de supprimer."""
 

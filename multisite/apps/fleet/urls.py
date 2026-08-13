@@ -24,4 +24,8 @@ urlpatterns = [
         "stacks/oublier-disparues/",
         views.ForgetGoneStacksView.as_view(), name='forget_gone_stacks',
     ),
+    path(
+        "stacks/<uuid:pk>/ignorer/",
+        views.AckStackAlertView.as_view(), name='ack_stack_alert',
+    ),
 ]
