@@ -171,7 +171,15 @@ class Stack(TimeStampedModel):
     behind = models.IntegerField(
         null=True, blank=True, help_text="commits behind the last known remote ref",
     )
-    compose = models.CharField(max_length=16, default=Compose.UNKNOWN)
+    # `choices` n'est pas décoratif : c'est lui qui fait exister
+    # `get_compose_display()`, la méthode que le gabarit appelle. Sans lui Django ne la
+    # génère pas, le gabarit avale l'attribut manquant en silence, et la colonne
+    # « Compose » de la page Stacks est restée vide depuis le premier jour -- alors que
+    # l'encart d'alerte, qui compare la valeur brute, disait bien « le fichier compose a
+    # disparu ». Le seul champ à choix de la console qui ne le déclarait pas.
+    compose = models.CharField(
+        max_length=16, choices=Compose.choices, default=Compose.UNKNOWN,
+    )
     # Nom du script de déploiement trouvé par la sonde à côté du compose, vide sinon.
     # C'est lui qui autorise la console à proposer une mise à jour de la stack.
     deploy_script = models.CharField(

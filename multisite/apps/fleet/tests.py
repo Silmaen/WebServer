@@ -86,6 +86,42 @@ class IngestDeployScriptTest(TestCase):
         self.assertFalse(stack.deployable)
 
 
+class LibelleComposeTest(TestCase):
+    """La colonne « Compose » de la page Stacks, restée vide depuis le premier jour.
+
+    `get_compose_display()` n'existe que si le champ déclare ses `choices` ; sans eux le
+    gabarit avale l'attribut manquant en silence, sans erreur et sans texte. Le test
+    porte sur l'affichage rendu, pas seulement sur la méthode : c'est la cellule vide
+    qui était le symptôme.
+    """
+
+    def setUp(self):
+        self.machine = _machine()
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+
+    def test_chaque_etat_a_un_libelle(self):
+        """Les cinq états rapportables par la sonde ont un texte lisible."""
+        attendus = {
+            "tracked": "Suivi par git",
+            "untracked": "Jamais commité",
+            "missing": "Fichier disparu",
+            "no-git": "Hors dépôt git",
+            "-": "Inconnu",
+        }
+        for valeur, libelle in attendus.items():
+            with self.subTest(compose=valeur):
+                stack = Stack(machine=self.machine, project="p", path="/a", compose=valeur)
+                self.assertEqual(stack.get_compose_display(), libelle)
+
+    def test_la_colonne_est_rendue(self):
+        """La cellule porte le libellé, et non le vide qu'on y lisait."""
+        store(self.machine, RAPPORT)
+        with mock.patch("apps.fleet.state.wud.containers", return_value=([], None)):
+            response = self.client.get(reverse("fleet:stacks"))
+        self.assertContains(response, "Suivi par git")
+
+
 class StackDisparueTest(TestCase):
     """Une stack déplacée ou supprimée : plus rapportée, donc plus alarmante.
 

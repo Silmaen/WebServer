@@ -236,6 +236,8 @@ Nothing is deleted by ingestion — "this was deployed here" is information — 
 - A probe that sends **no** `stacks` key reconciles nothing. "No stacks" and "I don't talk about stacks" are two different documents, and confusing them would mark a whole machine as having nothing deployed.
 - `ntfy.publish_deploy()` and `DeployStackView` filter on `present=True`: a moved stack leaves a row with the same project name, and the one to deploy is the one still running.
 
+`Stack.compose` declares `choices=Compose.choices`, and that is load-bearing: it is what makes `get_compose_display()` exist. Declared without it — as it was until the fix — Django generates no such method, the template swallows the missing attribute in silence, and the "Compose" column of the Stacks page stays **empty** while the alert box, which compares the raw value, still says "le fichier compose a disparu". It was the only choice-backed field in the console that did not declare its choices.
+
 ### User Levels & Access Control
 
 `connector/models.py` `UserProfile.user_level` is an integer field with 4 tiers:
@@ -402,6 +404,7 @@ Shared building blocks, all defined in CSS and never inline:
 - `StackDisparueTest` — reconciliation: a stack absent from a report loses `present`, a move leaves the old path behind, a `missing` compose stops alerting once gone, a redeploy comes back, a report without a `stacks` key changes nothing, and other machines are untouched
 - `StacksPageDisparuesTest` — the alert stays while the stack is reported and goes out by itself when it is not, and a gone stack is counted nowhere else
 - `ForgetStackViewTest` — the only delete in the console: access control, GET refused, a gone stack forgotten, a still-reported one refused, and the bulk sweep sparing what runs
+- `LibelleComposeTest` — the five compose labels, and the rendered cell rather than only the method: an empty column was the symptom
 
 `apps/core/tests.py` covers the console:
 - `ConsoleAccessTest` — the three cases on a console page (anonymous→302, logged-in without group→403, viewer→200), plus viewer refused on a staff-only page
