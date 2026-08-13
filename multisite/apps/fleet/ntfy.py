@@ -98,7 +98,11 @@ def publish_deploy(machine_name, project):
     if not _machine_connue(machine_name):
         return f"{machine_name} n'est pas dans l'inventaire"
 
-    stack = Stack.objects.filter(machine__name=machine_name, project=project).first()
+    # `present=True` : une stack déplacée laisse derrière elle une ligne au même projet,
+    # et c'est celle qui tourne encore qu'on veut déployer, pas la trace de l'ancienne.
+    stack = Stack.objects.filter(
+        machine__name=machine_name, project=project, present=True,
+    ).first()
     if stack is None:
         return f"{project} n'est pas une stack connue de {machine_name}"
     # La sonde est seule à savoir si un script existe : sans elle, on ne demande rien.

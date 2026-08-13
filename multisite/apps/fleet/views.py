@@ -29,11 +29,15 @@ class FleetBaseView(ViewerRequiredMixin, ConsolePageMixin, TemplateView):
         ctx.update(build_state())
         # Les deux états qu'aucun autre contrôle du lab ne voit : gatus voit des
         # conteneurs sains et wud une image à jour, donc ce sont ces pages ou rien.
+        # `present` seulement : une stack déplacée ou supprimée n'a plus de conteneurs,
+        # donc plus de compose à réparer — l'alerte qu'elle portait était indéfinie et
+        # sans remède, c'est-à-dire du bruit.
         ctx["stack_alerts"] = [
             stack
             for row in ctx["machines"]
             for stack in row["stacks"]
-            if stack.compose in (Stack.Compose.MISSING, Stack.Compose.UNTRACKED)
+            if stack.present
+            and stack.compose in (Stack.Compose.MISSING, Stack.Compose.UNTRACKED)
         ]
         # Reste-t-il quelque chose à attendre ? C'est au serveur de le dire, parce que
         # lui seul sait si un rapport est arrivé depuis la demande. La page se
@@ -73,12 +77,17 @@ class StacksView(FleetBaseView):
         # page puisse dire « aucune » sans lister des machines vides.
         ctx["machines"] = [row for row in ctx["machines"] if row["stacks"]]
         toutes = [stack for row in ctx["machines"] for stack in row["stacks"]]
+        # Les compteurs ne portent que sur ce qui est déployé : compter le retard git
+        # d'une stack qui n'existe plus, c'est annoncer un travail à faire qui n'en est
+        # pas un. Les disparues ont leur propre compteur, et leur bouton pour partir.
+        vivantes = [s for s in toutes if s.present]
         # Les deux retards sont comptés séparément : un compose jamais appliqué et une
         # image dont le tag a bougé ne se soignent pas de la même façon.
-        ctx["stacks_total"] = len(toutes)
-        ctx["stacks_git_en_retard"] = sum(1 for s in toutes if s.git_en_retard)
-        ctx["stacks_images_en_retard"] = sum(1 for s in toutes if s.images["behind"])
-        ctx["stacks_deployables"] = sum(1 for s in toutes if s.deployable)
+        ctx["stacks_total"] = len(vivantes)
+        ctx["stacks_git_en_retard"] = sum(1 for s in vivantes if s.git_en_retard)
+        ctx["stacks_images_en_retard"] = sum(1 for s in vivantes if s.images["behind"])
+        ctx["stacks_deployables"] = sum(1 for s in vivantes if s.deployable)
+        ctx["stacks_absentes"] = len(toutes) - len(vivantes)
         return ctx
 
 
@@ -169,11 +178,61 @@ class DeployStackView(StaffRequiredMixin, View):
             # Horodaté après la publication, jamais avant : marquer « en cours » une
             # demande qui n'est pas partie ferait mentir la page dans le seul cas où
             # elle doit être crue.
-            Stack.objects.filter(machine__name=machine, project=project).update(
-                deploy_requested_at=timezone.now()
-            )
+            Stack.objects.filter(
+                machine__name=machine, project=project, present=True,
+            ).update(deploy_requested_at=timezone.now())
             suite = _rapport_de_suivi("deploy", machine)
             messages.success(
                 request, f"Mise à jour demandée pour {machine}/{project}{suite}"
             )
+        return _voir_autre_page("fleet:stacks")
+
+
+class ForgetStackView(StaffRequiredMixin, View):
+    """Retire de la base la ligne d'une stack qui n'est plus déployée.
+
+    La seule suppression de toute la flotte, et elle ne touche que cette console : la
+    machine n'en sait rien. Elle existe parce qu'une stack déplacée ou supprimée
+    laissait une ligne que rien ne pouvait plus mettre à jour — la sonde ne la rapporte
+    plus, donc son état restait figé au dernier instant où elle a été vue à moitié
+    démontée.
+
+    Une stack encore rapportée est refusée : la supprimer ne ferait rien, le prochain
+    rapport la recréerait en perdant son `first_seen`.
+    """
+
+    def post(self, request, pk):
+        """Supprime la ligne, si et seulement si elle n'est plus rapportée."""
+        stack = Stack.objects.filter(pk=pk).select_related("machine").first()
+        if stack is None:
+            messages.error(request, "Cette stack n'existe plus.")
+        elif stack.present:
+            messages.error(
+                request,
+                f"{stack} est encore rapportée par sa machine : rien à oublier.",
+            )
+        else:
+            nom = str(stack)
+            stack.delete()
+            messages.success(request, f"{nom} a été oubliée.")
+        return _voir_autre_page("fleet:stacks")
+
+
+class ForgetGoneStacksView(StaffRequiredMixin, View):
+    """Oublie d'un coup toutes les stacks que plus aucune machine ne rapporte.
+
+    Un bouton par ligne suffisait mal : le cas courant est un ménage dans le lab, qui
+    en laisse plusieurs derrière lui d'un coup.
+    """
+
+    def post(self, request):
+        """Supprime toutes les lignes marquées absentes du dernier rapport."""
+        disparues = Stack.objects.filter(present=False)
+        nombre = disparues.count()
+        disparues.delete()
+        if nombre:
+            pluriel = "s" if nombre > 1 else ""
+            messages.success(request, f"{nombre} stack{pluriel} oubliée{pluriel}.")
+        else:
+            messages.info(request, "Aucune stack disparue à oublier.")
         return _voir_autre_page("fleet:stacks")

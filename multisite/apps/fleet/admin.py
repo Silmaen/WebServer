@@ -35,7 +35,8 @@ class StackAdmin(admin.ModelAdmin):
     """Consultation des stacks compose déployées."""
 
     list_display = (
-        "machine", "project", "repo", "head", "worktree", "behind", "compose", "last_seen",
+        "machine", "project", "repo", "head", "worktree", "behind", "compose",
+        "present", "last_seen",
     )
-    list_filter = ("machine", "compose", "worktree")
+    list_filter = ("machine", "compose", "worktree", "present")
     search_fields = ("project", "path", "remote")

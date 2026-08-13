@@ -11,6 +11,7 @@
         {% if stacks_git_en_retard %}{{ stacks_git_en_retard }} en retard sur git{% else %}git à jour{% endif %},
         {% if stacks_images_en_retard %}{{ stacks_images_en_retard }} avec une image plus récente{% else %}images à jour{% endif %}.
         {% if stacks_deployables %}{{ stacks_deployables }} ont un script de déploiement.{% endif %}
+        {% if stacks_absentes %}{{ stacks_absentes }} plus rapportée{{ stacks_absentes|pluralize }}.{% endif %}
     </span>
     <span class="console-toolbar-info">Généré le {{ generated|date:"d/m/Y H:i:s" }}</span>
 </div>
@@ -33,6 +34,31 @@
         </li>
         {% endfor %}
     </ul>
+</div>
+{% endif %}
+
+{% comment %} Les stacks que plus aucune machine ne rapporte. Elles gardent leur ligne — « ceci
+   était déployé ici » est une information — mais elles ne portent plus d'alerte, et ce bouton
+   est ce qui manquait : la sonde ne les connaît plus, donc rien d'autre ne pouvait les faire
+   disparaître de la page. {% endcomment %}
+{% if stacks_absentes %}
+<div class="alert console-toolbar">
+    <span class="console-toolbar-info">
+        <i class="mdi mdi-package-variant-remove"></i>
+        {{ stacks_absentes }} stack{{ stacks_absentes|pluralize }} n'apparaî{{ stacks_absentes|pluralize:"t,ssent" }}
+        plus dans le dernier rapport de sa machine : déplacée, renommée ou supprimée.
+    </span>
+    {% if user.is_staff %}
+    <span class="console-toolbar-actions">
+        <form method="post" action="{% url 'fleet:forget_gone_stacks' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary btn-sm"
+                    title="Retire ces lignes de la console. Les machines ne sont pas touchées.">
+                <i class="mdi mdi-broom"></i> Oublier les stacks disparues
+            </button>
+        </form>
+    </span>
+    {% endif %}
 </div>
 {% endif %}
 
@@ -82,7 +108,9 @@
             </thead>
             <tbody>
                 {% for s in m.stacks %}
-                <tr {% if s.severity %}class="table-{{ s.severity }}"{% endif %}>
+                {% comment %} Une stack disparue n'est pas une stack en faute : ligne grise, et
+                   aucune couleur de gravité — son dernier état connu ne se répare pas. {% endcomment %}
+                <tr {% if not s.present %}class="stack-absente"{% elif s.severity %}class="table-{{ s.severity }}"{% endif %}>
                     <td><code>{{ s.project }}</code><div class="text-muted small">{{ s.path }}</div></td>
                     <td class="col-secondaire">{{ s.repo }}{% if s.foreign %} <i class="mdi mdi-open-in-new text-muted small" title="dépôt externe"></i>{% endif %}</td>
                     <td class="col-secondaire"><code class="small">{{ s.head|default:"-" }}</code></td>
@@ -111,7 +139,15 @@
                         <span class="text-muted">-</span>
                         {% endif %}
                     </td>
-                    <td class="small">{{ s.get_compose_display }}</td>
+                    <td class="small">
+                        {% if s.present %}{{ s.get_compose_display }}
+                        {% else %}
+                        <span class="badge text-bg-secondary"
+                              title="Absente du dernier rapport de {{ m.name }} : cette stack n'est plus déployée. Son dernier état connu était « {{ s.get_compose_display }} ».">
+                            plus déployée
+                        </span>
+                        {% endif %}
+                    </td>
                     <td class="small text-muted col-secondaire">{{ s.last_seen|timesince }}</td>
                     {% if user.is_staff %}
                     <td>
@@ -129,7 +165,19 @@
                             </span>
                         </div>
                         {% endif %}
-                        {% if s.deployable %}
+                        {% if not s.present %}
+                        {% comment %} Le seul bouton de la console qui supprime quelque chose, et il
+                           ne supprime qu'ici : la machine n'a plus cette stack de toute façon. {% endcomment %}
+                        <div class="btn-group btn-group-sm">
+                            <form method="post" action="{% url 'fleet:forget_stack' s.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-secondary"
+                                        title="Retire cette ligne de la console. {{ m.name }} n'est pas touchée.">
+                                    <i class="mdi mdi-broom"></i> Oublier
+                                </button>
+                            </form>
+                        </div>
+                        {% elif s.deployable %}
                         <div class="btn-group btn-group-sm">
                             <form method="post" action="{% url 'fleet:deploy' m.name s.project %}">
                                 {% csrf_token %}

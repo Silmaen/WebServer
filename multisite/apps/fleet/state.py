@@ -161,6 +161,7 @@ def _stack_json(stack):
         "deploy_script": stack.deploy_script,
         "deployable": stack.deployable,
         "severity": stack.severity,
+        "present": stack.present,
         # Posé par `_attacher_images`, absent si l'état n'est pas passé par là.
         "images": getattr(stack, "images", None),
         "first_seen": stack.first_seen,

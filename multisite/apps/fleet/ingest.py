@@ -85,18 +85,32 @@ def store(machine, payload):
         },
     )
 
-    _store_stacks(machine, payload.get("stacks") or [])
+    # La clé brute et non `or []` : « aucune stack » et « cette sonde ne parle pas de
+    # stacks » sont deux documents différents, et les confondre marquerait toute une
+    # machine comme n'ayant plus rien de déployé.
+    _store_stacks(machine, payload.get("stacks"))
     return report
 
 
 def _store_stacks(machine, stacks):
-    """Crée ou met à jour les stacks déployées de la machine.
+    """Crée ou met à jour les stacks déployées de la machine, et réconcilie le reste.
 
     Rien n'est supprimé : une stack qui cesse d'être rapportée garde sa ligne et son
     `last_seen` vieillit, ce qui est la réponse honnête — « ceci était déployé ici »
-    est une information, une ligne qui disparaît en silence non.
+    est une information, une ligne qui disparaît en silence non. Elle perd en revanche
+    son `present`, car la liste rapportée est complète : `homelab-probe` la dérive des
+    conteneurs que Docker déclare, donc ce qui n'y figure pas n'est plus déployé. Sans
+    cette réconciliation, une stack déplacée laissait derrière elle une ligne figée sur
+    le `compose: missing` du moment du déménagement, donc une alerte rouge définitive.
+
+    Une sonde qui n'envoie pas de clé `stacks` ne réconcilie rien : elle ne dit pas
+    « plus aucune stack », elle ne dit rien du tout.
     """
+    if not isinstance(stacks, list):
+        return
+
     now = timezone.now()
+    vues = []
     for entry in stacks:
         if not isinstance(entry, dict):
             continue
@@ -104,7 +118,7 @@ def _store_stacks(machine, stacks):
         path = (entry.get("path") or "").strip()
         if not project or not path:
             continue
-        Stack.objects.update_or_create(
+        stack, _ = Stack.objects.update_or_create(
             machine=machine,
             project=project,
             path=path,
@@ -116,5 +130,12 @@ def _store_stacks(machine, stacks):
                 "compose": entry.get("compose") or Stack.Compose.UNKNOWN,
                 "deploy_script": _deploy_script(entry.get("deploy")),
                 "last_seen": now,
+                "present": True,
             },
         )
+        vues.append(stack.pk)
+
+    disparues = Stack.objects.filter(machine=machine, present=True).exclude(pk__in=vues)
+    nombre = disparues.update(present=False)
+    if nombre:
+        logger.info("%s : %d stack(s) plus rapportée(s)", machine.name, nombre)

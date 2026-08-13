@@ -86,6 +86,171 @@ class IngestDeployScriptTest(TestCase):
         self.assertFalse(stack.deployable)
 
 
+class StackDisparueTest(TestCase):
+    """Une stack déplacée ou supprimée : plus rapportée, donc plus alarmante.
+
+    C'est le cas qui rendait une alerte impossible à faire taire. La sonde dérive la
+    liste des stacks des conteneurs que Docker déclare : dès que la stack part, sa ligne
+    n'est plus mise à jour et reste figée sur le dernier état vu — souvent
+    `compose: missing`, puisque c'est l'instant du déménagement. La page annonçait alors
+    pour toujours une stack sans compose exploitable, et rien ne pouvait la corriger.
+    """
+
+    def setUp(self):
+        self.machine = _machine()
+        store(self.machine, RAPPORT)
+
+    def _rapport(self, at, stacks):
+        """Un rapport suivant, avec la liste de stacks donnée."""
+        return {**RAPPORT, "at": at, "stacks": stacks}
+
+    def test_stack_absente_du_rapport_perd_present(self):
+        """La liste rapportée est complète : ce qui n'y est plus n'est plus déployé."""
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", []))
+        self.assertFalse(Stack.objects.get(project="immich").present)
+
+    def test_stack_deplacee_laisse_l_ancienne_ligne(self):
+        """Un déplacement crée la nouvelle ligne et rend l'ancienne au passé."""
+        deplacee = {**RAPPORT["stacks"][0], "path": "/srv/docker/immich"}
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", [deplacee]))
+        etats = {s.path: s.present for s in Stack.objects.filter(project="immich")}
+        self.assertEqual(etats, {"/srv/stacks/immich": False, "/srv/docker/immich": True})
+
+    def test_une_absente_ne_porte_plus_de_gravite(self):
+        """Le `compose: missing` d'une stack partie ne se répare pas : plus d'alerte."""
+        casse = {**RAPPORT["stacks"][0], "compose": "missing"}
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", [casse]))
+        stack = Stack.objects.get(project="immich")
+        self.assertEqual(stack.severity, "danger")
+
+        store(self.machine, self._rapport("2026-08-11T12:00:00Z", []))
+        stack.refresh_from_db()
+        self.assertEqual(stack.severity, "")
+        self.assertFalse(stack.deployable)
+
+    def test_retour_de_la_stack_la_rend_presente(self):
+        """Rien n'est définitif : une stack redéployée reprend sa ligne."""
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", []))
+        store(self.machine, self._rapport("2026-08-11T12:00:00Z", RAPPORT["stacks"]))
+        self.assertTrue(Stack.objects.get(project="immich").present)
+
+    def test_sonde_sans_cle_stacks_ne_reconcilie_rien(self):
+        """« Aucune stack » et « je ne parle pas de stacks » sont deux documents."""
+        sans_cle = {k: v for k, v in RAPPORT.items() if k != "stacks"}
+        store(self.machine, {**sans_cle, "at": "2026-08-11T11:00:00Z"})
+        self.assertTrue(Stack.objects.get(project="immich").present)
+
+    def test_les_autres_machines_ne_sont_pas_touchees(self):
+        """La réconciliation est bornée à la machine qui rapporte."""
+        autre = _machine(nom="hermes", ip="10.10.0.11")
+        store(autre, RAPPORT)
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", []))
+        self.assertTrue(Stack.objects.get(machine=autre).present)
+
+    def test_deploiement_refuse_pour_une_absente(self):
+        """La console ne demande pas la mise à jour d'une stack qui n'est plus là."""
+        store(self.machine, self._rapport("2026-08-11T11:00:00Z", []))
+        with mock.patch("apps.fleet.ntfy.requests.post") as poste:
+            erreur = ntfy.publish_deploy("selene", "immich")
+        self.assertIn("pas une stack connue", erreur)
+        poste.assert_not_called()
+
+
+class StacksPageDisparuesTest(TestCase):
+    """Ce que la page fait des stacks disparues : les montrer sans les compter."""
+
+    def setUp(self):
+        self.machine = _machine()
+        casse = {**RAPPORT["stacks"][0], "compose": "missing"}
+        store(self.machine, {**RAPPORT, "stacks": [casse]})
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+
+    def _page(self):
+        # wud est mocké : la page l'interroge en HTTP, ce qui n'a rien à faire ici.
+        with mock.patch("apps.fleet.state.wud.containers", return_value=([], None)):
+            return self.client.get(reverse("fleet:stacks"))
+
+    def test_alerte_presente_tant_que_la_stack_est_rapportee(self):
+        """Le cas légitime reste alarmé : les conteneurs tournent, le compose manque."""
+        self.assertEqual(len(self._page().context["stack_alerts"]), 1)
+
+    def test_alerte_eteinte_quand_la_stack_disparait(self):
+        """C'est tout le sujet : l'alerte s'éteint d'elle-même au rapport suivant."""
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z", "stacks": []})
+        contexte = self._page().context
+        self.assertEqual(contexte["stack_alerts"], [])
+        self.assertEqual(contexte["stacks_absentes"], 1)
+        # Comptée nulle part ailleurs : annoncer un retard git sur une stack qui
+        # n'existe plus serait annoncer un travail à faire qui n'en est pas un.
+        self.assertEqual(contexte["stacks_total"], 0)
+        self.assertEqual(contexte["stacks_git_en_retard"], 0)
+
+
+class ForgetStackViewTest(TestCase):
+    """Le seul bouton de la console qui supprime, et ce qu'il refuse de supprimer."""
+
+    def setUp(self):
+        self.machine = _machine()
+        store(self.machine, RAPPORT)
+        self.stack = Stack.objects.get(project="immich")
+        self.url = reverse("fleet:forget_stack", args=[self.stack.pk])
+        self.client = Client()
+
+    def _absente(self):
+        """Rend la stack absente du dernier rapport."""
+        store(self.machine, {**RAPPORT, "at": "2026-08-11T11:00:00Z", "stacks": []})
+
+    def test_anonyme_redirige(self):
+        """Un anonyme est renvoyé vers la connexion."""
+        self.assertEqual(self.client.post(self.url).status_code, 302)
+
+    def test_utilisateur_sans_droit_interdit(self):
+        """Un membre sans droit console reçoit un 403."""
+        User.objects.create_user(username="simple", password="motdepasse")
+        self.client.login(username="simple", password="motdepasse")
+        self.assertEqual(self.client.post(self.url).status_code, 403)
+
+    def test_get_refuse(self):
+        """Seul POST est accepté : une suppression n'est pas une lecture."""
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_staff_oublie_une_stack_absente(self):
+        """Le geste qui manquait : la ligne part, et la page revient en 303."""
+        self._absente()
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        response = self.client.post(self.url)
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(response["Location"], reverse("fleet:stacks"))
+        self.assertFalse(Stack.objects.filter(pk=self.stack.pk).exists())
+
+    def test_stack_encore_rapportee_refusee(self):
+        """La supprimer ne ferait rien : le prochain rapport la recréerait sans son âge."""
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        self.client.post(self.url)
+        self.assertTrue(Stack.objects.filter(pk=self.stack.pk).exists())
+
+    def test_oubli_en_masse(self):
+        """Un ménage dans le lab en laisse plusieurs : un seul clic les efface."""
+        self._absente()
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        response = self.client.post(reverse("fleet:forget_gone_stacks"))
+        self.assertEqual(response.status_code, 303)
+        self.assertEqual(Stack.objects.count(), 0)
+
+    def test_oubli_en_masse_epargne_les_presentes(self):
+        """Seules les disparues partent : ce qui tourne garde sa ligne et son `first_seen`."""
+        _admin()
+        self.client.login(username="admin", password="motdepasse")
+        self.client.post(reverse("fleet:forget_gone_stacks"))
+        self.assertTrue(Stack.objects.filter(pk=self.stack.pk).exists())
+
+
 class RetardStackTest(TestCase):
     """Les deux retards, git et images, restent distincts."""
 

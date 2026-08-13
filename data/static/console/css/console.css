@@ -138,6 +138,11 @@
 .console .table-warning { background: color-mix(in srgb, var(--yellow) 18%, transparent); }
 .console .table-info    { background: color-mix(in srgb, var(--blue) 18%, transparent); }
 
+/* Une stack que plus aucune machine ne rapporte : gardée, mais rendue au passé. Pas
+   une gravité — son état ne se répare pas, il ne se lit plus que comme une trace. */
+.console .stack-absente { color: var(--text-secondary); }
+.console .stack-absente code { opacity: .7; }
+
 /* Cellules d'actions : boutons alignés, hauteur identique, sans rupture de ligne. */
 .console .table td:has(> .btn),
 .console .table td:has(> .btn-group),

@@ -180,6 +180,17 @@ class Stack(TimeStampedModel):
     )
     first_seen = models.DateTimeField(default=timezone.now)
     last_seen = models.DateTimeField(default=timezone.now)
+    # La stack figurait-elle dans le dernier rapport de sa machine ? Une stack
+    # déplacée ou supprimée cesse d'être rapportée sans que rien ne le dise : sa ligne
+    # restait alors telle quelle, avec le `compose: missing` du dernier instant où la
+    # sonde l'a vue à moitié démontée, et l'alerte rouge que cela déclenche n'avait
+    # aucun moyen de s'éteindre. Ce drapeau est ce qui distingue « cassée » de
+    # « plus là » -- la première mérite une alerte, la seconde une ligne grise et un
+    # bouton pour l'oublier.
+    present = models.BooleanField(
+        default=True,
+        help_text="présente dans le dernier rapport de la machine",
+    )
     # Quand la console a publié une demande de mise à jour pour cette stack. Une
     # demande, pas un résultat : la console n'exécute rien, elle publie un verbe, et
     # c'est la machine qui décide. Comparé à `last_seen`, ce champ permet de dire
@@ -220,7 +231,13 @@ class Stack(TimeStampedModel):
 
         `missing` et `untracked` sont les deux états qu'aucun autre contrôle du lab
         ne voit : les conteneurs tournent, donc gatus et wud sont satisfaits.
+
+        Une stack qui n'est plus rapportée ne relève de rien de tout cela : il n'y a
+        plus de conteneurs, donc plus de compose à réparer. Elle ne pèse plus sur les
+        alertes, sinon un déplacement de stack en laisserait une pour toujours.
         """
+        if not self.present:
+            return ""
         if self.compose in (self.Compose.MISSING, self.Compose.UNTRACKED):
             return "danger"
         if (self.behind or 0) > 0 or self.worktree == "dirty":
@@ -232,9 +249,14 @@ class Stack(TimeStampedModel):
         """La console peut-elle demander une mise à jour de cette stack ?
 
         Un script disparu avec son compose ne peut pas être lancé : on ne propose
-        rien plutôt que de publier une demande qui échouera sur la machine.
+        rien plutôt que de publier une demande qui échouera sur la machine. Même
+        raison pour une stack qui n'est plus rapportée — son répertoire n'est plus là.
         """
-        return bool(self.deploy_script) and self.compose != self.Compose.MISSING
+        return (
+            self.present
+            and bool(self.deploy_script)
+            and self.compose != self.Compose.MISSING
+        )
 
     @property
     def git_en_retard(self):

@@ -121,7 +121,7 @@ Front-end: no framework. **Bootstrap is not loaded** (neither CSS nor JS) — se
 - `connector.urls` — user auth & profile routes (under `profile/`): login, logout, register, password change/reset, profile view/edit
 - `/console/` — la console (see below), from `multisite/apps/`:
   - `/console/` — dashboard (`apps.dashboard`)
-  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state. `POST fleet/approve/<machine>/<verb>/` and `POST fleet/deploy/<machine>/<project>/` publish an ntfy approval (staff only, see the ntfy contract below)
+  - `/console/fleet/` — declared machines, and `/console/fleet/stacks/` — deployed compose stacks. **Two pages**, joined by an inline Machines / Stacks sub-navigation; both read the same assembled state. `POST fleet/approve/<machine>/<verb>/` and `POST fleet/deploy/<machine>/<project>/` publish an ntfy approval (staff only, see the ntfy contract below); `POST fleet/stacks/<uuid>/oublier/` and `POST fleet/stacks/oublier-disparues/` forget stacks no machine reports any more (staff only, see "A stack that moves or disappears")
   - `/console/devices/` — devices observed by the scanner, with `add/`, `<uuid>/`, `<uuid>/edit/`, `<uuid>/delete/`, `<uuid>/probe/`
   - `/console/networks/` — monitored networks and gateway credentials
   - `/console/monitoring/` — supervision history (time series + state transitions)
@@ -185,7 +185,7 @@ Front-end: no framework. **Bootstrap is not loaded** (neither CSS nor JS) — se
 
 Console models (`multisite/apps/*/models.py`):
 - `apps.core` — `TimeStampedModel` (abstract: UUID pk + timestamps), `BackgroundTask` (Celery task tracking with log, result, `triggered_by`)
-- `apps.fleet` — `Machine` (**declared**, mirror of `_common/inventory.conf`), `Report` (a `homelab-report` document, kept as history), `Stack` (a deployed compose project as the Docker daemon reports it, with a `severity` for missing/untracked compose files)
+- `apps.fleet` — `Machine` (**declared**, mirror of `_common/inventory.conf`), `Report` (a `homelab-report` document, kept as history), `Stack` (a deployed compose project as the Docker daemon reports it, with a `severity` for missing/untracked compose files and a `present` flag saying whether the last report still mentions it)
 - `apps.devices` — `Device` (**observed** by the scanner), `DevicePort`, `ConnectionLog`
 - `apps.network` — `Network` (CIDR, scan interval), `GatewayCredential` (OpenWrt ubus access)
 - `apps.monitoring` — `MonitoringCheck` (ICMP/TCP/HTTP/DNS on a device), `CheckResult`
@@ -223,6 +223,18 @@ Two independent signals, deliberately kept apart on the Stacks page because they
 - `wud.watch: 'false'` on `web` and `celery_scanner`, built here and therefore present in no registry: wud was looking up `library/webserver-web:latest` on Docker Hub and reporting a 401 per container. What those images really track is the Dockerfile's base, which `deploy.sh` pulls at every deployment.
 
 The other stacks of the lab carry no wud label at all, so the same noise is on them (`authentik-postgresql`, `pretloc-db-1`, `sensor_server-redis-1`, the `nginx` containers, plus a 401 on every locally built image). Fixing it belongs to `home-server-stacks`, with these same two labels.
+
+### A stack that moves or disappears
+
+`homelab-probe` derives the stack list from what the Docker daemon declares, so **the reported list is complete for that machine**: what is not in it is not deployed any more. `apps/fleet/ingest.py` `_store_stacks()` reconciles on that basis and sets `Stack.present = False` on the rest.
+
+Nothing is deleted by ingestion — "this was deployed here" is information — but `present` is what separates a **broken** stack from a **gone** one, and that distinction is the whole point. Without it, moving or removing a stack left a row frozen on the last state the probe saw, which is the state mid-move: `compose: missing`. The page then announced "stack without a usable compose file" **for ever**, and no gesture could fix it — the only machine able to update that row no longer knew it. So:
+
+- `Stack.severity` and `Stack.deployable` are empty/false when `present` is false. The red alert on both fleet pages, and the badge on `www`'s monitoring page, only count reported stacks.
+- The Stacks page still lists them, greyed (`.stack-absente`), with a "plus déployée" badge and — for staff — `POST fleet/stacks/<uuid>/oublier/` to forget the row, plus `POST fleet/stacks/oublier-disparues/` to sweep them all. This is the only delete in the whole console, and it only touches this database.
+- A stack still reported is **refused** by the forget view: deleting it would achieve nothing, the next report would recreate it and lose its `first_seen`.
+- A probe that sends **no** `stacks` key reconciles nothing. "No stacks" and "I don't talk about stacks" are two different documents, and confusing them would mark a whole machine as having nothing deployed.
+- `ntfy.publish_deploy()` and `DeployStackView` filter on `present=True`: a moved stack leaves a row with the same project name, and the one to deploy is the one still running.
 
 ### User Levels & Access Control
 
@@ -387,6 +399,9 @@ Shared building blocks, all defined in CSS and never inline:
 - `WudGroupementTest` — `local` watcher means selene, per-machine summary, project read from labels
 - `PublicationDeploiementTest` — `publish_deploy` validates machine, stack, script and token **before** publishing, and the body is `deploy <machine> <project>` with no path
 - `DeployStackViewTest` — access control (anonymous→302, member→403, staff→303), and GET refused
+- `StackDisparueTest` — reconciliation: a stack absent from a report loses `present`, a move leaves the old path behind, a `missing` compose stops alerting once gone, a redeploy comes back, a report without a `stacks` key changes nothing, and other machines are untouched
+- `StacksPageDisparuesTest` — the alert stays while the stack is reported and goes out by itself when it is not, and a gone stack is counted nowhere else
+- `ForgetStackViewTest` — the only delete in the console: access control, GET refused, a gone stack forgotten, a still-reported one refused, and the bulk sweep sparing what runs
 
 `apps/core/tests.py` covers the console:
 - `ConsoleAccessTest` — the three cases on a console page (anonymous→302, logged-in without group→403, viewer→200), plus viewer refused on a staff-only page
